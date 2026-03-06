@@ -197,7 +197,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-xs text-center text-muted-foreground">
-          Demo: username <span className="font-mono">superadmin1</span> / password <span className="font-mono">admin123</span>
+          Demo: username <span className="font-mono">superadmin</span> / password <span className="font-mono">admin123</span>
         </p>
       </div>
     </div>
