@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ import CompaniesPage from "@/pages/companies";
 import NotFound from "@/pages/not-found";
 
 function HeaderBar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { data: unreadCount } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
     refetchInterval: 30000,
@@ -49,6 +49,9 @@ function HeaderBar() {
             )}
           </Button>
         </Link>
+        <Button variant="ghost" size="icon" onClick={logout} data-testid="button-header-logout" title="Keluar">
+          <LogOut className="w-4 h-4" />
+        </Button>
       </div>
     </header>
   );

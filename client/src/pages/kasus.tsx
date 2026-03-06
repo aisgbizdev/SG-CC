@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, RiskBadge } from "./dashboard";
 import { Plus, Search, Filter, ArrowRight } from "lucide-react";
+import { DownloadMenu } from "@/components/download-menu";
 import type { Case, Company } from "@shared/schema";
 
 const BUCKETS = [
@@ -92,7 +93,24 @@ export default function KasusPage() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Kasus Pengaduan</h1>
           <p className="text-sm text-muted-foreground">Daftar kasus pengaduan yang tercatat</p>
         </div>
-        {canCreate && (
+        <div className="flex items-center gap-2">
+          <DownloadMenu
+            title="Laporan Kasus Pengaduan"
+            filename="laporan_kasus"
+            columns={[
+              { header: "Kode Kasus", key: "caseCode", width: 15 },
+              { header: "Nasabah", key: "customerName", width: 20 },
+              { header: "PT", key: "_company", width: 10 },
+              { header: "Cabang", key: "branch", width: 15 },
+              { header: "Risk", key: "riskLevel", width: 8 },
+              { header: "Status", key: "status", width: 12 },
+              { header: "Stage", key: "workflowStage", width: 15 },
+              { header: "Progress", key: "_progress", width: 10 },
+              { header: "Ringkasan", key: "summary", width: 30 },
+            ]}
+            data={filtered.map(c => ({ ...c, _company: getCompanyName(c.companyId), _progress: `${c.progress}%` }))}
+          />
+          {canCreate && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-create-case"><Plus className="w-4 h-4 mr-1" /> Tambah Kasus</Button>
@@ -170,6 +188,7 @@ export default function KasusPage() {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">

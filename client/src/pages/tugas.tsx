@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
 import { Plus, Search, Filter, Calendar, User, ArrowRight } from "lucide-react";
+import { DownloadMenu } from "@/components/download-menu";
 import type { Task, Company } from "@shared/schema";
 
 const STATUSES = ["Baru", "Sedang Dikerjakan", "Menunggu Review", "Selesai", "Terlambat"];
@@ -96,7 +97,22 @@ export default function TugasPage() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Tugas</h1>
           <p className="text-sm text-muted-foreground">Daftar tugas yang diberikan</p>
         </div>
-        {canCreate && (
+        <div className="flex items-center gap-2">
+          <DownloadMenu
+            title="Laporan Tugas"
+            filename="laporan_tugas"
+            columns={[
+              { header: "Judul", key: "title", width: 30 },
+              { header: "Ditugaskan ke", key: "_assignee", width: 20 },
+              { header: "PT", key: "_company", width: 10 },
+              { header: "Status", key: "status", width: 15 },
+              { header: "Prioritas", key: "priority", width: 10 },
+              { header: "Progress", key: "_progress", width: 10 },
+              { header: "Deadline", key: "deadline", width: 12 },
+            ]}
+            data={filtered.map(t => ({ ...t, _assignee: getUserName(t.assignedTo), _company: t.companyId ? getCompanyName(t.companyId) : "-", _progress: `${t.progress}%` }))}
+          />
+          {canCreate && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-create-task"><Plus className="w-4 h-4 mr-1" /> Buat Tugas</Button>
@@ -156,6 +172,7 @@ export default function TugasPage() {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">

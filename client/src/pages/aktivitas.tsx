@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
 import { Plus, Search, Filter, Calendar, ArrowRight } from "lucide-react";
+import { DownloadMenu } from "@/components/download-menu";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
 
 export default function AktivitasPage() {
@@ -93,7 +94,22 @@ export default function AktivitasPage() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Aktivitas</h1>
           <p className="text-sm text-muted-foreground">Daftar aktivitas penting yang tercatat</p>
         </div>
-        {canCreate && (
+        <div className="flex items-center gap-2">
+          <DownloadMenu
+            title="Laporan Aktivitas"
+            filename="laporan_aktivitas"
+            columns={[
+              { header: "Tanggal", key: "date", width: 12 },
+              { header: "Judul", key: "title", width: 30 },
+              { header: "PT", key: "_company", width: 10 },
+              { header: "Status", key: "status", width: 15 },
+              { header: "Prioritas", key: "priority", width: 10 },
+              { header: "Progress", key: "_progress", width: 10 },
+              { header: "Deskripsi", key: "description", width: 30 },
+            ]}
+            data={filtered.map(a => ({ ...a, _company: getCompanyName(a.companyId), _progress: `${a.progress}%` }))}
+          />
+          {canCreate && (
           <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
             <DialogTrigger asChild>
               <Button data-testid="button-create-activity"><Plus className="w-4 h-4 mr-1" /> Tambah Aktivitas</Button>
@@ -172,6 +188,7 @@ export default function AktivitasPage() {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
