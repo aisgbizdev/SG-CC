@@ -76,9 +76,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-md flex items-center justify-center">
-            <Shield className="w-8 h-8 text-primary-foreground" />
-          </div>
+          <img src="/icon-512.png" alt="SGCC" className="mx-auto w-20 h-20 rounded-2xl shadow-lg" />
           <h1 className="text-2xl font-bold tracking-tight">SG Control Center</h1>
           <p className="text-sm text-muted-foreground">Pusat Kendali Internal Grup SG</p>
         </div>

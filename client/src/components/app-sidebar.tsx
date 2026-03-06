@@ -47,9 +47,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary rounded-md flex items-center justify-center flex-shrink-0">
-            <Shield className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src="/icon-192.png" alt="SGCC" className="w-9 h-9 rounded-md flex-shrink-0" />
           <div className="min-w-0">
             <h2 className="font-bold text-sm truncate">SG Control Center</h2>
             <p className="text-xs text-muted-foreground truncate">Pusat Kendali Grup</p>

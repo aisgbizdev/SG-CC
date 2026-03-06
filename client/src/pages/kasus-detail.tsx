@@ -102,7 +102,7 @@ export default function KasusDetailPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-3 sm:p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3">
         <Link href="/kasus"><Button variant="ghost" size="icon" data-testid="button-back"><ArrowLeft className="w-4 h-4" /></Button></Link>
         <div className="flex-1 min-w-0">

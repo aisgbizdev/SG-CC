@@ -49,7 +49,7 @@ export default function CompaniesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Manajemen PT</h1>

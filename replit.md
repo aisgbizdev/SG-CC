@@ -73,6 +73,20 @@ client/src/
 - du_kpf / dk_kpf (DU/DK PT KPF)
 - du_ewf / dk_ewf (DU/DK PT EWF)
 
+## PWA (Progressive Web App)
+- Manifest: `client/public/manifest.json`
+- Service Worker: `client/public/sw.js` (network-first strategy, offline fallback)
+- Icons: `client/public/icon-192.png`, `client/public/icon-512.png`
+- Splash screen: inline CSS in `client/index.html` (navy gradient, logo pulse animation, auto-fade 1.5s)
+- Mobile-optimized: responsive padding (`p-3 sm:p-6`), sidebar drawer on mobile, viewport meta with user-scalable
+- Installable: manifest configured with standalone display, maskable icons
+
+## Download/Export
+- PDF (jspdf + jspdf-autotable), Excel (xlsx), Word (docx + file-saver)
+- `client/src/lib/download.ts` - export utilities
+- `client/src/components/download-menu.tsx` - dropdown UI component
+- Available on: Aktivitas, Kasus Pengaduan, Tugas pages
+
 ## Database
 - PostgreSQL via DATABASE_URL
 - Schema push: `npm run db:push`

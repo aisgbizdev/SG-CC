@@ -48,7 +48,7 @@ export default function PengaturanPage() {
   const initials = user?.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() || "";
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl mx-auto">
+    <div className="p-3 sm:p-6 space-y-6 max-w-2xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold" data-testid="text-page-title">Pengaturan</h1>
         <p className="text-sm text-muted-foreground">Kelola akun dan preferensi Anda</p>

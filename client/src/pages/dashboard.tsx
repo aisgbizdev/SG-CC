@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   const getCompanyName = (id: number) => companiesData?.find((c: any) => c.id === id)?.code || "-";
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">Dashboard</h1>

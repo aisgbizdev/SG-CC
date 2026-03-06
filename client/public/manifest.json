@@ -1,0 +1,27 @@
+{
+  "name": "SG Control Center",
+  "short_name": "SGCC",
+  "description": "Sistem monitoring governance dan kepatuhan perusahaan futures trading Indonesia",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#163466",
+  "theme_color": "#163466",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "id",
+  "dir": "ltr"
+}
