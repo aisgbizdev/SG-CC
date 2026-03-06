@@ -22,6 +22,15 @@ export async function registerRoutes(
     res.json(data);
   });
 
+  app.post("/api/companies", requireRole("superadmin"), async (req, res) => {
+    try {
+      const company = await storage.createCompany(req.body);
+      res.json(company);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal membuat PT" });
+    }
+  });
+
   app.get("/api/users", requireAuth, async (req, res) => {
     const user = req.user as any;
     const data = await storage.getUsers();
@@ -365,6 +374,22 @@ export async function registerRoutes(
       res.json(safe);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update profil" });
+    }
+  });
+
+  app.post("/api/users/:id/reset-password", requireRole("superadmin"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { newPassword } = req.body;
+      if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ message: "Password minimal 8 karakter" });
+      }
+      const hashed = await bcrypt.hash(newPassword, 10);
+      const user = await storage.updateUser(id, { password: hashed, loginAttempts: 0, lockedUntil: null });
+      if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+      res.json({ message: "Password berhasil direset" });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal reset password" });
     }
   });
 

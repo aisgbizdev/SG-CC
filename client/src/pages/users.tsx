@@ -12,12 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Shield, Building2, User } from "lucide-react";
+import { Plus, Shield, Building2, User, KeyRound } from "lucide-react";
 import type { Company } from "@shared/schema";
 
 export default function UsersPage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetUserId, setResetUserId] = useState<number | null>(null);
+  const [resetUserName, setResetUserName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const { data: usersData, isLoading } = useQuery<any[]>({ queryKey: ["/api/users"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
@@ -43,6 +47,29 @@ export default function UsersPage() {
       toast({ title: "Gagal", description: err.message || "Gagal membuat user", variant: "destructive" });
     },
   });
+
+  const resetMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
+      const res = await apiRequest("POST", `/api/users/${userId}/reset-password`, { newPassword });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Berhasil", description: "Password berhasil direset" });
+      setResetDialogOpen(false);
+      setNewPassword("");
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal reset password", variant: "destructive" });
+    },
+  });
+
+  const handleResetPassword = () => {
+    if (!newPassword || newPassword.length < 8) {
+      toast({ title: "Error", description: "Password minimal 8 karakter", variant: "destructive" });
+      return;
+    }
+    if (resetUserId) resetMutation.mutate({ userId: resetUserId, newPassword });
+  };
 
   const handleSubmit = () => {
     if (!form.username || !form.password || !form.fullName) {
@@ -161,15 +188,47 @@ export default function UsersPage() {
                       <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{getCompanyName(u.companyId)}</span>
                     </div>
                   </div>
-                  <Badge variant={u.isActive ? "default" : "secondary"}>
-                    {getRoleLabel(u.role)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      data-testid={`button-reset-pw-${u.id}`}
+                      onClick={() => { setResetUserId(u.id); setResetUserName(u.fullName); setNewPassword(""); setResetDialogOpen(true); }}
+                    >
+                      <KeyRound className="w-3 h-3 mr-1" /> Reset
+                    </Button>
+                    <Badge variant={u.isActive ? "default" : "secondary"}>
+                      {getRoleLabel(u.role)}
+                    </Badge>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Reset Password</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Reset password untuk <strong>{resetUserName}</strong></p>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Password Baru</Label>
+              <Input
+                data-testid="input-reset-password"
+                type="password"
+                placeholder="Minimal 8 karakter"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+              />
+            </div>
+            <Button data-testid="button-confirm-reset" onClick={handleResetPassword} className="w-full" disabled={resetMutation.isPending}>
+              {resetMutation.isPending ? "Memproses..." : "Reset Password"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

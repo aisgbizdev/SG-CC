@@ -24,6 +24,7 @@ import PesanPage from "@/pages/pesan";
 import NotifikasiPage from "@/pages/notifikasi";
 import PengaturanPage from "@/pages/pengaturan";
 import UsersPage from "@/pages/users";
+import CompaniesPage from "@/pages/companies";
 import NotFound from "@/pages/not-found";
 
 function HeaderBar() {
@@ -106,6 +107,7 @@ function AuthenticatedApp() {
               <Route path="/notifikasi" component={NotifikasiPage} />
               <Route path="/pengaturan" component={PengaturanPage} />
               <Route path="/users" component={UsersPage} />
+              <Route path="/companies" component={CompaniesPage} />
               <Route component={NotFound} />
             </Switch>
           </main>
