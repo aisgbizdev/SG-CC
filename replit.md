@@ -57,11 +57,21 @@ client/src/
 8. Komentar - thread diskusi pada aktivitas/kasus/tugas
 9. Manajemen User - CRUD user (superadmin only)
 
-## Demo Login
-- superadmin1 / admin123
-- owner1 / admin123
-- du_sgf / admin123
-- dk_sgf / admin123
+## Perusahaan
+1. PT Solid Gold Berjangka (SGB)
+2. PT Rifan Financindo Berjangka (RFB)
+3. PT Best Profit Futures (BPF)
+4. PT Kontak Perkasa Futures (KPF)
+5. PT Equityworld Futures (EWF)
+
+## Demo Login (password: admin123)
+- superadmin (Superadmin)
+- nelson / hambali / masir / dr / bw (Owner)
+- du_sgb / dk_sgb (DU/DK PT SGB)
+- du_rfb / dk_rfb (DU/DK PT RFB)
+- du_bpf / dk_bpf (DU/DK PT BPF)
+- du_kpf / dk_kpf (DU/DK PT KPF)
+- du_ewf / dk_ewf (DU/DK PT EWF)
 
 ## Database
 - PostgreSQL via DATABASE_URL
