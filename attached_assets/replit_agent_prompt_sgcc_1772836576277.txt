@@ -1,0 +1,38 @@
+
+Baca file spesifikasi ini dengan teliti dan bangun aplikasi sesuai isinya.
+
+Aturan utama:
+1. Jangan menebak fitur di luar spesifikasi.
+2. Jangan menambah fitur yang tidak diminta.
+3. Gunakan Bahasa Indonesia untuk UI.
+4. Gunakan nuansa warna navy blue.
+5. Bangun sebagai web app yang mobile-friendly dan PWA.
+6. Ikuti hierarki role persis:
+   - Superadmin: 2 orang, editor inti
+   - Owner: 5 orang, hanya view + comment + announcement + task + export
+   - DU: input/update PT sendiri
+   - DK: input/update PT sendiri
+7. Input aktif hanya oleh DU dan DK.
+8. Database harus 1 pusat dengan model multi-company, bukan database terpisah per PT.
+9. Prioritaskan v1 yang stabil, mudah dipakai, dan maintainable.
+
+Urutan kerja yang diminta:
+1. Buat struktur database dan role access
+2. Buat halaman login dan auth username/password + secret question
+3. Buat dashboard dasar sesuai role
+4. Buat modul Aktivitas
+5. Buat modul Kasus Pengaduan
+6. Buat modul Tugas
+7. Buat komentar/thread
+8. Buat Pengumuman dan Pesan
+9. Buat notifikasi in-app
+10. Buat export laporan dasar
+11. Baru lanjutkan import Excel dan push notification
+
+Output yang saya butuhkan dari Anda:
+- struktur folder project yang rapi
+- database schema
+- backend API
+- frontend pages
+- penjelasan singkat cara menjalankan project
+- demo data minimal agar aplikasi bisa langsung diuji

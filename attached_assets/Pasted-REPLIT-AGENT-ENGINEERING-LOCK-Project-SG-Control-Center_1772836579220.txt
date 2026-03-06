@@ -1,0 +1,218 @@
+REPLIT AGENT ENGINEERING LOCK
+Project: SG Control Center (SGCC)
+
+Sebelum mulai build, baca file berikut sampai selesai:
+
+SG_Control_Center_Complete_Build_Spec.md
+
+File tersebut adalah **spesifikasi sistem final**.
+Jangan mengubah struktur, jangan improvisasi, dan jangan menambahkan fitur di luar dokumen.
+
+==================================================
+
+ENGINEERING RULES (WAJIB)
+
+1. Jangan over-engineer.
+2. Jangan membuat arsitektur yang kompleks.
+3. Jangan membuat microservices.
+4. Jangan membuat terlalu banyak layer abstraction.
+5. Jangan membuat fitur yang tidak diminta.
+6. Jangan mengubah nama modul utama.
+7. Jangan mengganti bahasa UI (harus Bahasa Indonesia).
+8. Jangan mengganti tema warna (harus Navy Blue).
+9. Jangan mengganti struktur role.
+
+Fokus aplikasi ini adalah:
+
+Executive Control Center
+Monitoring
+Compliance tracking
+Governance dashboard
+
+Bukan CRM.
+Bukan ERP.
+Bukan aplikasi chat.
+
+==================================================
+
+PROJECT STRUCTURE YANG DIHARAPKAN
+
+Gunakan struktur sederhana berikut:
+
+/sg-control-center
+
+/backend
+/controllers
+/routes
+/middleware
+/services
+/models
+/config
+
+/frontend
+/src
+/components
+/pages
+/layout
+/hooks
+/services
+/styles
+
+/database
+/schema
+/migrations
+/seed
+
+/shared
+/types
+/constants
+
+/public
+
+==================================================
+
+DATABASE RULES
+
+Gunakan **PostgreSQL**.
+
+Semua tabel utama harus memiliki:
+
+company_id
+
+Karena sistem ini menggunakan **multi-company architecture**.
+
+Jangan membuat database terpisah per PT.
+
+==================================================
+
+AUTH SYSTEM
+
+Login menggunakan:
+
+username
+password
+
+Tidak menggunakan email.
+
+Fitur wajib:
+
+* change password
+* secret question
+* secret answer
+* password hashing
+* login attempt limit
+
+==================================================
+
+ROLE SYSTEM (TIDAK BOLEH BERUBAH)
+
+Superadmin (2 orang)
+
+Owner (5 orang)
+
+Direktur Utama (DU)
+
+Direktur Kepatuhan (DK)
+
+INPUT DATA HANYA OLEH:
+
+DU
+DK
+
+Owner hanya:
+
+* monitor
+* comment
+* announcement
+* task
+* export report
+
+==================================================
+
+STACK YANG DIINGINKAN
+
+Frontend
+React + Vite
+
+Backend
+Node.js + Express
+
+Database
+PostgreSQL
+
+PWA
+vite-plugin-pwa
+
+==================================================
+
+PRINSIP UI
+
+UI harus:
+
+clean
+executive
+modern
+ringan
+tidak padat
+
+Dominan warna:
+
+Navy Blue
+
+Status indicator:
+
+Hijau = On Track
+Kuning = Warning
+Merah = Overdue
+Abu gelap = Closed
+
+==================================================
+
+BUILD ORDER
+
+Bangun sistem sesuai urutan berikut:
+
+1 Database schema
+2 Role access control
+3 Authentication system
+4 Dashboard per role
+5 Modul Aktivitas
+6 Modul Kasus Pengaduan
+7 Thread komentar
+8 Modul Tugas
+9 Modul Pengumuman
+10 Notifikasi dalam aplikasi
+11 Export laporan dasar
+12 Import Excel
+13 Push notification (PWA)
+
+==================================================
+
+OUTPUT YANG HARUS DIBERIKAN
+
+Setelah membaca spesifikasi dan memulai build, tampilkan:
+
+1 Struktur folder project
+2 Database schema
+3 API structure
+4 Frontend pages
+5 Cara menjalankan project
+6 Demo data minimal
+
+==================================================
+
+CATATAN AKHIR
+
+Prioritas utama:
+
+Sistem harus:
+
+* stabil
+* ringan
+* mudah digunakan
+* mudah dirawat
+* tidak kompleks
+
+Jangan membuat sistem terlalu rumit.
+
+Bangun sesuai spesifikasi.
