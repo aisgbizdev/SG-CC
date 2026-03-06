@@ -12,6 +12,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
 import LoginPage from "@/pages/login";
+import UpdateProfilPage from "@/pages/update-profil";
 import DashboardPage from "@/pages/dashboard";
 import AktivitasPage from "@/pages/aktivitas";
 import AktivitasDetailPage from "@/pages/aktivitas-detail";
@@ -73,6 +74,13 @@ function AuthenticatedApp() {
   }
 
   if (location === "/login") return <Redirect to="/" />;
+
+  if (!user.profileCompleted && ["du", "dk"].includes(user.role)) {
+    if (location !== "/update-profil") return <Redirect to="/update-profil" />;
+    return <UpdateProfilPage />;
+  }
+
+  if (location === "/update-profil") return <Redirect to="/" />;
 
   const style = {
     "--sidebar-width": "16rem",

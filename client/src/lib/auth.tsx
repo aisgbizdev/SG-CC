@@ -10,6 +10,7 @@ type AuthUser = {
   role: string;
   companyId: number | null;
   isActive: boolean;
+  profileCompleted: boolean;
 };
 
 type AuthContextType = {

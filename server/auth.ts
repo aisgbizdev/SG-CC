@@ -17,6 +17,7 @@ declare global {
       role: string;
       companyId: number | null;
       isActive: boolean;
+      profileCompleted: boolean;
     }
   }
 }
@@ -72,6 +73,7 @@ export function setupAuth(app: Express) {
           role: user.role,
           companyId: user.companyId,
           isActive: user.isActive,
+          profileCompleted: user.profileCompleted,
         });
       } catch (err) {
         return done(err);
@@ -91,6 +93,7 @@ export function setupAuth(app: Express) {
         role: user.role,
         companyId: user.companyId,
         isActive: user.isActive,
+        profileCompleted: user.profileCompleted,
       });
     } catch (err) {
       done(err);

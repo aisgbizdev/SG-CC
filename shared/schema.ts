@@ -22,6 +22,12 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   role: text("role").notNull(), // superadmin, owner, du, dk
   companyId: integer("company_id"),
+  phone: text("phone"),
+  address: text("address"),
+  birthDate: text("birth_date"),
+  branchCount: integer("branch_count"),
+  position: text("position"),
+  profileCompleted: boolean("profile_completed").notNull().default(false),
   secretQuestion: text("secret_question"),
   secretAnswer: text("secret_answer"),
   isActive: boolean("is_active").notNull().default(true),

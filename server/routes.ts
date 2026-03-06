@@ -344,6 +344,30 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
+  app.get("/api/profile", requireAuth, async (req, res) => {
+    const user = req.user as any;
+    const fullUser = await storage.getUser(user.id);
+    if (!fullUser) return res.status(404).json({ message: "User tidak ditemukan" });
+    const { password: _, secretAnswer: __, ...safe } = fullUser;
+    res.json(safe);
+  });
+
+  app.patch("/api/profile", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { fullName, phone, address, birthDate, branchCount, position } = req.body;
+      const updated = await storage.updateUser(user.id, {
+        fullName, phone, address, birthDate, branchCount, position,
+        profileCompleted: true,
+      });
+      if (!updated) return res.status(404).json({ message: "User tidak ditemukan" });
+      const { password: _, secretAnswer: __, ...safe } = updated;
+      res.json(safe);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal update profil" });
+    }
+  });
+
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
