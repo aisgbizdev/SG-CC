@@ -102,15 +102,15 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Aktivitas" value={stats?.totalActivities || 0} icon={Activity} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" href="/aktivitas" />
+        <StatCard title="Aktivitas Selesai" value={stats?.completedActivities || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalActivities || 0} total`} href="/aktivitas" />
         <StatCard title="Kasus Aktif" value={stats?.activeCases || 0} icon={FileWarning} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" subtitle={`${stats?.overdueCases || 0} overdue`} href="/kasus" />
-        <StatCard title="Tugas Pending" value={stats?.pendingTasks || 0} icon={ListTodo} color="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" href="/tugas" />
-        <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" href="/pengumuman" />
+        <StatCard title="Kasus Selesai" value={stats?.closedCases || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalCases || 0} total`} href="/kasus" />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatCard title="Aktivitas Selesai" value={stats?.completedActivities || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalActivities || 0} total`} href="/aktivitas" />
-        <StatCard title="Kasus Selesai" value={stats?.closedCases || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalCases || 0} total`} href="/kasus" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Tugas Aktif" value={stats?.pendingTasks || 0} icon={ListTodo} color="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" href="/tugas" />
         <StatCard title="Tugas Selesai" value={stats?.completedTasks || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalTasks || 0} total`} href="/tugas" />
+        <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" href="/pengumuman" />
       </div>
 
       {(stats?.overdueCases > 0) && (
