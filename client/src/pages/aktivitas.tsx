@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, Calendar, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
@@ -32,6 +32,9 @@ export default function AktivitasPage() {
   const { data: activities, isLoading } = useQuery<Activity[]>({ queryKey: ["/api/activities"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
   const { data: categories } = useQuery<MasterCategory[]>({ queryKey: ["/api/categories"] });
+
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const [form, setForm] = useState({
     title: "", description: "", date: new Date().toISOString().split("T")[0],
@@ -100,6 +103,70 @@ export default function AktivitasPage() {
     },
     onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
   });
+
+  const editMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/activities/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Aktivitas berhasil diperbarui" });
+      setEditDialogOpen(false);
+      setEditingActivity(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal memperbarui aktivitas", variant: "destructive" });
+    },
+  });
+
+  const openEditDialog = (a: Activity, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setEditingActivity(a);
+    setForm({
+      title: a.title,
+      description: a.description || "",
+      date: a.date,
+      categoryId: a.categoryId?.toString() || "",
+      status: a.status,
+      priority: a.priority,
+      progress: a.progress,
+      targetDate: a.targetDate || "",
+      nextAction: a.nextAction || "",
+      result: a.result || "",
+      notes: a.notes || "",
+      companyId: a.companyId?.toString() || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!editingActivity) return;
+    if (!form.title || !form.date) {
+      toast({ title: "Error", description: "Judul dan tanggal wajib diisi", variant: "destructive" });
+      return;
+    }
+    editMutation.mutate({
+      id: editingActivity.id,
+      data: {
+        title: form.title,
+        description: form.description || null,
+        date: form.date,
+        categoryId: form.categoryId ? parseInt(form.categoryId) : null,
+        status: form.status,
+        priority: form.priority,
+        progress: Number(form.progress),
+        targetDate: form.targetDate || null,
+        nextAction: form.nextAction || null,
+        result: form.result || null,
+        notes: form.notes || null,
+      },
+    });
+  };
+
+  const canEdit = (a: Activity) => user?.role === "superadmin" || a.createdBy === user?.id;
 
   const statuses = ["Direncanakan", "Sedang Dikerjakan", "Menunggu Review", "Selesai", "Tertunda", "Overdue"];
 
@@ -252,6 +319,11 @@ export default function AktivitasPage() {
                       <p className="text-sm font-medium">{a.progress}%</p>
                       <Progress value={a.progress} className="h-1.5 w-20" />
                     </div>
+                    {canEdit(a) && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" data-testid={`button-edit-activity-${a.id}`} onClick={e => openEditDialog(a, e)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
                     {canDelete(a) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -280,6 +352,70 @@ export default function AktivitasPage() {
           <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={(o) => { setEditDialogOpen(o); if (!o) { setEditingActivity(null); resetForm(); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Aktivitas</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Tanggal *</Label>
+                <Input data-testid="input-edit-activity-date" type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
+                  <SelectTrigger data-testid="select-edit-activity-status"><SelectValue /></SelectTrigger>
+                  <SelectContent>{statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Judul *</Label>
+              <Input data-testid="input-edit-activity-title" placeholder="Judul aktivitas" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Kategori</Label>
+              <Select value={form.categoryId} onValueChange={v => setForm({...form, categoryId: v})}>
+                <SelectTrigger data-testid="select-edit-activity-category"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                <SelectContent>{activityCategories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Deskripsi</Label>
+              <Textarea data-testid="input-edit-activity-description" placeholder="Deskripsi singkat" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Prioritas</Label>
+                <Select value={form.priority} onValueChange={v => setForm({...form, priority: v})}>
+                  <SelectTrigger data-testid="select-edit-activity-priority"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Progress (%)</Label>
+                <Input data-testid="input-edit-activity-progress" type="number" min={0} max={100} value={form.progress} onChange={e => setForm({...form, progress: parseInt(e.target.value) || 0})} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Target Selesai</Label>
+              <Input data-testid="input-edit-activity-target" type="date" value={form.targetDate} onChange={e => setForm({...form, targetDate: e.target.value})} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Hasil / Perkembangan</Label>
+              <Textarea data-testid="input-edit-activity-result" placeholder="Hasil aktivitas" value={form.result} onChange={e => setForm({...form, result: e.target.value})} />
+            </div>
+            <Button data-testid="button-submit-edit-activity" onClick={handleEditSubmit} className="w-full" disabled={editMutation.isPending}>
+              {editMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

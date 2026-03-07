@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, RiskBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, ArrowRight, Trash2, Pencil } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Case, Company } from "@shared/schema";
@@ -38,6 +38,9 @@ export default function KasusPage() {
 
   const { data: cases, isLoading } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
+
+  const [editingCase, setEditingCase] = useState<Case | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
@@ -101,6 +104,84 @@ export default function KasusPage() {
     },
     onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
   });
+
+  const editMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/cases/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Kasus berhasil diperbarui" });
+      setEditDialogOpen(false);
+      setEditingCase(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal memperbarui kasus", variant: "destructive" });
+    },
+  });
+
+  const resetForm = () => setForm({
+    caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
+    customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
+    status: "Open", summary: "", riskLevel: "Medium", priority: "Medium",
+    workflowStage: "Open", progress: 0, targetDate: "",
+    companyId: user?.companyId?.toString() || "",
+  });
+
+  const openEditDialog = (c: Case, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setEditingCase(c);
+    setForm({
+      caseCode: c.caseCode,
+      branch: c.branch || "",
+      dateReceived: c.dateReceived,
+      customerName: c.customerName,
+      accountNumber: c.accountNumber || "",
+      picMain: c.picMain || "",
+      bucket: c.bucket,
+      status: c.status,
+      summary: c.summary,
+      riskLevel: c.riskLevel,
+      priority: c.priority,
+      workflowStage: c.workflowStage,
+      progress: c.progress,
+      targetDate: c.targetDate || "",
+      companyId: c.companyId?.toString() || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!editingCase) return;
+    if (!form.caseCode || !form.customerName || !form.summary) {
+      toast({ title: "Error", description: "Kode kasus, nama nasabah, dan ringkasan wajib diisi", variant: "destructive" });
+      return;
+    }
+    editMutation.mutate({
+      id: editingCase.id,
+      data: {
+        caseCode: form.caseCode,
+        customerName: form.customerName,
+        summary: form.summary,
+        branch: form.branch || null,
+        dateReceived: form.dateReceived,
+        accountNumber: form.accountNumber || null,
+        picMain: form.picMain || null,
+        bucket: form.bucket,
+        status: form.status,
+        riskLevel: form.riskLevel,
+        priority: form.priority,
+        workflowStage: form.workflowStage,
+        progress: Number(form.progress),
+        targetDate: form.targetDate || null,
+      },
+    });
+  };
+
+  const canEditCase = (c: Case) => user?.role === "superadmin" || c.createdBy === user?.id;
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
@@ -252,6 +333,11 @@ export default function KasusPage() {
                       <p className="text-sm font-medium">{c.progress}%</p>
                       <Progress value={c.progress} className="h-1.5 w-20" />
                     </div>
+                    {canEditCase(c) && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" data-testid={`button-edit-case-${c.id}`} onClick={e => openEditDialog(c, e)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
                     {canDeleteCase(c) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -280,6 +366,91 @@ export default function KasusPage() {
           <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={(o) => { setEditDialogOpen(o); if (!o) { setEditingCase(null); resetForm(); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Kasus</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Kode Kasus *</Label>
+                <Input data-testid="input-edit-case-code" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal Masuk</Label>
+                <Input data-testid="input-edit-case-date" type="date" value={form.dateReceived} onChange={e => setForm({...form, dateReceived: e.target.value})} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Nama Nasabah *</Label>
+                <Input data-testid="input-edit-case-customer" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>No. Akun</Label>
+                <Input data-testid="input-edit-case-account" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Cabang</Label>
+                <Input data-testid="input-edit-case-branch" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>PIC Utama</Label>
+                <Input data-testid="input-edit-case-pic" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Inti Pengaduan *</Label>
+              <Textarea data-testid="input-edit-case-summary" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label>Risk Level</Label>
+                <Select value={form.riskLevel} onValueChange={v => setForm({...form, riskLevel: v})}>
+                  <SelectTrigger data-testid="select-edit-case-risk"><SelectValue /></SelectTrigger>
+                  <SelectContent>{RISK_LEVELS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
+                  <SelectTrigger data-testid="select-edit-case-status"><SelectValue /></SelectTrigger>
+                  <SelectContent>{WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Stage</Label>
+                <Select value={form.workflowStage} onValueChange={v => setForm({...form, workflowStage: v})}>
+                  <SelectTrigger data-testid="select-edit-case-stage"><SelectValue /></SelectTrigger>
+                  <SelectContent>{WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Bucket</Label>
+                <Select value={form.bucket} onValueChange={v => setForm({...form, bucket: v})}>
+                  <SelectTrigger data-testid="select-edit-case-bucket"><SelectValue /></SelectTrigger>
+                  <SelectContent>{BUCKETS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Target</Label>
+                <Input data-testid="input-edit-case-target" type="date" value={form.targetDate} onChange={e => setForm({...form, targetDate: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Progress (%)</Label>
+              <Input data-testid="input-edit-case-progress" type="number" min={0} max={100} value={form.progress} onChange={e => setForm({...form, progress: parseInt(e.target.value) || 0})} />
+            </div>
+            <Button data-testid="button-submit-edit-case" onClick={handleEditSubmit} className="w-full" disabled={editMutation.isPending}>
+              {editMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

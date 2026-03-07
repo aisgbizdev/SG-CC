@@ -87,12 +87,15 @@ client/src/
 - `client/src/components/download-menu.tsx` - dropdown UI component
 - Available on: Aktivitas, Kasus Pengaduan, Tugas pages
 
-## Delete/Archive
+## Edit/Delete/Archive
+- Inline edit: Edit button (pencil icon) on aktivitas and kasus list cards opens edit dialog with pre-filled data
+- Edit permissions: Aktivitas/Kasus - creator OR superadmin can edit
+- Edit uses PATCH `/api/activities/:id` and PATCH `/api/cases/:id`
 - Soft-delete via `isArchived: true` (activities, cases, tasks)
 - List and detail queries filter `isArchived: false` automatically
 - Delete buttons on list cards (trash icon) and detail pages (red "Hapus" button)
 - AlertDialog confirmation before delete
-- Permissions: Aktivitas/Kasus - creator OR owner OR superadmin; Tugas - superadmin/owner only
+- Delete permissions: Aktivitas/Kasus - creator OR owner OR superadmin; Tugas - superadmin/owner only
 - Company access check enforced on task deletion for owners
 
 ## Security & Performance
