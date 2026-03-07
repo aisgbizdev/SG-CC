@@ -143,6 +143,23 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/activities/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const existing = await storage.getActivity(parseInt(req.params.id));
+      if (!existing) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
+      if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!["superadmin", "owner"].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, owner, atau superadmin yang bisa menghapus" });
+      }
+      await storage.updateActivity(existing.id, { isArchived: true });
+      await storage.createAuditLog({ userId: user.id, action: "delete", entityType: "activity", entityId: existing.id, details: `Menghapus aktivitas: ${existing.title}` });
+      res.json({ message: "Aktivitas berhasil dihapus" });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghapus aktivitas" });
+    }
+  });
+
   app.get("/api/cases", requireAuth, async (req, res) => {
     const user = req.user as any;
     const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
@@ -183,6 +200,23 @@ export async function registerRoutes(
       res.json(c);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update kasus" });
+    }
+  });
+
+  app.delete("/api/cases/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const existing = await storage.getCase(parseInt(req.params.id));
+      if (!existing) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+      if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!["superadmin", "owner"].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, owner, atau superadmin yang bisa menghapus" });
+      }
+      await storage.updateCase(existing.id, { isArchived: true });
+      await storage.createAuditLog({ userId: user.id, action: "delete", entityType: "case", entityId: existing.id, details: `Menghapus kasus: ${existing.caseCode}` });
+      res.json({ message: "Kasus berhasil dihapus" });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghapus kasus" });
     }
   });
 
@@ -264,6 +298,20 @@ export async function registerRoutes(
       res.json(task);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update tugas" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", requireRole("superadmin", "owner"), async (req, res) => {
+    try {
+      const user = req.user as any;
+      const existing = await storage.getTask(parseInt(req.params.id));
+      if (!existing) return res.status(404).json({ message: "Tugas tidak ditemukan" });
+      if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      await storage.updateTask(existing.id, { isArchived: true });
+      await storage.createAuditLog({ userId: user.id, action: "delete", entityType: "task", entityId: existing.id, details: `Menghapus tugas: ${existing.title}` });
+      res.json({ message: "Tugas berhasil dihapus" });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghapus tugas" });
     }
   });
 

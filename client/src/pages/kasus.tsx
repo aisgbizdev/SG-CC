@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, RiskBadge } from "./dashboard";
-import { Plus, Search, Filter, ArrowRight } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, Search, Filter, ArrowRight, Trash2 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import type { Case, Company } from "@shared/schema";
 
@@ -85,6 +86,17 @@ export default function KasusPage() {
 
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "du", "dk"].includes(user?.role || "");
+  const canDeleteCase = (c: Case) => ["superadmin", "owner"].includes(user?.role || "") || c.createdBy === user?.id;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => { await apiRequest("DELETE", `/api/cases/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Kasus berhasil dihapus" });
+    },
+    onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
+  });
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
@@ -214,35 +226,52 @@ export default function KasusPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(c => (
-            <Link key={c.id} href={`/kasus/${c.id}`}>
-              <Card className="hover-elevate cursor-pointer" data-testid={`card-case-${c.id}`}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-medium text-sm">{c.caseCode}</h3>
-                        <RiskBadge level={c.riskLevel} />
-                        <StatusBadge status={c.status} />
-                      </div>
-                      <p className="text-sm">{c.customerName}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{c.summary}</p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        <span>{getCompanyName(c.companyId)}</span>
-                        {c.branch && <span>{c.branch}</span>}
-                        <span>{c.workflowStage}</span>
-                      </div>
+            <Card key={c.id} className="hover-elevate" data-testid={`card-case-${c.id}`}>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <Link href={`/kasus/${c.id}`} className="flex-1 min-w-0 space-y-1.5 cursor-pointer">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-sm">{c.caseCode}</h3>
+                      <RiskBadge level={c.riskLevel} />
+                      <StatusBadge status={c.status} />
                     </div>
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{c.progress}%</p>
-                        <Progress value={c.progress} className="h-1.5 w-20" />
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm">{c.customerName}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{c.summary}</p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                      <span>{getCompanyName(c.companyId)}</span>
+                      {c.branch && <span>{c.branch}</span>}
+                      <span>{c.workflowStage}</span>
                     </div>
+                  </Link>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{c.progress}%</p>
+                      <Progress value={c.progress} className="h-1.5 w-20" />
+                    </div>
+                    {canDeleteCase(c) && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" data-testid={`button-delete-case-${c.id}`} onClick={e => e.stopPropagation()}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Hapus Kasus?</AlertDialogTitle>
+                            <AlertDialogDescription>Kasus "{c.caseCode} - {c.customerName}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMutation.mutate(c.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" data-testid={`button-confirm-delete-case-${c.id}`}>Hapus</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    <Link href={`/kasus/${c.id}`}><ArrowRight className="w-4 h-4 text-muted-foreground" /></Link>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

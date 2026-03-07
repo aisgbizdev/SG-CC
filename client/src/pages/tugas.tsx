@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
-import { Plus, Search, Filter, Calendar, User, ArrowRight } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import type { Task, Company } from "@shared/schema";
 
@@ -88,7 +89,19 @@ export default function TugasPage() {
   const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "owner"].includes(user?.role || "");
+  const canDeleteTask = ["superadmin", "owner"].includes(user?.role || "");
   const assignableUsers = usersData?.filter((u: any) => ["du", "dk", "superadmin"].includes(u.role)) || [];
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => { await apiRequest("DELETE", `/api/tasks/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Tugas berhasil dihapus" });
+      setSelectedTask(null);
+    },
+    onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
+  });
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
@@ -262,6 +275,25 @@ export default function TugasPage() {
                     }} />
                   </div>
                 </div>
+              )}
+              {canDeleteTask && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-task-${selectedTask.id}`}>
+                      <Trash2 className="w-4 h-4 mr-1" /> Hapus Tugas
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Hapus Tugas?</AlertDialogTitle>
+                      <AlertDialogDescription>Tugas "{selectedTask.title}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteMutation.mutate(selectedTask.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" data-testid={`button-confirm-delete-task-${selectedTask.id}`}>Hapus</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           </DialogContent>

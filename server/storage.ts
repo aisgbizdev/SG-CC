@@ -132,7 +132,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActivity(id: number): Promise<Activity | undefined> {
-    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+    const [activity] = await db.select().from(activities).where(and(eq(activities.id, id), eq(activities.isArchived, false)));
     return activity;
   }
 
@@ -154,7 +154,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCase(id: number): Promise<Case | undefined> {
-    const [c] = await db.select().from(cases).where(eq(cases.id, id));
+    const [c] = await db.select().from(cases).where(and(eq(cases.id, id), eq(cases.isArchived, false)));
     return c;
   }
 
@@ -186,7 +186,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTask(id: number): Promise<Task | undefined> {
-    const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
+    const [task] = await db.select().from(tasks).where(and(eq(tasks.id, id), eq(tasks.isArchived, false)));
     return task;
   }
 

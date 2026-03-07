@@ -87,6 +87,14 @@ client/src/
 - `client/src/components/download-menu.tsx` - dropdown UI component
 - Available on: Aktivitas, Kasus Pengaduan, Tugas pages
 
+## Delete/Archive
+- Soft-delete via `isArchived: true` (activities, cases, tasks)
+- List and detail queries filter `isArchived: false` automatically
+- Delete buttons on list cards (trash icon) and detail pages (red "Hapus" button)
+- AlertDialog confirmation before delete
+- Permissions: Aktivitas/Kasus - creator OR owner OR superadmin; Tugas - superadmin/owner only
+- Company access check enforced on task deletion for owners
+
 ## Database
 - PostgreSQL via DATABASE_URL
 - Schema push: `npm run db:push`

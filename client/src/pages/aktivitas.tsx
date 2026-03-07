@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
-import { Plus, Search, Filter, Calendar, ArrowRight } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, Search, Filter, Calendar, ArrowRight, Trash2 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
 
@@ -83,7 +84,18 @@ export default function AktivitasPage() {
 
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "du", "dk"].includes(user?.role || "");
+  const canDelete = (a: Activity) => ["superadmin", "owner"].includes(user?.role || "") || a.createdBy === user?.id;
   const activityCategories = categories?.filter(c => c.type === "activity") || [];
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => { await apiRequest("DELETE", `/api/activities/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Aktivitas berhasil dihapus" });
+    },
+    onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
+  });
 
   const statuses = ["Direncanakan", "Sedang Dikerjakan", "Menunggu Review", "Selesai", "Tertunda", "Overdue"];
 
@@ -216,33 +228,50 @@ export default function AktivitasPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(a => (
-            <Link key={a.id} href={`/aktivitas/${a.id}`}>
-              <Card className="hover-elevate cursor-pointer" data-testid={`card-activity-${a.id}`}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-medium text-sm">{a.title}</h3>
-                        <StatusBadge status={a.status} />
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{a.date}</span>
-                        <span>{getCompanyName(a.companyId)}</span>
-                        {a.priority === "High" && <span className="text-red-500 font-medium">Prioritas Tinggi</span>}
-                      </div>
-                      {a.description && <p className="text-xs text-muted-foreground line-clamp-1">{a.description}</p>}
+            <Card key={a.id} className="hover-elevate" data-testid={`card-activity-${a.id}`}>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <Link href={`/aktivitas/${a.id}`} className="flex-1 min-w-0 space-y-1 cursor-pointer">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-sm">{a.title}</h3>
+                      <StatusBadge status={a.status} />
                     </div>
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{a.progress}%</p>
-                        <Progress value={a.progress} className="h-1.5 w-20" />
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{a.date}</span>
+                      <span>{getCompanyName(a.companyId)}</span>
+                      {a.priority === "High" && <span className="text-red-500 font-medium">Prioritas Tinggi</span>}
                     </div>
+                    {a.description && <p className="text-xs text-muted-foreground line-clamp-1">{a.description}</p>}
+                  </Link>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{a.progress}%</p>
+                      <Progress value={a.progress} className="h-1.5 w-20" />
+                    </div>
+                    {canDelete(a) && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" data-testid={`button-delete-activity-${a.id}`} onClick={e => e.stopPropagation()}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Hapus Aktivitas?</AlertDialogTitle>
+                            <AlertDialogDescription>Aktivitas "{a.title}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMutation.mutate(a.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" data-testid={`button-confirm-delete-activity-${a.id}`}>Hapus</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    <Link href={`/aktivitas/${a.id}`}><ArrowRight className="w-4 h-4 text-muted-foreground" /></Link>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

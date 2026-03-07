@@ -14,7 +14,9 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge, RiskBadge } from "./dashboard";
-import { ArrowLeft, MessageSquare, Send, User, Clock, FileText } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2 } from "lucide-react";
+import { useLocation as useWouterLocation } from "wouter";
 import type { Case, CaseUpdate, Comment } from "@shared/schema";
 
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
@@ -82,8 +84,21 @@ export default function KasusDetailPage() {
   const getUserName = (userId: number) => usersData?.find((u: any) => u.id === userId)?.fullName || "Unknown";
   const getCompanyName = (companyId: number) => companiesData?.find((c: any) => c.id === companyId)?.name || "-";
 
+  const [, setLocation] = useWouterLocation();
   const canEdit = user?.role === "superadmin" || (["du", "dk"].includes(user?.role || "") && caseData?.createdBy === user?.id);
   const canUpdate = ["superadmin", "du", "dk"].includes(user?.role || "");
+  const canDelete = ["superadmin", "owner"].includes(user?.role || "") || caseData?.createdBy === user?.id;
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => { await apiRequest("DELETE", `/api/cases/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Kasus berhasil dihapus" });
+      setLocation("/kasus");
+    },
+    onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
+  });
 
   if (isLoading) return <div className="p-6"><Skeleton className="h-96" /></div>;
   if (!caseData) return <div className="p-6"><p className="text-muted-foreground">Kasus tidak ditemukan</p></div>;
@@ -113,7 +128,26 @@ export default function KasusDetailPage() {
           </div>
           <p className="text-sm text-muted-foreground">{caseData.customerName} - {getCompanyName(caseData.companyId)}</p>
         </div>
-        {canEdit && !editing && <Button size="sm" onClick={startEdit} data-testid="button-edit-case">Edit</Button>}
+        <div className="flex items-center gap-2">
+          {canEdit && !editing && <Button size="sm" onClick={startEdit} data-testid="button-edit-case">Edit</Button>}
+          {canDelete && !editing && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" data-testid="button-delete-case"><Trash2 className="w-4 h-4 mr-1" /> Hapus</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Hapus Kasus?</AlertDialogTitle>
+                  <AlertDialogDescription>Kasus "{caseData.caseCode} - {caseData.customerName}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </div>
 
       {editing ? (

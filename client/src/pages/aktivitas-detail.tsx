@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
-import { ArrowLeft, MessageSquare, Send, Calendar, User } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ArrowLeft, MessageSquare, Send, Calendar, User, Trash2 } from "lucide-react";
+import { useLocation as useWouterLocation } from "wouter";
 import type { Activity, Comment, User as UserType } from "@shared/schema";
 
 export default function AktivitasDetailPage() {
@@ -59,8 +61,21 @@ export default function AktivitasDetailPage() {
   const getUserName = (userId: number) => usersData?.find((u: any) => u.id === userId)?.fullName || "Unknown";
   const getCompanyName = (companyId: number) => companiesData?.find((c: any) => c.id === companyId)?.name || "-";
 
+  const [, setLocation] = useWouterLocation();
   const canEdit = user?.role === "superadmin" ||
     (["du", "dk"].includes(user?.role || "") && activity?.createdBy === user?.id);
+  const canDelete = ["superadmin", "owner"].includes(user?.role || "") || activity?.createdBy === user?.id;
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => { await apiRequest("DELETE", `/api/activities/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({ title: "Berhasil", description: "Aktivitas berhasil dihapus" });
+      setLocation("/aktivitas");
+    },
+    onError: (err: any) => { toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" }); },
+  });
 
   if (isLoading) return <div className="p-6"><Skeleton className="h-96" /></div>;
   if (!activity) return <div className="p-6"><p className="text-muted-foreground">Aktivitas tidak ditemukan</p></div>;
@@ -83,7 +98,26 @@ export default function AktivitasDetailPage() {
           <h1 className="text-xl font-bold" data-testid="text-activity-title">{activity.title}</h1>
           <p className="text-sm text-muted-foreground">{getCompanyName(activity.companyId)}</p>
         </div>
-        {canEdit && !editing && <Button size="sm" onClick={startEdit} data-testid="button-edit-activity">Edit</Button>}
+        <div className="flex items-center gap-2">
+          {canEdit && !editing && <Button size="sm" onClick={startEdit} data-testid="button-edit-activity">Edit</Button>}
+          {canDelete && !editing && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" data-testid="button-delete-activity"><Trash2 className="w-4 h-4 mr-1" /> Hapus</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Hapus Aktivitas?</AlertDialogTitle>
+                  <AlertDialogDescription>Aktivitas "{activity.title}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </div>
 
       {editing ? (
