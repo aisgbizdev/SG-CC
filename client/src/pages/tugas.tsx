@@ -15,7 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown, Pencil, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown, Pencil, X, BarChart3 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -316,6 +317,56 @@ export default function TugasPage() {
           </Select>
         </div>
       </div>
+
+      {!isLoading && !isError && tasks && tasks.length > 0 && (() => {
+        const src = filtered;
+        const total = src.length;
+        const byStatus: Record<string, number> = {};
+        const byPriority: Record<string, number> = {};
+        src.forEach(t => {
+          byStatus[t.status] = (byStatus[t.status] || 0) + 1;
+          byPriority[t.priority] = (byPriority[t.priority] || 0) + 1;
+        });
+        const avgProgress = total > 0 ? Math.round(src.reduce((s, t) => s + t.progress, 0) / total) : 0;
+        const overdue = src.filter(t => t.deadline && t.status !== "Selesai" && new Date(t.deadline) < new Date()).length;
+        return (
+          <Card data-testid="card-task-summary">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold flex-wrap">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                <span>Ringkasan</span>
+                <Badge variant="secondary" className="ml-1" data-testid="text-total-tasks">{total} tugas</Badge>
+                <Badge variant="outline" className="ml-1">Rata-rata progress: {avgProgress}%</Badge>
+                {overdue > 0 && <Badge variant="destructive" className="ml-1">{overdue} melewati deadline</Badge>}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1.5">Status</p>
+                  <div className="space-y-1">
+                    {STATUSES.filter(s => byStatus[s]).map(s => (
+                      <div key={s} className="flex items-center justify-between gap-2">
+                        <span>{s}</span>
+                        <span className="font-medium">{byStatus[s]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1.5">Prioritas</p>
+                  <div className="space-y-1">
+                    {["High", "Medium", "Low"].map(p => (
+                      <div key={p} className="flex items-center justify-between">
+                        <span className={p === "High" ? "text-red-600 dark:text-red-400 font-medium" : p === "Medium" ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}>{p}</span>
+                        <span className="font-medium">{byPriority[p] || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {isError ? (
         <QueryError message="Gagal memuat data tugas. Silakan coba lagi." onRetry={() => refetch()} />

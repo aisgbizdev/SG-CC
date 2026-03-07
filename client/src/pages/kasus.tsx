@@ -16,7 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -370,6 +371,65 @@ export default function KasusPage() {
           </Select>
         </div>
       </div>
+
+      {!isLoading && !isError && cases && cases.length > 0 && (() => {
+        const src = filtered;
+        const total = src.length;
+        const byRisk = { High: 0, Medium: 0, Low: 0 } as Record<string, number>;
+        const byBucket: Record<string, number> = {};
+        const byStage: Record<string, number> = {};
+        src.forEach(c => {
+          byRisk[c.riskLevel] = (byRisk[c.riskLevel] || 0) + 1;
+          byBucket[c.bucket] = (byBucket[c.bucket] || 0) + 1;
+          byStage[c.workflowStage] = (byStage[c.workflowStage] || 0) + 1;
+        });
+        return (
+          <Card data-testid="card-case-summary">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                <span>Ringkasan</span>
+                <Badge variant="secondary" className="ml-1" data-testid="text-total-cases">{total} kasus</Badge>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Risk Level</p>
+                  <div className="space-y-1">
+                    {["High", "Medium", "Low"].map(r => (
+                      <div key={r} className="flex items-center justify-between">
+                        <span className={r === "High" ? "text-red-600 dark:text-red-400 font-medium" : r === "Medium" ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}>{r}</span>
+                        <span className="font-medium">{byRisk[r] || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><FileWarning className="w-3 h-3" /> Bucket</p>
+                  <div className="space-y-1 max-h-28 overflow-y-auto">
+                    {Object.entries(byBucket).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between gap-2">
+                        <span className="truncate">{k}</span>
+                        <span className="font-medium flex-shrink-0">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> Stage</p>
+                  <div className="space-y-1 max-h-28 overflow-y-auto">
+                    {Object.entries(byStage).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between gap-2">
+                        <span className="truncate">{k}</span>
+                        <span className="font-medium flex-shrink-0">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {isError ? (
         <QueryError message="Gagal memuat data kasus. Silakan coba lagi." onRetry={() => refetch()} />
