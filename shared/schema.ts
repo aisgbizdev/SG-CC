@@ -48,6 +48,7 @@ export const users = pgTable("users", {
   birthDate: text("birth_date"),
   branchCount: integer("branch_count"),
   position: text("position"),
+  avatarUrl: text("avatar_url"),
   profileCompleted: boolean("profile_completed").notNull().default(false),
   secretQuestion: text("secret_question"),
   secretAnswer: text("secret_answer"),

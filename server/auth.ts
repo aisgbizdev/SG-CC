@@ -102,6 +102,7 @@ export function setupAuth(app: Express) {
         companyId: user.companyId,
         isActive: user.isActive,
         profileCompleted: user.profileCompleted,
+        avatarUrl: user.avatarUrl,
       });
     } catch (err) {
       done(err);

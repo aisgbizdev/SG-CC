@@ -11,6 +11,7 @@ type AuthUser = {
   companyId: number | null;
   isActive: boolean;
   profileCompleted: boolean;
+  avatarUrl: string | null;
 };
 
 type AuthContextType = {

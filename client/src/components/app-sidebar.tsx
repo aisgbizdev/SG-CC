@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Activity, FileWarning, ListTodo, Megaphone, Mail, Bell,
   Settings, Users, Building2, Shield, LogOut, ChevronDown, BarChart3,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 
@@ -106,6 +106,7 @@ export function AppSidebar() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 w-full p-2 rounded-md text-left" data-testid="button-user-menu">
               <Avatar className="w-8 h-8">
+                {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.fullName} /> : null}
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">

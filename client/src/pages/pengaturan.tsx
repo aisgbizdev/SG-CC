@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Lock, User, Shield, Building2, Pencil } from "lucide-react";
 import { Link } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -64,6 +64,7 @@ export default function PengaturanPage() {
         <CardContent className="px-5 pb-5">
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16">
+              {user?.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.fullName} /> : null}
               <AvatarFallback className="bg-primary text-primary-foreground text-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1">

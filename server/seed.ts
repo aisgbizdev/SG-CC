@@ -25,6 +25,7 @@ async function runMigrations() {
       )
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_branches_company_id ON branches(company_id)`);
+    await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);

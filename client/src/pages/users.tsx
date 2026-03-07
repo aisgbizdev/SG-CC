@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Shield, Building2, User, KeyRound } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -181,6 +181,7 @@ export default function UsersPage() {
               <Card key={u.id} data-testid={`card-user-${u.id}`}>
                 <CardContent className="p-3 flex items-center gap-3">
                   <Avatar className="w-10 h-10">
+                    {u.avatarUrl ? <AvatarImage src={u.avatarUrl} alt={u.fullName} /> : null}
                     <AvatarFallback className="bg-primary/10 text-primary text-sm">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
