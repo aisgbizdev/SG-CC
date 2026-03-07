@@ -79,6 +79,7 @@ export interface IStorage {
   getKpiAssessment(id: number): Promise<KpiAssessment | undefined>;
   createKpiAssessment(data: InsertKpiAssessment): Promise<KpiAssessment>;
   calculateKpiForUser(userId: number, period: string): Promise<any>;
+  calculateLiveKpi(userId: number): Promise<any>;
 
   transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T>;
 }
@@ -444,6 +445,139 @@ export class DatabaseStorage implements IStorage {
       tasksTotal: taskTotal?.count || 0,
       tasksCompleted: taskCompleted?.count || 0,
       avgProgress: avgP,
+    };
+  }
+
+  async calculateLiveKpi(userId: number): Promise<any> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User tidak ditemukan");
+
+    const actBase = and(eq(activities.isArchived, false), eq(activities.createdBy, userId));
+    const caseBase = and(eq(cases.isArchived, false), eq(cases.createdBy, userId));
+    const taskBase = and(eq(tasks.isArchived, false), eq(tasks.assignedTo, userId));
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const [
+      [actTotal], [actCompleted],
+      [caseTotal], [caseCompleted],
+      [taskTotal], [taskCompleted],
+      [actAvg], [caseAvg], [taskAvg],
+      [taskOnTime], [taskWithDeadline],
+      [actOnTime], [actWithTarget],
+      [caseOnTime], [caseWithTarget],
+      [taskOverdue],
+      [caseOverdue],
+      [actOverdue],
+    ] = await Promise.all([
+      db.select({ count: count() }).from(activities).where(actBase),
+      db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"))),
+      db.select({ count: count() }).from(cases).where(caseBase),
+      db.select({ count: count() }).from(cases).where(and(caseBase, eq(cases.status, "Closed"))),
+      db.select({ count: count() }).from(tasks).where(taskBase),
+      db.select({ count: count() }).from(tasks).where(and(taskBase, eq(tasks.status, "Selesai"))),
+      db.select({ avg: sql<number>`COALESCE(AVG(${activities.progress}), 0)` }).from(activities).where(actBase),
+      db.select({ avg: sql<number>`COALESCE(AVG(${cases.progress}), 0)` }).from(cases).where(caseBase),
+      db.select({ avg: sql<number>`COALESCE(AVG(${tasks.progress}), 0)` }).from(tasks).where(taskBase),
+      db.select({ count: count() }).from(tasks).where(and(taskBase, eq(tasks.status, "Selesai"), sql`${tasks.updatedAt}::date <= ${tasks.deadline}::date`)),
+      db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.deadline} IS NOT NULL`)),
+      db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"), sql`${activities.updatedAt}::date <= COALESCE(${activities.targetDate}::date, ${activities.updatedAt}::date)`)),
+      db.select({ count: count() }).from(activities).where(and(actBase, sql`${activities.targetDate} IS NOT NULL`)),
+      db.select({ count: count() }).from(cases).where(and(caseBase, eq(cases.status, "Closed"), sql`${cases.updatedAt}::date <= COALESCE(${cases.targetDate}::date, ${cases.updatedAt}::date)`)),
+      db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.targetDate} IS NOT NULL`)),
+      db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
+      db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
+      db.select({ count: count() }).from(activities).where(and(actBase, sql`${activities.status} != 'Selesai'`, sql`${activities.targetDate}::date < ${today}::date`)),
+    ]);
+
+    const aTotal = actTotal?.count || 0;
+    const aCompleted = actCompleted?.count || 0;
+    const cTotal = caseTotal?.count || 0;
+    const cCompleted = caseCompleted?.count || 0;
+    const tTotal = taskTotal?.count || 0;
+    const tCompleted = taskCompleted?.count || 0;
+
+    const totalItems = aTotal + cTotal + tTotal;
+
+    if (totalItems === 0) {
+      const zeroScores = {
+        penyelesaianTugas: 0, penyelesaianKasus: 0, penyelesaianAktivitas: 0,
+        ketepatanWaktu: 0, progressRataRata: 0, responsivitas: 0, bebanKerja: 0, konsistensi: 0,
+      };
+      return {
+        userId, fullName: user.fullName, role: user.role, companyId: user.companyId,
+        scores: zeroScores, totalScore: 0,
+        details: { activitiesTotal: 0, activitiesCompleted: 0, casesTotal: 0, casesCompleted: 0,
+          tasksTotal: 0, tasksCompleted: 0, avgProgress: 0, totalOverdue: 0, totalOnTime: 0, totalWithDeadline: 0, totalItems: 0 },
+      };
+    }
+
+    const penyelesaianTugas = tTotal > 0 ? Math.round((tCompleted / tTotal) * 100) : 0;
+    const penyelesaianKasus = cTotal > 0 ? Math.round((cCompleted / cTotal) * 100) : 0;
+    const penyelesaianAktivitas = aTotal > 0 ? Math.round((aCompleted / aTotal) * 100) : 0;
+
+    const totalWithDeadline = (taskWithDeadline?.count || 0) + (actWithTarget?.count || 0) + (caseWithTarget?.count || 0);
+    const totalOnTime = (taskOnTime?.count || 0) + (actOnTime?.count || 0) + (caseOnTime?.count || 0);
+    const ketepatanWaktu = totalWithDeadline > 0 ? Math.round((totalOnTime / totalWithDeadline) * 100) : 0;
+
+    const progressParts: number[] = [];
+    if (aTotal > 0) progressParts.push(Number(actAvg?.avg) || 0);
+    if (cTotal > 0) progressParts.push(Number(caseAvg?.avg) || 0);
+    if (tTotal > 0) progressParts.push(Number(taskAvg?.avg) || 0);
+    const avgProgress = progressParts.length > 0 ? Math.round(progressParts.reduce((a, b) => a + b, 0) / progressParts.length) : 0;
+
+    const totalOverdue = (taskOverdue?.count || 0) + (caseOverdue?.count || 0) + (actOverdue?.count || 0);
+    const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
+    const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
+
+    const CAPACITY_THRESHOLD = 20;
+    const bebanKerja = Math.min(100, Math.round((totalItems / CAPACITY_THRESHOLD) * 100));
+
+    const completedTotal = aCompleted + cCompleted + tCompleted;
+    const konsistensi = Math.round(Math.min(100, (completedTotal / totalItems) * 100));
+
+    const scores = {
+      penyelesaianTugas,
+      penyelesaianKasus,
+      penyelesaianAktivitas,
+      ketepatanWaktu,
+      progressRataRata: avgProgress,
+      responsivitas,
+      bebanKerja,
+      konsistensi,
+    };
+
+    const totalScore = Math.round(
+      (penyelesaianTugas * 0.15) +
+      (penyelesaianKasus * 0.20) +
+      (penyelesaianAktivitas * 0.15) +
+      (ketepatanWaktu * 0.15) +
+      (avgProgress * 0.10) +
+      (responsivitas * 0.10) +
+      (bebanKerja * 0.05) +
+      (konsistensi * 0.10)
+    );
+
+    return {
+      userId,
+      fullName: user.fullName,
+      role: user.role,
+      companyId: user.companyId,
+      scores,
+      totalScore,
+      details: {
+        activitiesTotal: aTotal,
+        activitiesCompleted: aCompleted,
+        casesTotal: cTotal,
+        casesCompleted: cCompleted,
+        tasksTotal: tTotal,
+        tasksCompleted: tCompleted,
+        avgProgress,
+        totalOverdue,
+        totalOnTime,
+        totalWithDeadline,
+        totalItems,
+      },
     };
   }
 

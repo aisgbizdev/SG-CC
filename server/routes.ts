@@ -689,6 +689,37 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/kpi/live", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (["superadmin", "owner"].includes(user.role)) {
+        const allUsers = await storage.getUsers();
+        const duDkUsers = allUsers.filter(u => ["du", "dk"].includes(u.role) && u.isActive);
+        const results = await Promise.all(duDkUsers.map(u => storage.calculateLiveKpi(u.id)));
+        res.json(results);
+      } else {
+        const result = await storage.calculateLiveKpi(user.id);
+        res.json([result]);
+      }
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghitung KPI live" });
+    }
+  });
+
+  app.get("/api/kpi/live/:userId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const targetUserId = parseInt(req.params.userId);
+      if (!["superadmin", "owner"].includes(user.role) && user.id !== targetUserId) {
+        return res.status(403).json({ message: "Akses ditolak" });
+      }
+      const result = await storage.calculateLiveKpi(targetUserId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghitung KPI" });
+    }
+  });
+
   app.get("/api/kpi", requireAuth, async (req, res) => {
     const user = req.user as any;
     if (["superadmin", "owner"].includes(user.role)) {
@@ -728,24 +759,41 @@ export async function registerRoutes(
     try {
       const kpiBodySchema = z.object({
         userId: z.number().int(),
-        period: z.string().min(1),
-        activitiesCompleted: z.number().int().default(0),
-        activitiesTotal: z.number().int().default(0),
-        casesCompleted: z.number().int().default(0),
-        casesTotal: z.number().int().default(0),
-        tasksCompleted: z.number().int().default(0),
-        tasksTotal: z.number().int().default(0),
-        avgProgress: z.number().int().default(0),
-        qualityScore: z.number().int().min(0).max(100).default(0),
-        timelinessScore: z.number().int().min(0).max(100).default(0),
-        initiativeScore: z.number().int().min(0).max(100).default(0),
-        totalScore: z.number().int().min(0).max(100).default(0),
+        period: z.string().regex(/^\d{4}-Q[1-4]$/, "Format period: YYYY-Q[1-4]"),
+        strengths: z.string().nullable().optional(),
+        improvements: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
       });
       const parsed = kpiBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+
+      const liveData = await storage.calculateLiveKpi(parsed.data.userId);
       const assessor = req.user as any;
-      const kpi = await storage.createKpiAssessment({ ...parsed.data, assessorId: assessor.id });
+
+      const kpi = await storage.createKpiAssessment({
+        userId: parsed.data.userId,
+        period: parsed.data.period,
+        assessorId: assessor.id,
+        activitiesCompleted: liveData.details.activitiesCompleted,
+        activitiesTotal: liveData.details.activitiesTotal,
+        casesCompleted: liveData.details.casesCompleted,
+        casesTotal: liveData.details.casesTotal,
+        tasksCompleted: liveData.details.tasksCompleted,
+        tasksTotal: liveData.details.tasksTotal,
+        avgProgress: liveData.details.avgProgress,
+        qualityScore: liveData.scores.penyelesaianAktivitas,
+        timelinessScore: liveData.scores.ketepatanWaktu,
+        initiativeScore: liveData.scores.responsivitas,
+        communicationScore: liveData.scores.penyelesaianKasus,
+        regulationScore: liveData.scores.penyelesaianTugas,
+        problemSolvingScore: liveData.scores.progressRataRata,
+        teamworkScore: liveData.scores.bebanKerja,
+        responsibilityScore: liveData.scores.konsistensi,
+        totalScore: liveData.totalScore,
+        notes: parsed.data.notes || null,
+        strengths: parsed.data.strengths || null,
+        improvements: parsed.data.improvements || null,
+      });
       res.json(kpi);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal menyimpan KPI" });
