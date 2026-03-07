@@ -392,7 +392,7 @@ export default function KpiPage() {
                             </Badge>
                             <Badge className={gradeCls}>{grade} - {label}</Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas</span>
                             <span className="flex items-center gap-1"><FileWarning className="w-3 h-3" /> {kpi.details.casesCompleted}/{kpi.details.casesTotal} kasus</span>
                             <span className="flex items-center gap-1"><ListTodo className="w-3 h-3" /> {kpi.details.tasksCompleted}/{kpi.details.tasksTotal} tugas</span>
@@ -425,16 +425,16 @@ export default function KpiPage() {
                                   const val = kpi.scores[a.key] || 0;
                                   const Icon = a.icon;
                                   return (
-                                    <div key={a.key} className="flex items-center gap-2">
+                                    <div key={a.key} className="flex items-center gap-1.5">
                                       <Icon className={`w-3.5 h-3.5 ${a.color} flex-shrink-0`} />
-                                      <span className="text-xs w-32 truncate" title={a.label}>{a.label}</span>
-                                      <div className="flex-1 bg-muted rounded-full h-2">
+                                      <span className="text-xs w-24 sm:w-32 truncate" title={a.label}>{a.label}</span>
+                                      <div className="flex-1 bg-muted rounded-full h-2 min-w-[40px]">
                                         <div
                                           className={`h-2 rounded-full transition-all ${val >= 85 ? "bg-emerald-500" : val >= 70 ? "bg-blue-500" : val >= 55 ? "bg-amber-500" : "bg-red-500"}`}
                                           style={{ width: `${val}%` }}
                                         />
                                       </div>
-                                      <span className="text-xs font-medium w-8 text-right">{val}</span>
+                                      <span className="text-xs font-medium w-7 text-right">{val}</span>
                                     </div>
                                   );
                                 })}
@@ -442,7 +442,7 @@ export default function KpiPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-3 text-center">
+                          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
                             <Card className="bg-muted/50">
                               <CardContent className="p-3">
                                 <p className="text-lg font-bold">{kpi.details.totalItems}</p>
@@ -513,7 +513,7 @@ export default function KpiPage() {
                             <Badge variant="secondary">{kpi.period}</Badge>
                             <Badge className={gradeCls}>{grade} - {label}</Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             <span>Aktivitas: {kpi.activitiesCompleted}/{kpi.activitiesTotal}</span>
                             <span>Kasus: {kpi.casesCompleted}/{kpi.casesTotal}</span>
                             <span>Tugas: {kpi.tasksCompleted}/{kpi.tasksTotal}</span>
@@ -539,16 +539,16 @@ export default function KpiPage() {
                                   const val = (mappedScores as any)[a.key] || 0;
                                   const Icon = a.icon;
                                   return (
-                                    <div key={a.key} className="flex items-center gap-2">
+                                    <div key={a.key} className="flex items-center gap-1.5">
                                       <Icon className={`w-3.5 h-3.5 ${a.color} flex-shrink-0`} />
-                                      <span className="text-xs w-32 truncate">{a.label}</span>
-                                      <div className="flex-1 bg-muted rounded-full h-2">
+                                      <span className="text-xs w-24 sm:w-32 truncate">{a.label}</span>
+                                      <div className="flex-1 bg-muted rounded-full h-2 min-w-[40px]">
                                         <div
                                           className={`h-2 rounded-full ${val >= 85 ? "bg-emerald-500" : val >= 70 ? "bg-blue-500" : val >= 55 ? "bg-amber-500" : "bg-red-500"}`}
                                           style={{ width: `${val}%` }}
                                         />
                                       </div>
-                                      <span className="text-xs font-medium w-8 text-right">{val}</span>
+                                      <span className="text-xs font-medium w-7 text-right">{val}</span>
                                     </div>
                                   );
                                 })}
