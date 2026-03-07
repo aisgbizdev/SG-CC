@@ -83,5 +83,7 @@ export async function seedData() {
   await storage.createNotification({ userId: dk_sgb.id, type: "task_assigned", title: "Tugas Baru", message: "Anda mendapat tugas: Tindak Lanjut Kasus SGB-2024-001", entityType: "task", entityId: 2, priority: "high" });
   await storage.createNotification({ userId: dk_kpf.id, type: "task_assigned", title: "Tugas Baru", message: "Anda mendapat tugas: Laporan Kepatuhan Triwulan", entityType: "task", entityId: 4, priority: "high" });
 
+  await db.execute(`UPDATE users SET profile_completed = true WHERE role IN ('superadmin', 'owner')`);
+
   console.log("Seed data selesai!");
 }
