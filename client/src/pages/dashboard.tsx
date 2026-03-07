@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import type { Activity as ActivityType, Case } from "@shared/schema";
 
-function StatCard({ title, value, icon: Icon, color, subtitle }: {
-  title: string; value: number | string; icon: any; color: string; subtitle?: string;
+function StatCard({ title, value, icon: Icon, color, subtitle, href }: {
+  title: string; value: number | string; icon: any; color: string; subtitle?: string; href?: string;
 }) {
-  return (
-    <Card>
+  const content = (
+    <Card className={href ? "cursor-pointer hover-elevate" : ""} data-testid={`stat-card-${title.toLowerCase().replace(/\s+/g, "-")}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-1">
           <div className="space-y-1">
@@ -31,6 +31,8 @@ function StatCard({ title, value, icon: Icon, color, subtitle }: {
       </CardContent>
     </Card>
   );
+  if (href) return <Link href={href}>{content}</Link>;
+  return content;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -118,10 +120,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Aktivitas" value={stats?.totalActivities || 0} icon={Activity} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" />
-        <StatCard title="Kasus Aktif" value={stats?.activeCases || 0} icon={FileWarning} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" subtitle={`${stats?.overdueCases || 0} overdue`} />
-        <StatCard title="Tugas Pending" value={stats?.pendingTasks || 0} icon={ListTodo} color="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" />
-        <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" />
+        <StatCard title="Total Aktivitas" value={stats?.totalActivities || 0} icon={Activity} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" href="/aktivitas" />
+        <StatCard title="Kasus Aktif" value={stats?.activeCases || 0} icon={FileWarning} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" subtitle={`${stats?.overdueCases || 0} overdue`} href="/kasus" />
+        <StatCard title="Tugas Pending" value={stats?.pendingTasks || 0} icon={ListTodo} color="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" href="/tugas" />
+        <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" href="/pengumuman" />
       </div>
 
       {(stats?.overdueCases > 0) && (

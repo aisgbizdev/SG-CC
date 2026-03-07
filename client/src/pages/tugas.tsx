@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Task, Company } from "@shared/schema";
@@ -26,6 +26,9 @@ export default function TugasPage() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [assigneeFilter, setAssigneeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("deadline-desc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,11 +85,34 @@ export default function TugasPage() {
     });
   };
 
-  const filtered = tasks?.filter(t => {
-    const matchSearch = t.title.toLowerCase().includes(search.toLowerCase());
+  const priorityOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+
+  const filtered = (tasks?.filter(t => {
+    const matchSearch = t.title.toLowerCase().includes(search.toLowerCase()) ||
+      (t.description || "").toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || t.status === statusFilter;
-    return matchSearch && matchStatus;
-  }) || [];
+    const matchPriority = priorityFilter === "all" || t.priority === priorityFilter;
+    const matchAssignee = assigneeFilter === "all" || t.assignedTo?.toString() === assigneeFilter;
+    return matchSearch && matchStatus && matchPriority && matchAssignee;
+  }) || []).sort((a, b) => {
+    switch (sortBy) {
+      case "deadline-desc":
+        if (!a.deadline && !b.deadline) return 0;
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return b.deadline.localeCompare(a.deadline);
+      case "deadline-asc":
+        if (!a.deadline && !b.deadline) return 0;
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return a.deadline.localeCompare(b.deadline);
+      case "progress-asc": return a.progress - b.progress;
+      case "progress-desc": return b.progress - a.progress;
+      case "priority-desc": return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+      case "priority-asc": return (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+      default: return 0;
+    }
+  });
 
   const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
   const pagedItems = getPageItems(currentPage);
@@ -192,18 +218,59 @@ export default function TugasPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input data-testid="input-search-task" placeholder="Cari tugas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input data-testid="input-search-task" placeholder="Cari tugas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+          </div>
+          <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-sort-task" className="w-48">
+              <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="deadline-desc">Deadline Terbaru</SelectItem>
+              <SelectItem value="deadline-asc">Deadline Terlama</SelectItem>
+              <SelectItem value="priority-desc">Prioritas Tertinggi</SelectItem>
+              <SelectItem value="priority-asc">Prioritas Terendah</SelectItem>
+              <SelectItem value="progress-desc">Progress Tertinggi</SelectItem>
+              <SelectItem value="progress-asc">Progress Terendah</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
-          <SelectTrigger className="w-48"><Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
-            {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-2">
+          <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-status-task" className="w-44">
+              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-priority-task" className="w-40">
+              <SelectValue placeholder="Semua Prioritas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Prioritas</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={assigneeFilter} onValueChange={v => { setAssigneeFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-assignee" className="w-48">
+              <SelectValue placeholder="Semua Penerima" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Penerima</SelectItem>
+              {assignableUsers.map((u: any) => (
+                <SelectItem key={u.id} value={u.id.toString()}>{u.fullName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (

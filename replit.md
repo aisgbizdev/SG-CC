@@ -111,6 +111,17 @@ client/src/
 - Pagination: Client-side pagination (20 items/page) on all list pages; backend supports `?page=1&limit=20` query params
 - Response logging: No response body logging (security)
 
+## Dashboard Stat Cards
+- 4 stat cards (Total Aktivitas, Kasus Aktif, Tugas Pending, Pengumuman) are clickable — navigate to respective list pages
+- Uses `Link` from wouter with hover-elevate effect
+
+## Sorting & Filtering
+- Aktivitas: sort by tanggal/prioritas/progress; filter by status/PT/prioritas
+- Kasus: sort by tanggal/risiko/progress; filter by risk/PT/bucket/workflow stage
+- Tugas: sort by deadline/prioritas/progress; filter by status/prioritas/penerima
+- All filters reset pagination to page 1
+- Null deadlines always sorted to end
+
 ## Pagination Component
 - `client/src/components/data-pagination.tsx` - Reusable pagination UI + `usePagination` hook
 - Used on: aktivitas, kasus, tugas, pengumuman, notifikasi, pesan pages

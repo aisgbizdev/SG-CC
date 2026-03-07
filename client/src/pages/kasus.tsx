@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, RiskBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, ArrowRight, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Case, Company } from "@shared/schema";
@@ -33,6 +33,10 @@ export default function KasusPage() {
   const [location] = useLocation();
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [bucketFilter, setBucketFilter] = useState("all");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -82,12 +86,28 @@ export default function KasusPage() {
     });
   };
 
-  const filtered = cases?.filter(c => {
+  const riskOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+
+  const filtered = (cases?.filter(c => {
     const matchSearch = c.caseCode.toLowerCase().includes(search.toLowerCase()) ||
-      c.customerName.toLowerCase().includes(search.toLowerCase());
+      c.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      (c.summary || "").toLowerCase().includes(search.toLowerCase());
     const matchRisk = riskFilter === "all" || c.riskLevel === riskFilter;
-    return matchSearch && matchRisk;
-  }) || [];
+    const matchCompany = companyFilter === "all" || c.companyId?.toString() === companyFilter;
+    const matchBucket = bucketFilter === "all" || c.bucket === bucketFilter;
+    const matchStage = stageFilter === "all" || c.workflowStage === stageFilter;
+    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage;
+  }) || []).sort((a, b) => {
+    switch (sortBy) {
+      case "date-asc": return a.dateReceived.localeCompare(b.dateReceived);
+      case "date-desc": return b.dateReceived.localeCompare(a.dateReceived);
+      case "progress-asc": return a.progress - b.progress;
+      case "progress-desc": return b.progress - a.progress;
+      case "risk-desc": return (riskOrder[b.riskLevel] || 0) - (riskOrder[a.riskLevel] || 0);
+      case "risk-asc": return (riskOrder[a.riskLevel] || 0) - (riskOrder[b.riskLevel] || 0);
+      default: return 0;
+    }
+  });
 
   const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
   const pagedItems = getPageItems(currentPage);
@@ -288,20 +308,64 @@ export default function KasusPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input data-testid="input-search-case" placeholder="Cari kode kasus atau nama nasabah..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input data-testid="input-search-case" placeholder="Cari kode kasus, nasabah, atau ringkasan..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+          </div>
+          <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-sort-case" className="w-48">
+              <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date-desc">Terbaru</SelectItem>
+              <SelectItem value="date-asc">Terlama</SelectItem>
+              <SelectItem value="risk-desc">Risiko Tertinggi</SelectItem>
+              <SelectItem value="risk-asc">Risiko Terendah</SelectItem>
+              <SelectItem value="progress-desc">Progress Tertinggi</SelectItem>
+              <SelectItem value="progress-asc">Progress Terendah</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={riskFilter} onValueChange={v => { setRiskFilter(v); setCurrentPage(1); }}>
-          <SelectTrigger data-testid="select-filter-risk" className="w-48">
-            <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Risk" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Risk Level</SelectItem>
-            {RISK_LEVELS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-2">
+          <Select value={riskFilter} onValueChange={v => { setRiskFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-risk" className="w-40">
+              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Risk" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Risk</SelectItem>
+              {RISK_LEVELS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-company-case" className="w-40">
+              <SelectValue placeholder="Semua PT" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua PT</SelectItem>
+              {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={bucketFilter} onValueChange={v => { setBucketFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-bucket" className="w-52">
+              <SelectValue placeholder="Semua Bucket" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Bucket</SelectItem>
+              {BUCKETS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={stageFilter} onValueChange={v => { setStageFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-stage" className="w-44">
+              <SelectValue placeholder="Semua Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Stage</SelectItem>
+              {WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (

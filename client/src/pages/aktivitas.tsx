@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil, ArrowUpDown } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
@@ -26,6 +26,9 @@ export default function AktivitasPage() {
   const [location] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -81,11 +84,26 @@ export default function AktivitasPage() {
     });
   };
 
-  const filtered = activities?.filter(a => {
-    const matchSearch = a.title.toLowerCase().includes(search.toLowerCase());
+  const priorityOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+
+  const filtered = (activities?.filter(a => {
+    const matchSearch = a.title.toLowerCase().includes(search.toLowerCase()) ||
+      (a.description || "").toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || a.status === statusFilter;
-    return matchSearch && matchStatus;
-  }) || [];
+    const matchCompany = companyFilter === "all" || a.companyId?.toString() === companyFilter;
+    const matchPriority = priorityFilter === "all" || a.priority === priorityFilter;
+    return matchSearch && matchStatus && matchCompany && matchPriority;
+  }) || []).sort((a, b) => {
+    switch (sortBy) {
+      case "date-asc": return a.date.localeCompare(b.date);
+      case "date-desc": return b.date.localeCompare(a.date);
+      case "progress-asc": return a.progress - b.progress;
+      case "progress-desc": return b.progress - a.progress;
+      case "priority-desc": return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+      case "priority-asc": return (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+      default: return 0;
+    }
+  });
 
   const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
   const pagedItems = getPageItems(currentPage);
@@ -274,20 +292,57 @@ export default function AktivitasPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input data-testid="input-search-activity" placeholder="Cari aktivitas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input data-testid="input-search-activity" placeholder="Cari aktivitas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+          </div>
+          <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-sort-activity" className="w-48">
+              <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date-desc">Terbaru</SelectItem>
+              <SelectItem value="date-asc">Terlama</SelectItem>
+              <SelectItem value="priority-desc">Prioritas Tertinggi</SelectItem>
+              <SelectItem value="priority-asc">Prioritas Terendah</SelectItem>
+              <SelectItem value="progress-desc">Progress Tertinggi</SelectItem>
+              <SelectItem value="progress-asc">Progress Terendah</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
-          <SelectTrigger data-testid="select-filter-status" className="w-48">
-            <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
-            {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-2">
+          <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-status" className="w-44">
+              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-company" className="w-40">
+              <SelectValue placeholder="Semua PT" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua PT</SelectItem>
+              {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-priority" className="w-40">
+              <SelectValue placeholder="Semua Prioritas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Prioritas</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (
