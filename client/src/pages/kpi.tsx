@@ -365,7 +365,14 @@ export default function KpiPage() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {[...filteredLive].sort((a, b) => b.totalScore - a.totalScore).map((kpi, idx) => {
+              {[...filteredLive].sort((a, b) => {
+                const companyOrder = (companiesData || []).map(c => c.id);
+                const aCompIdx = companyOrder.indexOf(a.companyId ?? -1);
+                const bCompIdx = companyOrder.indexOf(b.companyId ?? -1);
+                if (aCompIdx !== bCompIdx) return aCompIdx - bCompIdx;
+                const roleOrder = { du: 0, dk: 1 } as Record<string, number>;
+                return (roleOrder[a.role] ?? 2) - (roleOrder[b.role] ?? 2);
+              }).map((kpi, idx) => {
                 const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);
                 const isExpanded = expandedLiveId === kpi.userId;
                 return (
