@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { UserCircle, Save } from "lucide-react";
+import { UserCircle, Save, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function UpdateProfilPage() {
   const { user } = useAuth();
@@ -32,6 +33,7 @@ export default function UpdateProfilPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
       toast({ title: "Berhasil", description: "Profil berhasil diperbarui" });
+      window.location.href = "/pengaturan";
     },
     onError: (err: any) => {
       toast({ title: "Gagal", description: err.message || "Gagal menyimpan profil", variant: "destructive" });
@@ -57,23 +59,35 @@ export default function UpdateProfilPage() {
 
   if (isLoading || !actualData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="p-6 flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg shadow-lg">
-        <CardHeader className="text-center pb-2">
-          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-3">
-            <UserCircle className="w-9 h-9 text-primary" />
+    <div className="p-3 sm:p-6 space-y-6 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3">
+        <Link href="/pengaturan"><Button variant="ghost" size="icon" data-testid="button-back"><ArrowLeft className="w-4 h-4" /></Button></Link>
+        <div>
+          <h1 className="text-2xl font-bold" data-testid="text-profile-title">Update Profil</h1>
+          <p className="text-sm text-muted-foreground">Perbarui data pribadi Anda</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2 px-5 pt-5">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center">
+              <UserCircle className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Data Profil</CardTitle>
+              <CardDescription>Lengkapi data profil Anda</CardDescription>
+            </div>
           </div>
-          <CardTitle className="text-xl" data-testid="text-profile-title">Lengkapi Profil Anda</CardTitle>
-          <CardDescription>Silakan lengkapi data pribadi Anda sebelum melanjutkan</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-5 pb-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="fullName">Nama Lengkap</Label>
@@ -97,7 +111,7 @@ export default function UpdateProfilPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="phone">No. Telepon</Label>
                 <Input
@@ -158,7 +172,7 @@ export default function UpdateProfilPage() {
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              Simpan & Lanjutkan
+              Simpan Profil
             </Button>
           </form>
         </CardContent>

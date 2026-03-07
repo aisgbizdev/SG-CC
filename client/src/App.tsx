@@ -79,13 +79,6 @@ function AuthenticatedApp() {
 
   if (location === "/login") return <Redirect to="/" />;
 
-  if (!user.profileCompleted && ["du", "dk"].includes(user.role)) {
-    if (location !== "/update-profil") return <Redirect to="/update-profil" />;
-    return <UpdateProfilPage />;
-  }
-
-  if (location === "/update-profil") return <Redirect to="/" />;
-
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
@@ -109,6 +102,7 @@ function AuthenticatedApp() {
               <Route path="/pesan" component={PesanPage} />
               <Route path="/notifikasi" component={NotifikasiPage} />
               <Route path="/pengaturan" component={PengaturanPage} />
+              <Route path="/update-profil" component={UpdateProfilPage} />
               <Route path="/users" component={UsersPage} />
               <Route path="/companies" component={CompaniesPage} />
               <Route component={NotFound} />

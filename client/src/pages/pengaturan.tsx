@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Lock, User, Shield, Building2 } from "lucide-react";
+import { Lock, User, Shield, Building2, Pencil } from "lucide-react";
+import { Link } from "wouter";
 
 export default function PengaturanPage() {
   const { user } = useAuth();
@@ -63,7 +64,7 @@ export default function PengaturanPage() {
             <Avatar className="w-16 h-16">
               <AvatarFallback className="bg-primary text-primary-foreground text-lg">{initials}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <p className="text-lg font-semibold" data-testid="text-user-fullname">{user?.fullName}</p>
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Shield className="w-3 h-3" /> {getRoleLabel(user?.role || "")}
@@ -72,6 +73,11 @@ export default function PengaturanPage() {
                 <Building2 className="w-3 h-3" /> {user?.companyId ? `PT ID: ${user.companyId}` : "Semua PT"}
               </p>
             </div>
+            <Link href="/update-profil">
+              <Button variant="outline" size="sm" data-testid="button-edit-profile">
+                <Pencil className="w-4 h-4 mr-1" /> Edit Profil
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
