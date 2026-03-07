@@ -53,6 +53,7 @@ export interface IStorage {
   getAnnouncements(): Promise<Announcement[]>;
   getAnnouncement(id: number): Promise<Announcement | undefined>;
   createAnnouncement(data: InsertAnnouncement): Promise<Announcement>;
+  updateAnnouncement(id: number, data: Partial<Announcement>): Promise<Announcement | undefined>;
   getAnnouncementReads(announcementId: number): Promise<AnnouncementRead[]>;
   markAnnouncementRead(data: InsertAnnouncementRead): Promise<AnnouncementRead>;
 
@@ -233,6 +234,11 @@ export class DatabaseStorage implements IStorage {
 
   async createAnnouncement(data: InsertAnnouncement): Promise<Announcement> {
     const [ann] = await db.insert(announcements).values(data).returning();
+    return ann;
+  }
+
+  async updateAnnouncement(id: number, data: Partial<Announcement>): Promise<Announcement | undefined> {
+    const [ann] = await db.update(announcements).set(data).where(eq(announcements.id, id)).returning();
     return ann;
   }
 

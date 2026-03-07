@@ -543,6 +543,38 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/announcements/:id", requireRole("superadmin", "owner"), async (req, res) => {
+    try {
+      const user = req.user as any;
+      const existing = await storage.getAnnouncement(parseInt(req.params.id));
+      if (!existing) return res.status(404).json({ message: "Pengumuman tidak ditemukan" });
+      if (user.role !== "superadmin" && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat atau superadmin yang bisa mengedit" });
+      }
+      const parsed = announcementBodySchema.partial().safeParse(req.body);
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const ann = await storage.updateAnnouncement(existing.id, parsed.data);
+      res.json(ann);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal mengupdate pengumuman" });
+    }
+  });
+
+  app.delete("/api/announcements/:id", requireRole("superadmin", "owner"), async (req, res) => {
+    try {
+      const user = req.user as any;
+      const existing = await storage.getAnnouncement(parseInt(req.params.id));
+      if (!existing) return res.status(404).json({ message: "Pengumuman tidak ditemukan" });
+      if (user.role !== "superadmin" && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat atau superadmin yang bisa menghapus" });
+      }
+      await storage.updateAnnouncement(existing.id, { isArchived: true } as any);
+      res.json({ message: "Pengumuman berhasil dihapus" });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghapus pengumuman" });
+    }
+  });
+
   app.get("/api/announcements/:id/reads", requireAuth, async (req, res) => {
     const reads = await storage.getAnnouncementReads(parseInt(req.params.id));
     res.json(reads);

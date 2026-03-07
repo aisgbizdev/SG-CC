@@ -90,15 +90,22 @@ client/src/
 - Available on: Aktivitas, Kasus Pengaduan, Tugas pages
 
 ## Edit/Delete/Archive
-- Inline edit: Edit button (pencil icon) on aktivitas and kasus list cards opens edit dialog with pre-filled data
-- Edit permissions: Aktivitas/Kasus - creator OR superadmin can edit
-- Edit uses PATCH `/api/activities/:id` and PATCH `/api/cases/:id`
-- Soft-delete via `isArchived: true` (activities, cases, tasks)
+- Inline edit: Edit button (pencil icon) on aktivitas, kasus, pengumuman, and tugas list cards/dialogs opens edit form with pre-filled data
+- Edit permissions: Aktivitas/Kasus - creator OR superadmin; Pengumuman - creator OR superadmin (backend requires owner/superadmin role); Tugas - superadmin/owner (full fields: title, description, assignee, company, priority, deadline, notes)
+- Edit uses PATCH `/api/activities/:id`, PATCH `/api/cases/:id`, PATCH `/api/announcements/:id`, PATCH `/api/tasks/:id`
+- Soft-delete via `isArchived: true` (activities, cases, tasks, announcements)
 - List and detail queries filter `isArchived: false` automatically
 - Delete buttons on list cards (trash icon) and detail pages (red "Hapus" button)
 - AlertDialog confirmation before delete
-- Delete permissions: Aktivitas/Kasus - creator OR owner OR superadmin; Tugas - superadmin/owner only
+- Delete permissions: Aktivitas/Kasus - creator OR owner OR superadmin; Tugas - superadmin/owner only; Pengumuman - creator OR superadmin
 - Company access check enforced on task deletion for owners
+
+## Pesan (Messages)
+- Multi-select recipients with checkbox list UI (not dropdown)
+- "Pilih Semua" checkbox to select/deselect all recipients at once
+- Shows count of selected recipients in label and send button
+- Uses Promise.allSettled for batch send with partial failure handling
+- Reports partial success when some messages fail to send
 
 ## Security & Performance
 - Trust proxy: `app.set("trust proxy", 1)` enabled for correct rate-limit IP detection behind proxy

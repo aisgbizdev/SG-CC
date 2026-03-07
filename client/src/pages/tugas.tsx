@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown, Pencil, X } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -34,6 +34,8 @@ export default function TugasPage() {
   const [sortBy, setSortBy] = useState("deadline-desc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", description: "", assignedTo: "", companyId: "", priority: "Medium", deadline: "", notes: "" });
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: tasks, isLoading, isError, refetch } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
@@ -67,11 +69,16 @@ export default function TugasPage() {
       const res = await apiRequest("PATCH", `/api/tasks/${id}`, data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedTask: Task) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       toast({ title: "Berhasil", description: "Tugas diperbarui" });
-      setSelectedTask(null);
+      if (editMode) {
+        setSelectedTask(updatedTask);
+        setEditMode(false);
+      } else {
+        setSelectedTask(null);
+      }
     },
   });
 
@@ -123,7 +130,41 @@ export default function TugasPage() {
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "owner"].includes(user?.role || "");
   const canDeleteTask = ["superadmin", "owner"].includes(user?.role || "");
+  const canEditTask = ["superadmin", "owner"].includes(user?.role || "");
   const assignableUsers = usersData?.filter((u: any) => ["du", "dk", "superadmin"].includes(u.role)) || [];
+
+  const startEditMode = (task: Task) => {
+    setEditForm({
+      title: task.title,
+      description: task.description || "",
+      assignedTo: task.assignedTo.toString(),
+      companyId: task.companyId?.toString() || "",
+      priority: task.priority,
+      deadline: task.deadline || "",
+      notes: task.notes || "",
+    });
+    setEditMode(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!selectedTask) return;
+    if (!editForm.title || !editForm.assignedTo) {
+      toast({ title: "Error", description: "Judul dan penerima tugas wajib diisi", variant: "destructive" });
+      return;
+    }
+    updateMutation.mutate({
+      id: selectedTask.id,
+      data: {
+        title: editForm.title,
+        description: editForm.description || null,
+        assignedTo: parseInt(editForm.assignedTo),
+        companyId: editForm.companyId ? parseInt(editForm.companyId) : null,
+        priority: editForm.priority,
+        deadline: editForm.deadline || null,
+        notes: editForm.notes || null,
+      },
+    });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => { await apiRequest("DELETE", `/api/tasks/${id}`); },
@@ -315,64 +356,137 @@ export default function TugasPage() {
       )}
 
       {selectedTask && (
-        <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
+        <Dialog open={!!selectedTask} onOpenChange={() => { setSelectedTask(null); setEditMode(false); }}>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{selectedTask.title}</DialogTitle></DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div><p className="text-xs text-muted-foreground">Status</p><StatusBadge status={selectedTask.status} /></div>
-                <div><p className="text-xs text-muted-foreground">Prioritas</p><p className="text-sm">{selectedTask.priority}</p></div>
-                <div><p className="text-xs text-muted-foreground">Diberikan kepada</p><p className="text-sm">{getUserName(selectedTask.assignedTo)}</p></div>
-                <div><p className="text-xs text-muted-foreground">Dibuat oleh</p><p className="text-sm">{getUserName(selectedTask.createdBy)}</p></div>
-                {selectedTask.deadline && <div><p className="text-xs text-muted-foreground">Deadline</p><p className="text-sm">{selectedTask.deadline}</p></div>}
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <DialogTitle>{editMode ? "Edit Tugas" : selectedTask.title}</DialogTitle>
+                {canEditTask && !editMode && (
+                  <Button variant="ghost" size="icon" onClick={() => startEditMode(selectedTask)} data-testid={`button-edit-task-${selectedTask.id}`}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
+                {editMode && (
+                  <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} data-testid="button-cancel-edit-task">
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
-              {selectedTask.description && <div><p className="text-xs text-muted-foreground mb-1">Deskripsi</p><p className="text-sm">{selectedTask.description}</p></div>}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Progress</p>
-                <div className="flex items-center gap-3">
-                  <Progress value={selectedTask.progress} className="h-2 flex-1" />
-                  <span className="text-sm font-medium">{selectedTask.progress}%</span>
+            </DialogHeader>
+            {editMode ? (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Judul Tugas *</Label>
+                  <Input data-testid="input-edit-task-title" value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
                 </div>
-              </div>
-              {(user?.id === selectedTask.assignedTo || user?.role === "superadmin") && (
-                <div className="p-3 bg-muted/50 rounded-md space-y-3">
-                  <p className="text-sm font-medium">Update Status</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Select defaultValue={selectedTask.status} onValueChange={v => {
-                      updateMutation.mutate({ id: selectedTask.id, data: { status: v } });
-                    }}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <div className="space-y-1.5">
+                  <Label>Deskripsi</Label>
+                  <Textarea data-testid="input-edit-task-description" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Ditugaskan kepada *</Label>
+                    <Select value={editForm.assignedTo} onValueChange={v => setEditForm({ ...editForm, assignedTo: v })}>
+                      <SelectTrigger data-testid="select-edit-task-assignee"><SelectValue placeholder="Pilih penerima" /></SelectTrigger>
+                      <SelectContent>
+                        {assignableUsers.map((u: any) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>{u.fullName} ({getRoleLabel(u.role)})</SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
-                    <Input type="number" min={0} max={100} defaultValue={selectedTask.progress} placeholder="Progress %" onBlur={e => {
-                      const val = parseInt(e.target.value);
-                      if (!isNaN(val) && val !== selectedTask.progress) {
-                        updateMutation.mutate({ id: selectedTask.id, data: { progress: val } });
-                      }
-                    }} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>PT Terkait</Label>
+                    <Select value={editForm.companyId} onValueChange={v => setEditForm({ ...editForm, companyId: v })}>
+                      <SelectTrigger data-testid="select-edit-task-company"><SelectValue placeholder="Pilih PT" /></SelectTrigger>
+                      <SelectContent>{companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
                 </div>
-              )}
-              {canDeleteTask && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-task-${selectedTask.id}`}>
-                      <Trash2 className="w-4 h-4 mr-1" /> Hapus Tugas
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Hapus Tugas?</AlertDialogTitle>
-                      <AlertDialogDescription>Tugas "{selectedTask.title}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Batal</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteMutation.mutate(selectedTask.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" data-testid={`button-confirm-delete-task-${selectedTask.id}`}>Hapus</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Prioritas</Label>
+                    <Select value={editForm.priority} onValueChange={v => setEditForm({ ...editForm, priority: v })}>
+                      <SelectTrigger data-testid="select-edit-task-priority"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Deadline</Label>
+                    <Input data-testid="input-edit-task-deadline" type="date" value={editForm.deadline} onChange={e => setEditForm({ ...editForm, deadline: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Catatan</Label>
+                  <Textarea data-testid="input-edit-task-notes" value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
+                </div>
+                <Button data-testid="button-submit-edit-task" onClick={handleEditSubmit} className="w-full" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div><p className="text-xs text-muted-foreground">Status</p><StatusBadge status={selectedTask.status} /></div>
+                  <div><p className="text-xs text-muted-foreground">Prioritas</p><p className="text-sm">{selectedTask.priority}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Diberikan kepada</p><p className="text-sm">{getUserName(selectedTask.assignedTo)}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Dibuat oleh</p><p className="text-sm">{getUserName(selectedTask.createdBy)}</p></div>
+                  {selectedTask.deadline && <div><p className="text-xs text-muted-foreground">Deadline</p><p className="text-sm">{selectedTask.deadline}</p></div>}
+                  {selectedTask.companyId && <div><p className="text-xs text-muted-foreground">PT Terkait</p><p className="text-sm">{getCompanyName(selectedTask.companyId)}</p></div>}
+                </div>
+                {selectedTask.description && <div><p className="text-xs text-muted-foreground mb-1">Deskripsi</p><p className="text-sm">{selectedTask.description}</p></div>}
+                {selectedTask.notes && <div><p className="text-xs text-muted-foreground mb-1">Catatan</p><p className="text-sm">{selectedTask.notes}</p></div>}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Progress</p>
+                  <div className="flex items-center gap-3">
+                    <Progress value={selectedTask.progress} className="h-2 flex-1" />
+                    <span className="text-sm font-medium">{selectedTask.progress}%</span>
+                  </div>
+                </div>
+                {(user?.id === selectedTask.assignedTo || user?.role === "superadmin") && (
+                  <div className="p-3 bg-muted/50 rounded-md space-y-3">
+                    <p className="text-sm font-medium">Update Status</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Select defaultValue={selectedTask.status} onValueChange={v => {
+                        updateMutation.mutate({ id: selectedTask.id, data: { status: v } });
+                      }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Input type="number" min={0} max={100} defaultValue={selectedTask.progress} placeholder="Progress %" onBlur={e => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val !== selectedTask.progress) {
+                          updateMutation.mutate({ id: selectedTask.id, data: { progress: val } });
+                        }
+                      }} />
+                    </div>
+                  </div>
+                )}
+                {canDeleteTask && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-task-${selectedTask.id}`}>
+                        <Trash2 className="w-4 h-4 mr-1" /> Hapus Tugas
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Tugas?</AlertDialogTitle>
+                        <AlertDialogDescription>Tugas "{selectedTask.title}" akan dihapus. Tindakan ini tidak bisa dibatalkan.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteMutation.mutate(selectedTask.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" data-testid={`button-confirm-delete-task-${selectedTask.id}`}>Hapus</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

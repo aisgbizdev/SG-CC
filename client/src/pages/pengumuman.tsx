@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Megaphone, Pin, Eye, Calendar, User } from "lucide-react";
+import { Plus, Megaphone, Pin, Eye, Calendar, User, Pencil, Trash2 } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -22,17 +23,24 @@ export default function PengumumanPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: announcements, isLoading, isError, refetch } = useQuery<Announcement[]>({ queryKey: ["/api/announcements"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     title: "", content: "", priority: "Normal",
     targetType: "all", targetValue: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: "", isPinned: false,
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
+
+  const [editForm, setEditForm] = useState(emptyForm);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -43,10 +51,42 @@ export default function PengumumanPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
       toast({ title: "Berhasil", description: "Pengumuman berhasil dibuat" });
       setDialogOpen(false);
-      setForm({ title: "", content: "", priority: "Normal", targetType: "all", targetValue: "", startDate: new Date().toISOString().split("T")[0], endDate: "", isPinned: false });
+      setForm(emptyForm);
     },
     onError: (err: any) => {
       toast({ title: "Gagal", description: err.message || "Gagal", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/announcements/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
+      toast({ title: "Berhasil", description: "Pengumuman berhasil diperbarui" });
+      setEditDialogOpen(false);
+      setSelectedAnnouncement(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal memperbarui", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/announcements/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
+      toast({ title: "Berhasil", description: "Pengumuman berhasil dihapus" });
+      setDeleteDialogOpen(false);
+      setSelectedAnnouncement(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal menghapus", variant: "destructive" });
     },
   });
 
@@ -67,6 +107,47 @@ export default function PengumumanPage() {
       endDate: form.endDate || null,
       targetValue: form.targetValue || null,
     });
+  };
+
+  const handleEditSubmit = () => {
+    if (!editForm.title || !editForm.content) {
+      toast({ title: "Error", description: "Judul dan isi wajib diisi", variant: "destructive" });
+      return;
+    }
+    if (!selectedAnnouncement) return;
+    updateMutation.mutate({
+      id: selectedAnnouncement.id,
+      data: {
+        ...editForm,
+        endDate: editForm.endDate || null,
+        targetValue: editForm.targetValue || null,
+      },
+    });
+  };
+
+  const openEditDialog = (ann: Announcement) => {
+    setSelectedAnnouncement(ann);
+    setEditForm({
+      title: ann.title,
+      content: ann.content,
+      priority: ann.priority || "Normal",
+      targetType: ann.targetType || "all",
+      targetValue: ann.targetValue || "",
+      startDate: ann.startDate || new Date().toISOString().split("T")[0],
+      endDate: ann.endDate || "",
+      isPinned: ann.isPinned || false,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (ann: Announcement) => {
+    setSelectedAnnouncement(ann);
+    setDeleteDialogOpen(true);
+  };
+
+  const canModify = (ann: Announcement) => {
+    if (!user) return false;
+    return user.role === "superadmin" || ann.createdBy === user.id;
   };
 
   const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
@@ -159,6 +240,26 @@ export default function PengumumanPage() {
                       <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Penting</span>
                     )}
                   </div>
+                  {canModify(ann) && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        data-testid={`button-edit-announcement-${ann.id}`}
+                        onClick={(e) => { e.stopPropagation(); openEditDialog(ann); }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        data-testid={`button-delete-announcement-${ann.id}`}
+                        onClick={(e) => { e.stopPropagation(); openDeleteDialog(ann); }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm leading-relaxed">{ann.content}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
@@ -175,6 +276,78 @@ export default function PengumumanPage() {
           <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Edit Pengumuman</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Judul *</Label>
+              <Input data-testid="input-edit-announcement-title" placeholder="Judul pengumuman" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Isi Pengumuman *</Label>
+              <Textarea data-testid="input-edit-announcement-content" placeholder="Isi pengumuman" value={editForm.content} onChange={e => setEditForm({...editForm, content: e.target.value})} className="min-h-[120px]" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Prioritas</Label>
+                <Select value={editForm.priority} onValueChange={v => setEditForm({...editForm, priority: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Normal">Normal</SelectItem>
+                    <SelectItem value="Tinggi">Tinggi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Target Penerima</Label>
+                <Select value={editForm.targetType} onValueChange={v => setEditForm({...editForm, targetType: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua User</SelectItem>
+                    <SelectItem value="role">Per Role</SelectItem>
+                    <SelectItem value="company">Per PT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Tanggal Mulai</Label>
+                <Input type="date" value={editForm.startDate} onChange={e => setEditForm({...editForm, startDate: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal Berakhir</Label>
+                <Input type="date" value={editForm.endDate} onChange={e => setEditForm({...editForm, endDate: e.target.value})} />
+              </div>
+            </div>
+            <Button data-testid="button-submit-edit-announcement" onClick={handleEditSubmit} className="w-full" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus pengumuman "{selectedAnnouncement?.title}"? Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-announcement">Batal</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="button-confirm-delete-announcement"
+              onClick={() => selectedAnnouncement && deleteMutation.mutate(selectedAnnouncement.id)}
+            >
+              {deleteMutation.isPending ? "Menghapus..." : "Hapus"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

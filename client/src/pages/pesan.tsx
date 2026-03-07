@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Mail, MailOpen, Send, User, Clock } from "lucide-react";
+import { Plus, Mail, MailOpen, Send, Clock, Check } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -27,23 +26,11 @@ export default function PesanPage() {
   const { data: messages, isLoading, isError, refetch } = useQuery<Message[]>({ queryKey: ["/api/messages"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
 
-  const [form, setForm] = useState({ receiverId: "", subject: "", content: "" });
+  const [form, setForm] = useState({ receiverIds: [] as string[], subject: "", content: "" });
+  const [isSending, setIsSending] = useState(false);
 
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/messages", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
-      toast({ title: "Berhasil", description: "Pesan terkirim" });
-      setDialogOpen(false);
-      setForm({ receiverId: "", subject: "", content: "" });
-    },
-    onError: (err: any) => {
-      toast({ title: "Gagal", description: err.message || "Gagal mengirim pesan", variant: "destructive" });
-    },
-  });
+  const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
+  const otherUsers = usersData?.filter((u: any) => u.id !== user?.id) || [];
 
   const readMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -54,16 +41,60 @@ export default function PesanPage() {
     },
   });
 
-  const handleSubmit = () => {
-    if (!form.receiverId || !form.content) {
+  const handleSubmit = async () => {
+    if (form.receiverIds.length === 0 || !form.content) {
       toast({ title: "Error", description: "Penerima dan isi pesan wajib diisi", variant: "destructive" });
       return;
     }
-    createMutation.mutate({ ...form, receiverId: parseInt(form.receiverId) });
+    setIsSending(true);
+    try {
+      const results = await Promise.allSettled(
+        form.receiverIds.map((rid) =>
+          apiRequest("POST", "/api/messages", {
+            receiverId: parseInt(rid),
+            subject: form.subject || null,
+            content: form.content,
+          }).then((res) => res.json())
+        )
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      if (failed === 0) {
+        toast({ title: "Berhasil", description: `Pesan terkirim ke ${succeeded} penerima` });
+        setDialogOpen(false);
+        setForm({ receiverIds: [], subject: "", content: "" });
+      } else if (succeeded > 0) {
+        toast({ title: "Sebagian Berhasil", description: `${succeeded} terkirim, ${failed} gagal`, variant: "destructive" });
+        setDialogOpen(false);
+        setForm({ receiverIds: [], subject: "", content: "" });
+      } else {
+        toast({ title: "Gagal", description: "Gagal mengirim semua pesan", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message || "Gagal mengirim pesan", variant: "destructive" });
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
-  const otherUsers = usersData?.filter((u: any) => u.id !== user?.id) || [];
+  const toggleReceiver = (id: string) => {
+    setForm((prev) => ({
+      ...prev,
+      receiverIds: prev.receiverIds.includes(id)
+        ? prev.receiverIds.filter((r) => r !== id)
+        : [...prev.receiverIds, id],
+    }));
+  };
+
+  const toggleSelectAll = () => {
+    const allIds = otherUsers.map((u: any) => u.id.toString());
+    const allSelected = allIds.length > 0 && allIds.every((id: string) => form.receiverIds.includes(id));
+    setForm((prev) => ({
+      ...prev,
+      receiverIds: allSelected ? [] : allIds,
+    }));
+  };
 
   const allMessages = messages || [];
   const { totalPages, totalItems, getPageItems } = usePagination(allMessages, 20);
@@ -83,15 +114,35 @@ export default function PesanPage() {
             <DialogHeader><DialogTitle>Kirim Pesan Baru</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Kepada *</Label>
-                <Select value={form.receiverId} onValueChange={v => setForm({...form, receiverId: v})}>
-                  <SelectTrigger data-testid="select-message-receiver"><SelectValue placeholder="Pilih penerima" /></SelectTrigger>
-                  <SelectContent>
-                    {otherUsers.map((u: any) => (
-                      <SelectItem key={u.id} value={u.id.toString()}>{u.fullName} ({getRoleLabel(u.role)})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Kepada * {form.receiverIds.length > 0 && <span className="text-xs text-muted-foreground ml-1">({form.receiverIds.length} dipilih)</span>}</Label>
+                <div className="border rounded-md max-h-[180px] overflow-y-auto" data-testid="select-message-receiver">
+                  <div
+                    className="flex items-center gap-2 px-3 py-2 border-b cursor-pointer hover-elevate"
+                    onClick={toggleSelectAll}
+                    data-testid="checkbox-select-all-receivers"
+                  >
+                    <div className={`flex items-center justify-center w-4 h-4 rounded border ${otherUsers.length > 0 && otherUsers.every((u: any) => form.receiverIds.includes(u.id.toString())) ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                      {otherUsers.length > 0 && otherUsers.every((u: any) => form.receiverIds.includes(u.id.toString())) && <Check className="w-3 h-3" />}
+                    </div>
+                    <span className="text-sm font-medium">Pilih Semua</span>
+                  </div>
+                  {otherUsers.map((u: any) => {
+                    const isSelected = form.receiverIds.includes(u.id.toString());
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center gap-2 px-3 py-2 cursor-pointer hover-elevate"
+                        onClick={() => toggleReceiver(u.id.toString())}
+                        data-testid={`checkbox-receiver-${u.id}`}
+                      >
+                        <div className={`flex items-center justify-center w-4 h-4 rounded border ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <span className="text-sm">{u.fullName} ({getRoleLabel(u.role)})</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Subjek</Label>
@@ -101,8 +152,8 @@ export default function PesanPage() {
                 <Label>Isi Pesan *</Label>
                 <Textarea data-testid="input-message-content" placeholder="Tulis pesan..." value={form.content} onChange={e => setForm({...form, content: e.target.value})} className="min-h-[100px]" />
               </div>
-              <Button data-testid="button-submit-message" onClick={handleSubmit} className="w-full" disabled={createMutation.isPending}>
-                <Send className="w-4 h-4 mr-1" /> {createMutation.isPending ? "Mengirim..." : "Kirim Pesan"}
+              <Button data-testid="button-submit-message" onClick={handleSubmit} className="w-full" disabled={isSending}>
+                <Send className="w-4 h-4 mr-1" /> {isSending ? "Mengirim..." : `Kirim Pesan${form.receiverIds.length > 1 ? ` (${form.receiverIds.length})` : ""}`}
               </Button>
             </div>
           </DialogContent>
