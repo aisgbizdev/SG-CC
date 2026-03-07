@@ -6,7 +6,34 @@ import { count, eq, sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 
+async function runMigrations() {
+  try {
+    await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS phone text`);
+    await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS email text`);
+    await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS director_name text`);
+    await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS founded_date text`);
+    await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS license_number text`);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS branches (
+        id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        company_id integer NOT NULL,
+        name text NOT NULL,
+        address text,
+        head_name text,
+        wpb_count integer DEFAULT 0,
+        is_active boolean NOT NULL DEFAULT true
+      )
+    `);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_branches_company_id ON branches(company_id)`);
+    console.log("Migrasi schema selesai.");
+  } catch (err: any) {
+    console.error("Migrasi gagal:", err.message);
+  }
+}
+
 export async function seedData() {
+  await runMigrations();
+
   const [existing] = await db.select({ count: count() }).from(users);
   if (!existing || existing.count === 0) {
     console.log("Seeding data awal...");
