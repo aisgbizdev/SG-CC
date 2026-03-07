@@ -156,14 +156,17 @@ client/src/
 
 ## Penilaian KPI (Dual-Layer System)
 - **KPI Live**: skor real-time auto-calculated dari data aktivitas/kasus/tugas
-- **KPI Kuartal**: snapshot per kuartal + catatan coaching dari owner
+- **KPI Penilaian**: snapshot per periode + catatan coaching dari owner
+- 3 tipe periode: Bulanan (YYYY-MM), Kuartal (YYYY-Q#), Tahunan (YYYY)
 - 8 aspek penilaian otomatis: Penyelesaian Tugas (15%), Penyelesaian Kasus (20%), Penyelesaian Aktivitas (15%), Ketepatan Waktu (15%), Progress Rata-rata (10%), Responsivitas (10%), Beban Kerja (5%), Konsistensi (10%)
 - Grade: A (≥85), B (≥70), C (≥55), D (<55)
 - Radar chart SVG untuk visualisasi 8 aspek
 - Coaching fields: strengths (kekuatan), improvements (area perbaikan), notes (catatan coaching)
+- **Dasar Penilaian**: section collapsible yang menjelaskan rumus, sumber data, bobot, dan grade (di expanded Live & History)
+- **Papan Peringkat**: ranking DU/DK berdasarkan skor KPI Live (sorted by totalScore desc), top 3 highlight medali, dinamis berubah mengikuti skor
 - Akses: superadmin/owner lihat semua DU/DK; DU/DK hanya lihat KPI sendiri
 - API: GET /api/kpi/live, GET /api/kpi/live/:userId, GET /api/kpi, POST /api/kpi, GET /api/kpi/:id
-- Frontend: `client/src/pages/kpi.tsx` — route `/kpi` (2 tabs: Live + Riwayat Kuartal)
+- Frontend: `client/src/pages/kpi.tsx` — route `/kpi` (2 tabs: KPI Live + Riwayat Penilaian)
 
 ## Database
 - PostgreSQL via DATABASE_URL

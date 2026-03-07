@@ -19,7 +19,8 @@ import {
   BarChart3, Plus, User, Building2, Target,
   Activity, FileWarning, ListTodo, TrendingUp,
   Clock, Zap, Briefcase, BarChart2, ChevronDown, ChevronUp,
-  Award, ThumbsUp, AlertTriangle, BookOpen,
+  Award, ThumbsUp, AlertTriangle, BookOpen, Info, Trophy, Medal,
+  Calendar, CalendarDays, CalendarRange,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -131,15 +132,121 @@ function ScoreCircle({ score, size = "md" }: { score: number; size?: "sm" | "md"
   );
 }
 
-function getQuarterOptions() {
+type PeriodType = "bulanan" | "kuartal" | "tahunan";
+
+const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+function getPeriodOptions(type: PeriodType) {
   const currentYear = new Date().getFullYear();
-  const options: string[] = [];
-  for (let y = currentYear; y >= currentYear - 1; y--) {
-    for (let q = 4; q >= 1; q--) {
-      options.push(`${y}-Q${q}`);
+  const currentMonth = new Date().getMonth();
+  const options: { value: string; label: string }[] = [];
+
+  if (type === "bulanan") {
+    for (let y = currentYear; y >= currentYear - 1; y--) {
+      const maxMonth = y === currentYear ? currentMonth : 11;
+      for (let m = maxMonth; m >= 0; m--) {
+        const val = `${y}-${String(m + 1).padStart(2, "0")}`;
+        options.push({ value: val, label: `${MONTH_NAMES[m]} ${y}` });
+      }
+    }
+  } else if (type === "kuartal") {
+    for (let y = currentYear; y >= currentYear - 1; y--) {
+      for (let q = 4; q >= 1; q--) {
+        options.push({ value: `${y}-Q${q}`, label: `${y} - Q${q}` });
+      }
+    }
+  } else {
+    for (let y = currentYear; y >= currentYear - 2; y--) {
+      options.push({ value: `${y}`, label: `Tahun ${y}` });
     }
   }
   return options;
+}
+
+function getPeriodLabel(period: string) {
+  if (/^\d{4}-\d{2}$/.test(period)) {
+    const [y, m] = period.split("-");
+    return `${MONTH_NAMES[parseInt(m) - 1]} ${y}`;
+  }
+  if (/^\d{4}-Q\d$/.test(period)) {
+    return period.replace("-", " - ");
+  }
+  if (/^\d{4}$/.test(period)) {
+    return `Tahun ${period}`;
+  }
+  return period;
+}
+
+function getPeriodTypeFromValue(period: string): PeriodType {
+  if (/^\d{4}-\d{2}$/.test(period)) return "bulanan";
+  if (/^\d{4}-Q\d$/.test(period)) return "kuartal";
+  return "tahunan";
+}
+
+function DasarPenilaianSection() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setOpen(!open)}
+        data-testid="button-toggle-dasar-penilaian"
+      >
+        <Info className="w-3.5 h-3.5" />
+        <span className="underline underline-offset-2">{open ? "Sembunyikan Dasar Penilaian" : "Lihat Dasar Penilaian"}</span>
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+      </button>
+      {open && (
+        <Card className="mt-2 bg-muted/30 border-dashed">
+          <CardContent className="p-4 space-y-4 text-xs">
+            <div>
+              <h5 className="font-semibold text-sm mb-2 flex items-center gap-1">
+                <Info className="w-3.5 h-3.5 text-blue-500" /> Sumber Data
+              </h5>
+              <ul className="space-y-1 text-muted-foreground ml-1">
+                <li><span className="font-medium text-foreground">Total Item</span> = Jumlah Aktivitas + Kasus + Tugas yang tercatat di sistem untuk DU/DK</li>
+                <li><span className="font-medium text-foreground">Avg Progress</span> = Rata-rata % progress dari semua item aktif (aktivitas, kasus, tugas) — hanya dihitung dari kategori yang memiliki data</li>
+                <li><span className="font-medium text-foreground">Overdue</span> = Item yang melewati deadline/target date tapi belum diselesaikan</li>
+                <li className="text-[11px] italic">Data diambil dari modul Aktivitas (dibuat oleh DU/DK), Kasus (dibuat oleh DU/DK), dan Tugas (yang di-assign ke DU/DK)</li>
+              </ul>
+            </div>
+
+            <div>
+              <h5 className="font-semibold text-sm mb-2 flex items-center gap-1">
+                <BarChart3 className="w-3.5 h-3.5 text-purple-500" /> 8 Aspek Penilaian & Bobot
+              </h5>
+              <div className="space-y-1.5 ml-1">
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">20%</Badge><span><span className="font-medium text-foreground">Penyelesaian Kasus</span> — Kasus closed ÷ Total kasus × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Tugas</span> — Tugas selesai ÷ Total tugas × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Aktivitas</span> — Aktivitas selesai ÷ Total aktivitas × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Ketepatan Waktu</span> — Item selesai sebelum deadline ÷ Total item berdeadline × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Progress Rata-rata</span> — Rata-rata % progress dari semua item aktif</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Responsivitas</span> — 100% − (Item overdue ÷ Item aktif × 100)</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Konsistensi</span> — Item selesai ÷ Total item × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">5%</Badge><span><span className="font-medium text-foreground">Beban Kerja</span> — Total item ÷ 20 (kapasitas standar) × 100, maks 100</span></div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div>
+                <h5 className="font-semibold text-sm mb-1">Skor Total</h5>
+                <p className="text-muted-foreground">Rata-rata tertimbang dari 8 aspek sesuai bobot di atas</p>
+              </div>
+              <div>
+                <h5 className="font-semibold text-sm mb-1">Grade</h5>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">A ≥ 85 Sangat Baik</Badge>
+                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">B ≥ 70 Baik</Badge>
+                  <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">C ≥ 55 Cukup</Badge>
+                  <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">D &lt; 55 Perlu Perbaikan</Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
 
 type LiveKpi = {
@@ -172,10 +279,12 @@ export default function KpiPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterCompany, setFilterCompany] = useState("all");
   const [filterPeriod, setFilterPeriod] = useState("all");
+  const [filterPeriodType, setFilterPeriodType] = useState<"all" | PeriodType>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [expandedLiveId, setExpandedLiveId] = useState<number | null>(null);
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState(getQuarterOptions()[0]);
+  const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>("bulanan");
+  const [selectedPeriod, setSelectedPeriod] = useState(getPeriodOptions("bulanan")[0]?.value || "");
   const [strengths, setStrengths] = useState("");
   const [improvements, setImprovements] = useState("");
   const [notes, setNotes] = useState("");
@@ -208,7 +317,7 @@ export default function KpiPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/kpi"] });
       queryClient.invalidateQueries({ queryKey: ["/api/kpi/live"] });
-      toast({ title: "Penilaian kuartal berhasil disimpan" });
+      toast({ title: "Penilaian berhasil disimpan" });
       setDialogOpen(false);
       resetForm();
     },
@@ -219,7 +328,8 @@ export default function KpiPage() {
 
   const resetForm = () => {
     setSelectedUserId("");
-    setSelectedPeriod(getQuarterOptions()[0]);
+    setSelectedPeriodType("bulanan");
+    setSelectedPeriod(getPeriodOptions("bulanan")[0]?.value || "");
     setStrengths("");
     setImprovements("");
     setNotes("");
@@ -258,7 +368,8 @@ export default function KpiPage() {
   const filteredHistory = (historyData || []).filter(k => {
     const matchPeriod = filterPeriod === "all" || k.period === filterPeriod;
     const matchCompany = filterCompany === "all" || getUserCompanyId(k.userId)?.toString() === filterCompany;
-    return matchPeriod && matchCompany;
+    const matchPeriodType = filterPeriodType === "all" || getPeriodTypeFromValue(k.period) === filterPeriodType;
+    return matchPeriod && matchCompany && matchPeriodType;
   });
 
   const duDkUsers = usersData?.filter(u => ["du", "dk"].includes(u.role) && u.isActive) || [];
@@ -304,7 +415,7 @@ export default function KpiPage() {
         </div>
         {isAdmin && (
           <Button onClick={() => { resetForm(); setDialogOpen(true); }} data-testid="button-tambah-kpi">
-            <Plus className="w-4 h-4 mr-1" /> Simpan Penilaian Kuartal
+            <Plus className="w-4 h-4 mr-1" /> Simpan Penilaian
           </Button>
         )}
       </div>
@@ -325,7 +436,7 @@ export default function KpiPage() {
             data-testid="tab-kpi-history"
           >
             <BookOpen className="w-3.5 h-3.5 inline mr-1" />
-            Riwayat Kuartal
+            Riwayat Penilaian
           </button>
         </div>
 
@@ -342,15 +453,31 @@ export default function KpiPage() {
         )}
 
         {activeTab === "history" && (
-          <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-            <SelectTrigger className="w-36" data-testid="select-filter-period">
-              <SelectValue placeholder="Periode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Periode</SelectItem>
-              {getQuarterOptions().map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <>
+            <Select value={filterPeriodType} onValueChange={(v) => { setFilterPeriodType(v as "all" | PeriodType); setFilterPeriod("all"); }}>
+              <SelectTrigger className="w-36" data-testid="select-filter-period-type">
+                <SelectValue placeholder="Tipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Tipe</SelectItem>
+                <SelectItem value="bulanan">Bulanan</SelectItem>
+                <SelectItem value="kuartal">Kuartal</SelectItem>
+                <SelectItem value="tahunan">Tahunan</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+              <SelectTrigger className="w-40" data-testid="select-filter-period">
+                <SelectValue placeholder="Periode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Periode</SelectItem>
+                {filterPeriodType !== "all"
+                  ? getPeriodOptions(filterPeriodType).map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)
+                  : [...getPeriodOptions("bulanan"), ...getPeriodOptions("kuartal"), ...getPeriodOptions("tahunan")].map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)
+                }
+              </SelectContent>
+            </Select>
+          </>
         )}
       </div>
 
@@ -469,6 +596,8 @@ export default function KpiPage() {
                               </CardContent>
                             </Card>
                           </div>
+
+                          <DasarPenilaianSection />
                         </div>
                       )}
                     </CardContent>
@@ -476,6 +605,46 @@ export default function KpiPage() {
                 );
               })}
             </div>
+          )}
+
+          {filteredLive.length > 0 && (
+            <Card data-testid="card-papan-peringkat">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="text-base font-bold mb-1 flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-500" /> Papan Peringkat
+                </h3>
+                <p className="text-xs text-muted-foreground mb-4">Diurutkan berdasarkan skor total tertinggi — ranking berubah dinamis mengikuti performa</p>
+                <div className="space-y-2">
+                  {[...filteredLive].sort((a, b) => b.totalScore - a.totalScore).map((kpi, idx) => {
+                    const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);
+                    const medalColor = idx === 0 ? "text-amber-500" : idx === 1 ? "text-slate-400" : idx === 2 ? "text-amber-700" : "text-muted-foreground";
+                    const bgHighlight = idx === 0 ? "bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30" : idx === 1 ? "bg-slate-50/50 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800/30" : idx === 2 ? "bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800/30" : "";
+                    return (
+                      <div key={kpi.userId} className={`flex items-center gap-3 p-3 rounded-lg border ${bgHighlight || "border-transparent"}`} data-testid={`row-ranking-${idx + 1}`}>
+                        <div className="flex items-center justify-center w-8 shrink-0">
+                          {idx < 3 ? (
+                            <Medal className={`w-5 h-5 ${medalColor}`} />
+                          ) : (
+                            <span className="text-sm font-bold text-muted-foreground">#{idx + 1}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-sm truncate" data-testid={`text-ranking-name-${idx + 1}`}>{kpi.fullName}</span>
+                            <Badge variant="outline" className="text-[10px] px-1.5 h-5">{kpi.role === "du" ? "DU" : "DK"}</Badge>
+                            <Badge variant="outline" className="text-[10px] px-1.5 h-5">{getCompanyName(kpi.companyId)}</Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-lg font-bold ${kpi.totalScore >= 85 ? "text-emerald-600" : kpi.totalScore >= 70 ? "text-blue-600" : kpi.totalScore >= 55 ? "text-amber-600" : "text-red-600"}`}>{kpi.totalScore}</span>
+                          <Badge className={`${gradeCls} text-[10px]`}>{grade}</Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
@@ -486,8 +655,8 @@ export default function KpiPage() {
             <Card>
               <CardContent className="p-8 text-center">
                 <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground" data-testid="text-empty-history">Belum ada riwayat penilaian kuartal</p>
-                {isAdmin && <p className="text-xs text-muted-foreground mt-1">Klik "Simpan Penilaian Kuartal" untuk membuat snapshot skor saat ini</p>}
+                <p className="text-muted-foreground" data-testid="text-empty-history">Belum ada riwayat penilaian</p>
+                {isAdmin && <p className="text-xs text-muted-foreground mt-1">Klik "Simpan Penilaian" untuk membuat snapshot skor saat ini</p>}
               </CardContent>
             </Card>
           ) : (
@@ -517,7 +686,7 @@ export default function KpiPage() {
                               <Building2 className="w-3 h-3 mr-1" />
                               {getCompanyName(getUserCompanyId(kpi.userId))}
                             </Badge>
-                            <Badge variant="secondary">{kpi.period}</Badge>
+                            <Badge variant="secondary">{getPeriodLabel(kpi.period)}</Badge>
                             <Badge className={gradeCls}>{grade} - {label}</Badge>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -598,6 +767,8 @@ export default function KpiPage() {
                             </div>
                           )}
 
+                          <DasarPenilaianSection />
+
                           <div className="text-xs text-muted-foreground">
                             Dinilai: {new Date(kpi.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                           </div>
@@ -615,25 +786,49 @@ export default function KpiPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Simpan Penilaian Kuartal</DialogTitle>
+            <DialogTitle>Simpan Penilaian</DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
             Skor akan diambil otomatis dari performa live saat ini. Tambahkan catatan coaching untuk bahan evaluasi.
           </p>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Pegawai (DU/DK)</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger data-testid="select-kpi-user">
+                  <SelectValue placeholder="Pilih pegawai" />
+                </SelectTrigger>
+                <SelectContent>
+                  {duDkUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.fullName} ({u.role.toUpperCase()}) - {getCompanyName(u.companyId)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Pegawai (DU/DK)</Label>
-                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                  <SelectTrigger data-testid="select-kpi-user">
-                    <SelectValue placeholder="Pilih pegawai" />
+                <Label>Tipe Periode</Label>
+                <Select value={selectedPeriodType} onValueChange={(v) => {
+                  const t = v as PeriodType;
+                  setSelectedPeriodType(t);
+                  setSelectedPeriod(getPeriodOptions(t)[0]?.value || "");
+                }}>
+                  <SelectTrigger data-testid="select-kpi-period-type">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {duDkUsers.map(u => (
-                      <SelectItem key={u.id} value={u.id.toString()}>
-                        {u.fullName} ({u.role.toUpperCase()}) - {getCompanyName(u.companyId)}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="bulanan">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Bulanan</span>
+                    </SelectItem>
+                    <SelectItem value="kuartal">
+                      <span className="flex items-center gap-1.5"><CalendarRange className="w-3.5 h-3.5" /> Kuartal</span>
+                    </SelectItem>
+                    <SelectItem value="tahunan">
+                      <span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> Tahunan</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -644,7 +839,7 @@ export default function KpiPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {getQuarterOptions().map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
+                    {getPeriodOptions(selectedPeriodType).map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
