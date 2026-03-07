@@ -25,6 +25,7 @@ import NotifikasiPage from "@/pages/notifikasi";
 import PengaturanPage from "@/pages/pengaturan";
 import UsersPage from "@/pages/users";
 import CompaniesPage from "@/pages/companies";
+import CompanyDetailPage from "@/pages/company-detail";
 import KpiPage from "@/pages/kpi";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -136,6 +137,7 @@ function AuthenticatedApp() {
                   <>
                     <Route path="/users" component={UsersPage} />
                     <Route path="/companies" component={CompaniesPage} />
+                    <Route path="/companies/:id" component={CompanyDetailPage} />
                   </>
                 )}
                 <Route>{() => <Redirect to="/" />}</Route>

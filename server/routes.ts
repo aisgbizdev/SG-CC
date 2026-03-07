@@ -8,7 +8,11 @@ import { z } from "zod";
 import {
   insertCompanySchema,
   insertMasterCategorySchema,
+  insertBranchSchema,
+  cases, activities, tasks, announcements,
 } from "@shared/schema";
+import { eq, and, or, sql as dsql } from "drizzle-orm";
+import { db } from "./db";
 
 const createUserSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
@@ -197,6 +201,117 @@ export async function registerRoutes(
       res.json(company);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal membuat PT" });
+    }
+  });
+
+  app.get("/api/companies/:id", requireRole("superadmin"), async (req, res) => {
+    try {
+      const id = parseId(req.params.id);
+      if (id === null) return res.status(400).json({ message: "ID tidak valid" });
+      const company = await storage.getCompany(id);
+      if (!company) return res.status(404).json({ message: "PT tidak ditemukan" });
+
+      const branchList = await storage.getBranchesByCompany(id);
+      const userList = await storage.getUsersByCompany(id);
+      const safeUsers = userList.map(({ password, secretAnswer, ...u }: any) => u);
+
+      const caseRows = await db.select({
+        branch: cases.branch,
+        status: cases.status,
+      }).from(cases).where(and(eq(cases.companyId, id), eq(cases.isArchived, false)));
+
+      const caseRekap: Record<string, { total: number; open: number; closed: number; inProgress: number }> = {};
+      for (const c of caseRows) {
+        const b = c.branch || "Tidak diketahui";
+        if (!caseRekap[b]) caseRekap[b] = { total: 0, open: 0, closed: 0, inProgress: 0 };
+        caseRekap[b].total++;
+        if (c.status === "Open") caseRekap[b].open++;
+        else if (c.status === "Closed") caseRekap[b].closed++;
+        else caseRekap[b].inProgress++;
+      }
+
+      const activityRows = await db.select().from(activities).where(and(eq(activities.companyId, id), eq(activities.isArchived, false)));
+      const taskRows = await db.select().from(tasks).where(and(eq(tasks.companyId, id), eq(tasks.isArchived, false)));
+      const announcementRows = await db.select().from(announcements).where(
+        and(
+          eq(announcements.isArchived, false),
+          or(
+            eq(announcements.targetType, "all"),
+            and(eq(announcements.targetType, "company"), eq(announcements.targetValue, String(id)))
+          )
+        )
+      );
+
+      const rekapAktivitas = { total: activityRows.length };
+      const rekapTugas = {
+        total: taskRows.length,
+        selesai: taskRows.filter((t: any) => t.status === "Selesai").length,
+        belumSelesai: taskRows.filter((t: any) => t.status !== "Selesai").length,
+      };
+      const rekapPengumuman = { total: announcementRows.length };
+
+      res.json({
+        company,
+        branches: branchList,
+        users: safeUsers,
+        rekapKasus: caseRekap,
+        rekapAktivitas,
+        rekapTugas,
+        rekapPengumuman,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil detail PT" });
+    }
+  });
+
+  app.patch("/api/companies/:id", requireRole("superadmin"), async (req, res) => {
+    try {
+      const id = parseId(req.params.id);
+      if (id === null) return res.status(400).json({ message: "ID tidak valid" });
+      const updateSchema = insertCompanySchema.partial();
+      const parsed = updateSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const company = await storage.updateCompany(id, parsed.data);
+      if (!company) return res.status(404).json({ message: "PT tidak ditemukan" });
+      res.json(company);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal mengupdate PT" });
+    }
+  });
+
+  app.post("/api/companies/:id/branches", requireRole("superadmin"), async (req, res) => {
+    try {
+      const companyId = parseId(req.params.id);
+      if (companyId === null) return res.status(400).json({ message: "ID tidak valid" });
+      const parsed = insertBranchSchema.safeParse({ ...req.body, companyId });
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const branch = await storage.createBranch(parsed.data);
+      res.json(branch);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menambah cabang" });
+    }
+  });
+
+  app.patch("/api/branches/:id", requireRole("superadmin"), async (req, res) => {
+    try {
+      const id = parseId(req.params.id);
+      if (id === null) return res.status(400).json({ message: "ID tidak valid" });
+      const branch = await storage.updateBranch(id, req.body);
+      if (!branch) return res.status(404).json({ message: "Cabang tidak ditemukan" });
+      res.json(branch);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal mengupdate cabang" });
+    }
+  });
+
+  app.delete("/api/branches/:id", requireRole("superadmin"), async (req, res) => {
+    try {
+      const id = parseId(req.params.id);
+      if (id === null) return res.status(400).json({ message: "ID tidak valid" });
+      await storage.deleteBranch(id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghapus cabang" });
     }
   });
 

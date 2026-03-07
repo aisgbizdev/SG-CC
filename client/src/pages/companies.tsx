@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, MapPin } from "lucide-react";
+import { Building2, Plus, MapPin, ChevronRight } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useLocation } from "wouter";
 import type { Company } from "@shared/schema";
 
 export default function CompaniesPage() {
   usePageTitle("Manajemen PT");
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: "", code: "", address: "" });
 
@@ -89,7 +91,7 @@ export default function CompaniesPage() {
       ) : (
         <div className="space-y-2">
           {companies?.map((c) => (
-            <Card key={c.id} data-testid={`card-company-${c.id}`}>
+            <Card key={c.id} data-testid={`card-company-${c.id}`} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation(`/companies/${c.id}`)}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Building2 className="w-6 h-6 text-primary" />
@@ -107,6 +109,7 @@ export default function CompaniesPage() {
                 <Badge variant={c.isActive ? "default" : "secondary"}>
                   {c.isActive ? "Aktif" : "Nonaktif"}
                 </Badge>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
               </CardContent>
             </Card>
           ))}

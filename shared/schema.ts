@@ -8,12 +8,33 @@ export const companies = pgTable("companies", {
   name: text("name").notNull(),
   code: text("code").notNull().unique(),
   address: text("address"),
+  phone: text("phone"),
+  email: text("email"),
+  directorName: text("director_name"),
+  foundedDate: text("founded_date"),
+  licenseNumber: text("license_number"),
   isActive: boolean("is_active").notNull().default(true),
 });
 
 export const insertCompanySchema = createInsertSchema(companies).omit({ id: true });
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
+
+export const branches = pgTable("branches", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  companyId: integer("company_id").notNull(),
+  name: text("name").notNull(),
+  address: text("address"),
+  headName: text("head_name"),
+  wpbCount: integer("wpb_count").default(0),
+  isActive: boolean("is_active").notNull().default(true),
+}, (table) => [
+  index("idx_branches_company_id").on(table.companyId),
+]);
+
+export const insertBranchSchema = createInsertSchema(branches).omit({ id: true });
+export type InsertBranch = z.infer<typeof insertBranchSchema>;
+export type Branch = typeof branches.$inferSelect;
 
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

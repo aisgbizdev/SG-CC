@@ -44,6 +44,8 @@ client/src/
     notifikasi.tsx   - Notifikasi in-app
     pengaturan.tsx   - Ganti password
     users.tsx        - Manajemen user (superadmin)
+    companies.tsx    - Daftar perusahaan (clickable cards)
+    company-detail.tsx - Detail PT: info, cabang, rekap, pengurus
     kpi.tsx          - Penilaian KPI DU/DK
 ```
 
@@ -57,7 +59,8 @@ client/src/
 7. Notifikasi - in-app notifications
 8. Komentar - thread diskusi pada aktivitas/kasus/tugas
 9. Manajemen User - CRUD user (superadmin only)
-10. Penilaian KPI - penilaian kinerja DU/DK per kuartal
+10. Manajemen PT - detail perusahaan, cabang (CRUD), rekap kasus/aktivitas/tugas/pengumuman, daftar pengurus
+11. Penilaian KPI - penilaian kinerja DU/DK per kuartal
 
 ## Perusahaan
 1. PT Solid Gold Berjangka (SGB)

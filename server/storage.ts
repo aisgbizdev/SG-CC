@@ -3,7 +3,7 @@ import { eq, and, desc, or, sql, count, isNull, gte, lte } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates,
-  tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments,
+  tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments, branches,
   type InsertCompany, type Company, type InsertUser, type User,
   type InsertMasterCategory, type MasterCategory,
   type InsertActivity, type Activity, type InsertCase, type Case,
@@ -12,6 +12,7 @@ import {
   type InsertComment, type Comment, type InsertNotification, type Notification,
   type InsertMessage, type Message, type InsertAuditLog, type AuditLog,
   type InsertKpiAssessment, type KpiAssessment,
+  type InsertBranch, type Branch,
 } from "@shared/schema";
 import * as schema from "@shared/schema";
 
@@ -21,6 +22,13 @@ export interface IStorage {
   getCompanies(): Promise<Company[]>;
   getCompany(id: number): Promise<Company | undefined>;
   createCompany(data: InsertCompany): Promise<Company>;
+  updateCompany(id: number, data: Partial<InsertCompany>): Promise<Company | undefined>;
+
+  getBranchesByCompany(companyId: number): Promise<Branch[]>;
+  getBranch(id: number): Promise<Branch | undefined>;
+  createBranch(data: InsertBranch): Promise<Branch>;
+  updateBranch(id: number, data: Partial<InsertBranch>): Promise<Branch | undefined>;
+  deleteBranch(id: number): Promise<void>;
 
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -98,6 +106,34 @@ export class DatabaseStorage implements IStorage {
   async createCompany(data: InsertCompany): Promise<Company> {
     const [company] = await db.insert(companies).values(data).returning();
     return company;
+  }
+
+  async updateCompany(id: number, data: Partial<InsertCompany>): Promise<Company | undefined> {
+    const [company] = await db.update(companies).set(data).where(eq(companies.id, id)).returning();
+    return company;
+  }
+
+  async getBranchesByCompany(companyId: number): Promise<Branch[]> {
+    return db.select().from(branches).where(and(eq(branches.companyId, companyId), eq(branches.isActive, true)));
+  }
+
+  async getBranch(id: number): Promise<Branch | undefined> {
+    const [branch] = await db.select().from(branches).where(eq(branches.id, id));
+    return branch;
+  }
+
+  async createBranch(data: InsertBranch): Promise<Branch> {
+    const [branch] = await db.insert(branches).values(data).returning();
+    return branch;
+  }
+
+  async updateBranch(id: number, data: Partial<InsertBranch>): Promise<Branch | undefined> {
+    const [branch] = await db.update(branches).set(data).where(eq(branches.id, id)).returning();
+    return branch;
+  }
+
+  async deleteBranch(id: number): Promise<void> {
+    await db.update(branches).set({ isActive: false }).where(eq(branches.id, id));
   }
 
   async getUser(id: number): Promise<User | undefined> {
