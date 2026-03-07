@@ -13,14 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "./dashboard";
+import { StatusBadge } from "@/components/status-badges";
+import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil, ArrowUpDown } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
 
 export default function AktivitasPage() {
+  usePageTitle("Aktivitas");
   const { user } = useAuth();
   const { toast } = useToast();
   const [location] = useLocation();
@@ -32,7 +35,7 @@ export default function AktivitasPage() {
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: activities, isLoading } = useQuery<Activity[]>({ queryKey: ["/api/activities"] });
+  const { data: activities, isLoading, isError, refetch } = useQuery<Activity[]>({ queryKey: ["/api/activities"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
   const { data: categories } = useQuery<MasterCategory[]>({ queryKey: ["/api/categories"] });
 
@@ -345,7 +348,9 @@ export default function AktivitasPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError message="Gagal memuat data aktivitas. Silakan coba lagi." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}</div>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center">

@@ -13,9 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Shield, Building2, User, KeyRound } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Company } from "@shared/schema";
 
 export default function UsersPage() {
+  usePageTitle("Manajemen User");
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);

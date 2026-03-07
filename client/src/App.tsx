@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -26,18 +26,44 @@ import PengaturanPage from "@/pages/pengaturan";
 import UsersPage from "@/pages/users";
 import CompaniesPage from "@/pages/companies";
 import NotFound from "@/pages/not-found";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 function HeaderBar() {
   const { user, logout } = useAuth();
+  const [location, setLocation] = useLocation();
   const { data: unreadCount } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
     refetchInterval: 30000,
     enabled: !!user,
   });
 
+  const isHome = location === "/";
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      setLocation("/");
+    }
+  };
+
   return (
     <header className="flex items-center justify-between gap-1 p-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-      <SidebarTrigger data-testid="button-sidebar-toggle" />
+      <div className="flex items-center gap-1">
+        <SidebarTrigger data-testid="button-sidebar-toggle" />
+        {!isHome && (
+          <>
+            <Button variant="ghost" size="icon" onClick={handleBack} data-testid="button-header-back" title="Kembali">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <Link href="/">
+              <Button variant="ghost" size="icon" data-testid="button-header-home" title="Dashboard">
+                <Home className="w-4 h-4" />
+              </Button>
+            </Link>
+          </>
+        )}
+      </div>
       <div className="flex items-center gap-1">
         <Link href="/notifikasi">
           <Button variant="ghost" size="icon" className="relative" data-testid="button-header-notifications">
@@ -91,26 +117,28 @@ function AuthenticatedApp() {
         <div className="flex flex-col flex-1 min-w-0">
           <HeaderBar />
           <main className="flex-1 overflow-auto">
-            <Switch>
-              <Route path="/" component={DashboardPage} />
-              <Route path="/aktivitas" component={AktivitasPage} />
-              <Route path="/aktivitas/:id" component={AktivitasDetailPage} />
-              <Route path="/kasus" component={KasusPage} />
-              <Route path="/kasus/:id" component={KasusDetailPage} />
-              <Route path="/tugas" component={TugasPage} />
-              <Route path="/pengumuman" component={PengumumanPage} />
-              <Route path="/pesan" component={PesanPage} />
-              <Route path="/notifikasi" component={NotifikasiPage} />
-              <Route path="/pengaturan" component={PengaturanPage} />
-              <Route path="/update-profil" component={UpdateProfilPage} />
-              {user?.role === "superadmin" && (
-                <>
-                  <Route path="/users" component={UsersPage} />
-                  <Route path="/companies" component={CompaniesPage} />
-                </>
-              )}
-              <Route>{() => <Redirect to="/" />}</Route>
-            </Switch>
+            <ErrorBoundary>
+              <Switch>
+                <Route path="/" component={DashboardPage} />
+                <Route path="/aktivitas" component={AktivitasPage} />
+                <Route path="/aktivitas/:id" component={AktivitasDetailPage} />
+                <Route path="/kasus" component={KasusPage} />
+                <Route path="/kasus/:id" component={KasusDetailPage} />
+                <Route path="/tugas" component={TugasPage} />
+                <Route path="/pengumuman" component={PengumumanPage} />
+                <Route path="/pesan" component={PesanPage} />
+                <Route path="/notifikasi" component={NotifikasiPage} />
+                <Route path="/pengaturan" component={PengaturanPage} />
+                <Route path="/update-profil" component={UpdateProfilPage} />
+                {user?.role === "superadmin" && (
+                  <>
+                    <Route path="/users" component={UsersPage} />
+                    <Route path="/companies" component={CompaniesPage} />
+                  </>
+                )}
+                <Route>{() => <Redirect to="/" />}</Route>
+              </Switch>
+            </ErrorBoundary>
           </main>
         </div>
       </div>

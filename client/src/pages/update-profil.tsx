@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCircle, Save, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function UpdateProfilPage() {
+  usePageTitle("Update Profil");
   const { user } = useAuth();
   const { toast } = useToast();
 

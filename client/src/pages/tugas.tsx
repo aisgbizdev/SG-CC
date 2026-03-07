@@ -12,16 +12,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "./dashboard";
+import { StatusBadge } from "@/components/status-badges";
+import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Task, Company } from "@shared/schema";
 
 const STATUSES = ["Baru", "Sedang Dikerjakan", "Menunggu Review", "Selesai", "Terlambat"];
 
 export default function TugasPage() {
+  usePageTitle("Tugas");
   const { user } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -33,7 +36,7 @@ export default function TugasPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: tasks, isLoading } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
+  const { data: tasks, isLoading, isError, refetch } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
 
@@ -273,7 +276,9 @@ export default function TugasPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError message="Gagal memuat data tugas. Silakan coba lagi." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}</div>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada tugas</p></CardContent></Card>

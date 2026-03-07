@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, Lock, User, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function LoginPage() {
+  usePageTitle("Login");
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();

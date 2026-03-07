@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, CheckCheck, Clock, AlertTriangle, ListTodo, Megaphone, Mail, FileWarning } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { usePageTitle } from "@/hooks/use-page-title";
+import { QueryError } from "@/components/query-error";
 import type { Notification } from "@shared/schema";
 
 const iconMap: Record<string, any> = {
@@ -25,8 +27,9 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function NotifikasiPage() {
+  usePageTitle("Notifikasi");
   const [currentPage, setCurrentPage] = useState(1);
-  const { data: notifications, isLoading } = useQuery<Notification[]>({ queryKey: ["/api/notifications"] });
+  const { data: notifications, isLoading, isError, refetch } = useQuery<Notification[]>({ queryKey: ["/api/notifications"] });
 
   const readMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -67,7 +70,9 @@ export default function NotifikasiPage() {
         )}
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError message="Gagal memuat data notifikasi. Silakan coba lagi." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
       ) : notifications?.length === 0 ? (
         <Card>

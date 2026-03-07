@@ -10,9 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Plus, MapPin } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Company } from "@shared/schema";
 
 export default function CompaniesPage() {
+  usePageTitle("Manajemen PT");
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: "", code: "", address: "" });

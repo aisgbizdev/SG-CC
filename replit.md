@@ -122,6 +122,26 @@ client/src/
 - All filters reset pagination to page 1
 - Null deadlines always sorted to end
 
+## Navigation
+- Back button (ArrowLeft) and Home button appear in header on all pages except dashboard
+- Back uses window.history.back() with fallback to `/` if no history
+- Home links directly to `/` (dashboard)
+- Sidebar logo + "SG Control Center" text is clickable → navigates to `/`
+
+## Error Handling
+- `ErrorBoundary` wraps all routes — catches render errors, shows "Terjadi Kesalahan" with full page reload button
+- `QueryError` component — reusable error state for failed API queries with "Coba Lagi" retry button
+- Used on: dashboard, aktivitas, kasus, tugas, pengumuman, pesan, notifikasi
+
+## Dynamic Page Titles
+- Hook: `client/src/hooks/use-page-title.ts` — `usePageTitle(title)` sets `document.title` to "Title | SGCC"
+- Applied to all 14 pages including detail pages (dynamic titles)
+
+## Shared Components
+- `client/src/components/status-badges.tsx` — StatusBadge and RiskBadge (extracted from dashboard)
+- `client/src/components/error-boundary.tsx` — ErrorBoundary class component
+- `client/src/components/query-error.tsx` — QueryError for failed API states
+
 ## Pagination Component
 - `client/src/components/data-pagination.tsx` - Reusable pagination UI + `usePagination` hook
 - Used on: aktivitas, kasus, tugas, pengumuman, notifikasi, pesan pages

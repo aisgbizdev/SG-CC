@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Lock, User, Shield, Building2, Pencil } from "lucide-react";
 import { Link } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 export default function PengaturanPage() {
+  usePageTitle("Pengaturan");
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");

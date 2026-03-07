@@ -13,11 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge, RiskBadge } from "./dashboard";
+import { StatusBadge, RiskBadge } from "@/components/status-badges";
+import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, Company } from "@shared/schema";
 
 const BUCKETS = [
@@ -28,6 +30,7 @@ const RISK_LEVELS = ["Low", "Medium", "High"];
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
 
 export default function KasusPage() {
+  usePageTitle("Kasus Pengaduan");
   const { user } = useAuth();
   const { toast } = useToast();
   const [location] = useLocation();
@@ -40,7 +43,7 @@ export default function KasusPage() {
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: cases, isLoading } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
+  const { data: cases, isLoading, isError, refetch } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
 
   const [editingCase, setEditingCase] = useState<Case | null>(null);
@@ -368,7 +371,9 @@ export default function KasusPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError message="Gagal memuat data kasus. Silakan coba lagi." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28" />)}</div>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada kasus yang sesuai filter</p></CardContent></Card>

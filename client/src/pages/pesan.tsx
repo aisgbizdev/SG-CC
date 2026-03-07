@@ -13,15 +13,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Mail, MailOpen, Send, User, Clock } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { usePageTitle } from "@/hooks/use-page-title";
+import { QueryError } from "@/components/query-error";
 import type { Message } from "@shared/schema";
 
 export default function PesanPage() {
+  usePageTitle("Pesan");
   const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: messages, isLoading } = useQuery<Message[]>({ queryKey: ["/api/messages"] });
+  const { data: messages, isLoading, isError, refetch } = useQuery<Message[]>({ queryKey: ["/api/messages"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
 
   const [form, setForm] = useState({ receiverId: "", subject: "", content: "" });
@@ -106,7 +109,9 @@ export default function PesanPage() {
         </Dialog>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError message="Gagal memuat data pesan. Silakan coba lagi." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
       ) : messages?.length === 0 ? (
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada pesan</p></CardContent></Card>

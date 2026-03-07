@@ -12,10 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "./dashboard";
+import { StatusBadge } from "@/components/status-badges";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ArrowLeft, MessageSquare, Send, Calendar, User, Trash2 } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Activity, Comment, User as UserType } from "@shared/schema";
 
 export default function AktivitasDetailPage() {
@@ -27,6 +28,7 @@ export default function AktivitasDetailPage() {
   const [editing, setEditing] = useState(false);
 
   const { data: activity, isLoading } = useQuery<Activity>({ queryKey: ["/api/activities", id] });
+  usePageTitle(activity?.title ? `${activity.title} - Aktivitas` : "Detail Aktivitas");
   const { data: commentsData } = useQuery<Comment[]>({ queryKey: ["/api/comments", "activity", id] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
   const { data: companiesData } = useQuery<any[]>({ queryKey: ["/api/companies"] });

@@ -13,15 +13,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Megaphone, Pin, Eye, Calendar, User } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { usePageTitle } from "@/hooks/use-page-title";
+import { QueryError } from "@/components/query-error";
 import type { Announcement } from "@shared/schema";
 
 export default function PengumumanPage() {
+  usePageTitle("Pengumuman");
   const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: announcements, isLoading } = useQuery<Announcement[]>({ queryKey: ["/api/announcements"] });
+  const { data: announcements, isLoading, isError, refetch } = useQuery<Announcement[]>({ queryKey: ["/api/announcements"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
 
   const [form, setForm] = useState({
@@ -137,7 +140,9 @@ export default function PengumumanPage() {
         )}
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError message="Gagal memuat data pengumuman. Silakan coba lagi." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32" />)}</div>
       ) : announcements?.length === 0 ? (
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada pengumuman</p></CardContent></Card>

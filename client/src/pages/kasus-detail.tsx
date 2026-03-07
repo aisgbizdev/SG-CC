@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatusBadge, RiskBadge } from "./dashboard";
+import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2 } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
+import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, CaseUpdate, Comment } from "@shared/schema";
 
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
@@ -33,6 +34,7 @@ export default function KasusDetailPage() {
   const [editing, setEditing] = useState(false);
 
   const { data: caseData, isLoading } = useQuery<Case>({ queryKey: ["/api/cases", id] });
+  usePageTitle(caseData?.caseCode ? `${caseData.caseCode} - Kasus` : "Detail Kasus");
   const { data: caseUpdates } = useQuery<CaseUpdate[]>({ queryKey: ["/api/cases", id, "updates"] });
   const { data: commentsData } = useQuery<Comment[]>({ queryKey: ["/api/comments", "case", id] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
