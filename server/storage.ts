@@ -3,7 +3,7 @@ import { eq, and, desc, or, sql, count, isNull, gte, lte } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates,
-  tasks, announcements, announcementReads, comments, notifications, messages, auditLogs,
+  tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments,
   type InsertCompany, type Company, type InsertUser, type User,
   type InsertMasterCategory, type MasterCategory,
   type InsertActivity, type Activity, type InsertCase, type Case,
@@ -11,6 +11,7 @@ import {
   type InsertAnnouncement, type Announcement, type InsertAnnouncementRead, type AnnouncementRead,
   type InsertComment, type Comment, type InsertNotification, type Notification,
   type InsertMessage, type Message, type InsertAuditLog, type AuditLog,
+  type InsertKpiAssessment, type KpiAssessment,
 } from "@shared/schema";
 import * as schema from "@shared/schema";
 
@@ -73,6 +74,11 @@ export interface IStorage {
   createAuditLog(data: InsertAuditLog, tx?: TxOrDb): Promise<AuditLog>;
 
   getDashboardStats(companyId?: number): Promise<any>;
+
+  getKpiAssessments(userId?: number): Promise<KpiAssessment[]>;
+  getKpiAssessment(id: number): Promise<KpiAssessment | undefined>;
+  createKpiAssessment(data: InsertKpiAssessment): Promise<KpiAssessment>;
+  calculateKpiForUser(userId: number, period: string): Promise<any>;
 
   transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T>;
 }
@@ -325,8 +331,11 @@ export class DatabaseStorage implements IStorage {
       [totalCases],
       [activeCases],
       [overdueCases],
+      [completedActivities],
+      [closedCases],
       [totalTasks],
       [pendingTasks],
+      [completedTasks],
       [totalAnnouncements],
       recentActivities,
       recentCases,
@@ -336,8 +345,11 @@ export class DatabaseStorage implements IStorage {
       db.select({ count: count() }).from(cases).where(caseConditions),
       db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`)),
       db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.targetDate} < ${today}`, sql`${cases.status} != 'Closed'`)),
+      db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"))),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"))),
       db.select({ count: count() }).from(tasks).where(taskConditions),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`)),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"))),
       db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, false)),
       db.select().from(activities).where(actConditions).orderBy(desc(activities.createdAt)).limit(5),
       db.select().from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5),
@@ -346,15 +358,92 @@ export class DatabaseStorage implements IStorage {
 
     return {
       totalActivities: totalActivities?.count || 0,
+      completedActivities: completedActivities?.count || 0,
       totalCases: totalCases?.count || 0,
       activeCases: activeCases?.count || 0,
+      closedCases: closedCases?.count || 0,
       overdueCases: overdueCases?.count || 0,
       totalTasks: totalTasks?.count || 0,
       pendingTasks: pendingTasks?.count || 0,
+      completedTasks: completedTasks?.count || 0,
       totalAnnouncements: totalAnnouncements?.count || 0,
       recentActivities,
       recentCases,
       highRiskCases,
+    };
+  }
+
+  async getKpiAssessments(userId?: number): Promise<KpiAssessment[]> {
+    if (userId) {
+      return db.select().from(kpiAssessments).where(eq(kpiAssessments.userId, userId)).orderBy(desc(kpiAssessments.createdAt));
+    }
+    return db.select().from(kpiAssessments).orderBy(desc(kpiAssessments.createdAt));
+  }
+
+  async getKpiAssessment(id: number): Promise<KpiAssessment | undefined> {
+    const [kpi] = await db.select().from(kpiAssessments).where(eq(kpiAssessments.id, id));
+    return kpi;
+  }
+
+  async createKpiAssessment(data: InsertKpiAssessment): Promise<KpiAssessment> {
+    const [kpi] = await db.insert(kpiAssessments).values(data).returning();
+    return kpi;
+  }
+
+  async calculateKpiForUser(userId: number, period: string): Promise<any> {
+    const [year, quarter] = period.split("-");
+    let startMonth: number, endMonth: number;
+    if (quarter === "Q1") { startMonth = 1; endMonth = 3; }
+    else if (quarter === "Q2") { startMonth = 4; endMonth = 6; }
+    else if (quarter === "Q3") { startMonth = 7; endMonth = 9; }
+    else { startMonth = 10; endMonth = 12; }
+
+    const startDate = `${year}-${String(startMonth).padStart(2, "0")}-01`;
+    const nextMonth = endMonth === 12 ? 1 : endMonth + 1;
+    const nextYear = endMonth === 12 ? parseInt(year) + 1 : parseInt(year);
+    const endDateObj = new Date(nextYear, nextMonth - 1, 0);
+    const endDate = `${year}-${String(endMonth).padStart(2, "0")}-${String(endDateObj.getDate()).padStart(2, "0")}`;
+
+    const user = await this.getUser(userId);
+    const companyId = user?.companyId;
+
+    const actConditions = companyId
+      ? and(eq(activities.isArchived, false), eq(activities.createdBy, userId), gte(activities.date, startDate), lte(activities.date, endDate))
+      : and(eq(activities.isArchived, false), eq(activities.createdBy, userId));
+
+    const caseConditions = companyId
+      ? and(eq(cases.isArchived, false), eq(cases.createdBy, userId), gte(cases.dateReceived, startDate), lte(cases.dateReceived, endDate))
+      : and(eq(cases.isArchived, false), eq(cases.createdBy, userId));
+
+    const taskConditions = and(eq(tasks.isArchived, false), eq(tasks.assignedTo, userId));
+
+    const [
+      [actTotal], [actCompleted],
+      [caseTotal], [caseCompleted],
+      [taskTotal], [taskCompleted],
+      [actAvgProgress], [caseAvgProgress], [taskAvgProgress],
+    ] = await Promise.all([
+      db.select({ count: count() }).from(activities).where(actConditions),
+      db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"))),
+      db.select({ count: count() }).from(cases).where(caseConditions),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"))),
+      db.select({ count: count() }).from(tasks).where(taskConditions),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"))),
+      db.select({ avg: sql<number>`COALESCE(AVG(${activities.progress}), 0)` }).from(activities).where(actConditions),
+      db.select({ avg: sql<number>`COALESCE(AVG(${cases.progress}), 0)` }).from(cases).where(caseConditions),
+      db.select({ avg: sql<number>`COALESCE(AVG(${tasks.progress}), 0)` }).from(tasks).where(taskConditions),
+    ]);
+
+    const avgP = Math.round(((Number(actAvgProgress?.avg) || 0) + (Number(caseAvgProgress?.avg) || 0) + (Number(taskAvgProgress?.avg) || 0)) / 3);
+
+    return {
+      activitiesTotal: actTotal?.count || 0,
+      activitiesCompleted: actCompleted?.count || 0,
+      casesTotal: caseTotal?.count || 0,
+      casesCompleted: caseCompleted?.count || 0,
+      tasksTotal: taskTotal?.count || 0,
+      tasksCompleted: taskCompleted?.count || 0,
+      avgProgress: avgP,
     };
   }
 

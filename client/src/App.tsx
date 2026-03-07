@@ -25,6 +25,7 @@ import NotifikasiPage from "@/pages/notifikasi";
 import PengaturanPage from "@/pages/pengaturan";
 import UsersPage from "@/pages/users";
 import CompaniesPage from "@/pages/companies";
+import KpiPage from "@/pages/kpi";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/error-boundary";
 
@@ -125,6 +126,7 @@ function AuthenticatedApp() {
                 <Route path="/kasus" component={KasusPage} />
                 <Route path="/kasus/:id" component={KasusDetailPage} />
                 <Route path="/tugas" component={TugasPage} />
+                <Route path="/kpi" component={KpiPage} />
                 <Route path="/pengumuman" component={PengumumanPage} />
                 <Route path="/pesan" component={PesanPage} />
                 <Route path="/notifikasi" component={NotifikasiPage} />

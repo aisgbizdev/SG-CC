@@ -272,6 +272,33 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: tru
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
 
+export const kpiAssessments = pgTable("kpi_assessments", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: integer("user_id").notNull(),
+  period: text("period").notNull(),
+  assessorId: integer("assessor_id").notNull(),
+  activitiesCompleted: integer("activities_completed").notNull().default(0),
+  activitiesTotal: integer("activities_total").notNull().default(0),
+  casesCompleted: integer("cases_completed").notNull().default(0),
+  casesTotal: integer("cases_total").notNull().default(0),
+  tasksCompleted: integer("tasks_completed").notNull().default(0),
+  tasksTotal: integer("tasks_total").notNull().default(0),
+  avgProgress: integer("avg_progress").notNull().default(0),
+  qualityScore: integer("quality_score").notNull().default(0),
+  timelinessScore: integer("timeliness_score").notNull().default(0),
+  initiativeScore: integer("initiative_score").notNull().default(0),
+  totalScore: integer("total_score").notNull().default(0),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_kpi_user_id").on(table.userId),
+  index("idx_kpi_period").on(table.period),
+]);
+
+export const insertKpiAssessmentSchema = createInsertSchema(kpiAssessments).omit({ id: true, createdAt: true });
+export type InsertKpiAssessment = z.infer<typeof insertKpiAssessmentSchema>;
+export type KpiAssessment = typeof kpiAssessments.$inferSelect;
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),

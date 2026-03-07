@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Activity, FileWarning, ListTodo, Megaphone, Mail, Bell,
-  Settings, Users, Building2, Shield, LogOut, ChevronDown,
+  Settings, Users, Building2, Shield, LogOut, ChevronDown, BarChart3,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -31,6 +31,7 @@ export function AppSidebar() {
     { title: "Pengumuman", url: "/pengumuman", icon: Megaphone },
     { title: "Pesan", url: "/pesan", icon: Mail },
     { title: "Notifikasi", url: "/notifikasi", icon: Bell, badge: unreadCount?.count },
+    { title: "Penilaian KPI", url: "/kpi", icon: BarChart3 },
   ];
 
   const adminMenuItems = user.role === "superadmin" ? [

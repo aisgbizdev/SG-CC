@@ -44,6 +44,7 @@ client/src/
     notifikasi.tsx   - Notifikasi in-app
     pengaturan.tsx   - Ganti password
     users.tsx        - Manajemen user (superadmin)
+    kpi.tsx          - Penilaian KPI DU/DK
 ```
 
 ## Modul Utama
@@ -56,6 +57,7 @@ client/src/
 7. Notifikasi - in-app notifications
 8. Komentar - thread diskusi pada aktivitas/kasus/tugas
 9. Manajemen User - CRUD user (superadmin only)
+10. Penilaian KPI - penilaian kinerja DU/DK per kuartal
 
 ## Perusahaan
 1. PT Solid Gold Berjangka (SGB)
@@ -146,6 +148,21 @@ client/src/
 - `client/src/components/data-pagination.tsx` - Reusable pagination UI + `usePagination` hook
 - Used on: aktivitas, kasus, tugas, pengumuman, notifikasi, pesan pages
 - Shows "Halaman X dari Y (N data)" info
+
+## Dashboard Stat Cards (Updated)
+- 7 stat cards total: 4 operational (biru row atas) + 3 completion (hijau row bawah)
+- Row 1: Total Aktivitas, Kasus Aktif, Tugas Pending, Pengumuman
+- Row 2: Aktivitas Selesai, Kasus Selesai, Tugas Selesai (with "dari X total" subtitle)
+
+## Penilaian KPI
+- Table: `kpi_assessments` — penilaian kinerja DU/DK per kuartal
+- Skor otomatis (70%): dihitung dari aktivitas/kasus/tugas yang diselesaikan + avg progress
+- Skor manual (30%): kualitas kerja, ketepatan waktu, inisiatif (dinilai oleh superadmin/owner)
+- Total score: weighted average (auto 70% + manual 30%)
+- Akses: superadmin/owner bisa menilai semua DU/DK; DU/DK hanya lihat KPI sendiri
+- Period format: "YYYY-Q[1-4]" (contoh: "2026-Q1")
+- API: GET /api/kpi, GET /api/kpi/calculate/:userId?period=, POST /api/kpi, GET /api/kpi/:id
+- Frontend: `client/src/pages/kpi.tsx` — route `/kpi`
 
 ## Database
 - PostgreSQL via DATABASE_URL

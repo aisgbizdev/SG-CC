@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   Activity, FileWarning, ListTodo, Megaphone, AlertTriangle,
-  TrendingUp, Clock, Plus, ArrowRight, ShieldAlert,
+  TrendingUp, Clock, Plus, ArrowRight, ShieldAlert, CheckCircle2,
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -49,6 +49,9 @@ export default function DashboardPage() {
       <div className="p-3 sm:p-6 space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => <Skeleton key={`c${i}`} className="h-28" />)}
         </div>
         <div className="grid lg:grid-cols-2 gap-6">
           {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-64" />)}
@@ -101,7 +104,13 @@ export default function DashboardPage() {
         <StatCard title="Total Aktivitas" value={stats?.totalActivities || 0} icon={Activity} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" href="/aktivitas" />
         <StatCard title="Kasus Aktif" value={stats?.activeCases || 0} icon={FileWarning} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" subtitle={`${stats?.overdueCases || 0} overdue`} href="/kasus" />
         <StatCard title="Tugas Pending" value={stats?.pendingTasks || 0} icon={ListTodo} color="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" href="/tugas" />
-        <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" href="/pengumuman" />
+        <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" href="/pengumuman" />
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard title="Aktivitas Selesai" value={stats?.completedActivities || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalActivities || 0} total`} href="/aktivitas" />
+        <StatCard title="Kasus Selesai" value={stats?.closedCases || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalCases || 0} total`} href="/kasus" />
+        <StatCard title="Tugas Selesai" value={stats?.completedTasks || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalTasks || 0} total`} href="/tugas" />
       </div>
 
       {(stats?.overdueCases > 0) && (

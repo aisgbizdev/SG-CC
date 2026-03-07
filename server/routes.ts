@@ -689,5 +689,68 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/kpi", requireAuth, async (req, res) => {
+    const user = req.user as any;
+    if (["superadmin", "owner"].includes(user.role)) {
+      const data = await storage.getKpiAssessments();
+      res.json(data);
+    } else {
+      const data = await storage.getKpiAssessments(user.id);
+      res.json(data);
+    }
+  });
+
+  app.get("/api/kpi/calculate/:userId", requireRole("superadmin", "owner"), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const period = req.query.period as string;
+      if (!period || !/^\d{4}-Q[1-4]$/.test(period)) {
+        return res.status(400).json({ message: "Format period tidak valid (contoh: 2026-Q1)" });
+      }
+      const result = await storage.calculateKpiForUser(userId, period);
+      res.json(result);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghitung KPI" });
+    }
+  });
+
+  app.get("/api/kpi/:id", requireAuth, async (req, res) => {
+    const kpi = await storage.getKpiAssessment(parseInt(req.params.id));
+    if (!kpi) return res.status(404).json({ message: "KPI tidak ditemukan" });
+    const user = req.user as any;
+    if (!["superadmin", "owner"].includes(user.role) && kpi.userId !== user.id) {
+      return res.status(403).json({ message: "Akses ditolak" });
+    }
+    res.json(kpi);
+  });
+
+  app.post("/api/kpi", requireRole("superadmin", "owner"), async (req, res) => {
+    try {
+      const kpiBodySchema = z.object({
+        userId: z.number().int(),
+        period: z.string().min(1),
+        activitiesCompleted: z.number().int().default(0),
+        activitiesTotal: z.number().int().default(0),
+        casesCompleted: z.number().int().default(0),
+        casesTotal: z.number().int().default(0),
+        tasksCompleted: z.number().int().default(0),
+        tasksTotal: z.number().int().default(0),
+        avgProgress: z.number().int().default(0),
+        qualityScore: z.number().int().min(0).max(100).default(0),
+        timelinessScore: z.number().int().min(0).max(100).default(0),
+        initiativeScore: z.number().int().min(0).max(100).default(0),
+        totalScore: z.number().int().min(0).max(100).default(0),
+        notes: z.string().nullable().optional(),
+      });
+      const parsed = kpiBodySchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const assessor = req.user as any;
+      const kpi = await storage.createKpiAssessment({ ...parsed.data, assessorId: assessor.id });
+      res.json(kpi);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menyimpan KPI" });
+    }
+  });
+
   return httpServer;
 }
