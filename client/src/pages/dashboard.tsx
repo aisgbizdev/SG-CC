@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   Activity, FileWarning, ListTodo, Megaphone, AlertTriangle,
-  TrendingUp, Clock, Plus, ArrowRight, ShieldAlert, CheckCircle2,
+  TrendingUp, Clock, Plus, ArrowRight, ShieldAlert, CheckCircle2, Bot, ExternalLink,
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -112,6 +112,30 @@ export default function DashboardPage() {
         <StatCard title="Tugas Selesai" value={stats?.completedTasks || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalTasks || 0} total`} href="/tugas" />
         <StatCard title="Pengumuman" value={stats?.totalAnnouncements || 0} icon={Megaphone} color="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" href="/pengumuman" />
       </div>
+
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent" data-testid="card-ai-compliance">
+        <CardContent className="p-4 flex items-center gap-4">
+          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Bot className="w-6 h-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">SG Compliance & Risk Assistant</p>
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              Asisten AI untuk memahami KYC, APU PPT, pencegahan risiko, dan panduan komunikasi aman dengan nasabah.
+            </p>
+          </div>
+          <a
+            href="https://chatgpt.com/g/g-693fa1b8cc388191b1ceffe68d41b514-sg-compliance-risk-assistant"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button size="sm" variant="outline" className="flex-shrink-0" data-testid="button-open-ai-compliance">
+              <Bot className="w-4 h-4 mr-1" /> Buka AI
+              <ExternalLink className="w-3 h-3 ml-1" />
+            </Button>
+          </a>
+        </CardContent>
+      </Card>
 
       {(stats?.overdueCases > 0) && (
         <Card className="border-red-200 dark:border-red-900/50">

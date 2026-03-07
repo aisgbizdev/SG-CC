@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Activity, FileWarning, ListTodo, Megaphone, Mail, Bell,
-  Settings, Users, Building2, Shield, LogOut, ChevronDown, BarChart3,
+  Settings, Users, Building2, Shield, LogOut, ChevronDown, BarChart3, Bot, ExternalLink,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -78,6 +78,29 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Alat Bantu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a
+                    href="https://chatgpt.com/g/g-693fa1b8cc388191b1ceffe68d41b514-sg-compliance-risk-assistant"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="nav-ai-compliance"
+                    className="flex items-center gap-2"
+                  >
+                    <Bot className="w-4 h-4" />
+                    <span className="flex-1">AI Compliance</span>
+                    <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
