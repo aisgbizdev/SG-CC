@@ -63,6 +63,7 @@ export async function seedData() {
   }
 
   await seedCasesFromJson();
+  await verifyDataIntegrity();
 }
 
 async function seedCasesFromJson() {
@@ -151,4 +152,42 @@ async function seedCasesFromJson() {
   }
 
   console.log(`Seed kasus selesai: ${inserted} ditambahkan, ${skipped} sudah ada (skip).`);
+}
+
+async function verifyDataIntegrity() {
+  const [caseCount] = await db.select({ count: count() }).from(cases).where(eq(cases.isArchived, false));
+  const [activityCount] = await db.select({ count: count() }).from(activities).where(eq(activities.isArchived, false));
+  const [taskCount] = await db.select({ count: count() }).from(tasks).where(eq(tasks.isArchived, false));
+  const [announcementCount] = await db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, false));
+  const [userCount] = await db.select({ count: count() }).from(users).where(eq(users.isActive, true));
+  const [companyCount] = await db.select({ count: count() }).from(companies).where(eq(companies.isActive, true));
+
+  console.log("=== VERIFIKASI DATA ===");
+  console.log(`Users aktif: ${userCount?.count || 0}`);
+  console.log(`Perusahaan aktif: ${companyCount?.count || 0}`);
+  console.log(`Kasus aktif: ${caseCount?.count || 0}`);
+  console.log(`Aktivitas aktif: ${activityCount?.count || 0}`);
+  console.log(`Tugas aktif: ${taskCount?.count || 0}`);
+  console.log(`Pengumuman aktif: ${announcementCount?.count || 0}`);
+
+  const jsonPath = path.join(process.cwd(), "server", "seed-cases.json");
+  if (fs.existsSync(jsonPath)) {
+    const seedCases = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+    const expectedCount = seedCases.length;
+    const actualCount = caseCount?.count || 0;
+    if (actualCount < expectedCount) {
+      console.warn(`⚠ PERINGATAN: Kasus aktif (${actualCount}) kurang dari expected (${expectedCount}). Data mungkin belum lengkap!`);
+    } else {
+      console.log(`✓ Data kasus lengkap (${actualCount}/${expectedCount})`);
+    }
+  }
+
+  if ((userCount?.count || 0) < 12) {
+    console.warn("⚠ PERINGATAN: Users aktif kurang dari 12. Ada masalah dengan data user!");
+  }
+  if ((companyCount?.count || 0) < 5) {
+    console.warn("⚠ PERINGATAN: Perusahaan aktif kurang dari 5. Ada masalah dengan data perusahaan!");
+  }
+
+  console.log("=== VERIFIKASI SELESAI ===");
 }
