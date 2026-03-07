@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, date, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -35,7 +35,10 @@ export const users = pgTable("users", {
   lockedUntil: timestamp("locked_until"),
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_users_company_id").on(table.companyId),
+  index("idx_users_role").on(table.role),
+]);
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, loginAttempts: true, lockedUntil: true, lastLogin: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -70,7 +73,11 @@ export const activities = pgTable("activities", {
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_activities_company_id").on(table.companyId),
+  index("idx_activities_created_by").on(table.createdBy),
+  index("idx_activities_archived_company").on(table.isArchived, table.companyId),
+]);
 
 export const insertActivitySchema = createInsertSchema(activities).omit({ id: true, createdAt: true, updatedAt: true, isArchived: true });
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
@@ -107,7 +114,12 @@ export const cases = pgTable("cases", {
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_cases_company_id").on(table.companyId),
+  index("idx_cases_created_by").on(table.createdBy),
+  index("idx_cases_archived_company").on(table.isArchived, table.companyId),
+  index("idx_cases_status").on(table.status),
+]);
 
 export const insertCaseSchema = createInsertSchema(cases).omit({ id: true, createdAt: true, updatedAt: true, isArchived: true });
 export type InsertCase = z.infer<typeof insertCaseSchema>;
@@ -121,7 +133,9 @@ export const caseUpdates = pgTable("case_updates", {
   newStage: text("new_stage"),
   newProgress: integer("new_progress"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_case_updates_case_id").on(table.caseId),
+]);
 
 export const insertCaseUpdateSchema = createInsertSchema(caseUpdates).omit({ id: true, createdAt: true });
 export type InsertCaseUpdate = z.infer<typeof insertCaseUpdateSchema>;
@@ -144,7 +158,11 @@ export const tasks = pgTable("tasks", {
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_tasks_company_id").on(table.companyId),
+  index("idx_tasks_assigned_to").on(table.assignedTo),
+  index("idx_tasks_is_archived").on(table.isArchived),
+]);
 
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, updatedAt: true, isArchived: true });
 export type InsertTask = z.infer<typeof insertTaskSchema>;
@@ -163,7 +181,10 @@ export const announcements = pgTable("announcements", {
   isPinned: boolean("is_pinned").notNull().default(false),
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_announcements_created_by").on(table.createdBy),
+  index("idx_announcements_is_archived").on(table.isArchived),
+]);
 
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, isArchived: true });
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
@@ -174,7 +195,9 @@ export const announcementReads = pgTable("announcement_reads", {
   announcementId: integer("announcement_id").notNull(),
   userId: integer("user_id").notNull(),
   readAt: timestamp("read_at").notNull().defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("idx_announcement_reads_announcement_user").on(table.announcementId, table.userId),
+]);
 
 export const insertAnnouncementReadSchema = createInsertSchema(announcementReads).omit({ id: true, readAt: true });
 export type InsertAnnouncementRead = z.infer<typeof insertAnnouncementReadSchema>;
@@ -188,7 +211,9 @@ export const comments = pgTable("comments", {
   content: text("content").notNull(),
   parentId: integer("parent_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_comments_entity").on(table.entityType, table.entityId),
+]);
 
 export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
 export type InsertComment = z.infer<typeof insertCommentSchema>;
@@ -205,7 +230,9 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").notNull().default(false),
   priority: text("priority").notNull().default("low"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_notifications_user_read").on(table.userId, table.isRead),
+]);
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
@@ -219,7 +246,10 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_messages_sender_id").on(table.senderId),
+  index("idx_messages_receiver_id").on(table.receiverId),
+]);
 
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true, isRead: true });
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
@@ -233,7 +263,10 @@ export const auditLogs = pgTable("audit_logs", {
   entityId: integer("entity_id"),
   details: text("details"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_audit_logs_user_id").on(table.userId),
+  index("idx_audit_logs_entity").on(table.entityType, table.entityId),
+]);
 
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true });
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;

@@ -17,6 +17,7 @@ import { StatusBadge, RiskBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Search, Filter, ArrowRight, Trash2 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Case, Company } from "@shared/schema";
 
 const BUCKETS = [
@@ -33,6 +34,7 @@ export default function KasusPage() {
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: cases, isLoading } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
@@ -84,6 +86,8 @@ export default function KasusPage() {
     return matchSearch && matchRisk;
   }) || [];
 
+  const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
+  const pagedItems = getPageItems(currentPage);
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "du", "dk"].includes(user?.role || "");
   const canDeleteCase = (c: Case) => ["superadmin", "owner"].includes(user?.role || "") || c.createdBy === user?.id;
@@ -206,9 +210,9 @@ export default function KasusPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input data-testid="input-search-case" placeholder="Cari kode kasus atau nama nasabah..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input data-testid="input-search-case" placeholder="Cari kode kasus atau nama nasabah..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
         </div>
-        <Select value={riskFilter} onValueChange={setRiskFilter}>
+        <Select value={riskFilter} onValueChange={v => { setRiskFilter(v); setCurrentPage(1); }}>
           <SelectTrigger data-testid="select-filter-risk" className="w-48">
             <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Risk" />
           </SelectTrigger>
@@ -225,7 +229,7 @@ export default function KasusPage() {
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada kasus yang sesuai filter</p></CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(c => (
+          {pagedItems.map(c => (
             <Card key={c.id} className="hover-elevate" data-testid={`card-case-${c.id}`}>
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -273,6 +277,7 @@ export default function KasusPage() {
               </CardContent>
             </Card>
           ))}
+          <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
     </div>

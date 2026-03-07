@@ -95,6 +95,20 @@ client/src/
 - Permissions: Aktivitas/Kasus - creator OR owner OR superadmin; Tugas - superadmin/owner only
 - Company access check enforced on task deletion for owners
 
+## Security & Performance
+- Rate limiting: 100 req/min general API, 10 req/min login (express-rate-limit)
+- Session: SESSION_SECRET env var required; secure cookies in production
+- Database indexes: 22 indexes on frequently queried columns (users, activities, cases, tasks, announcements, notifications, messages, audit_logs)
+- Zod validation: All POST/PATCH routes validate request bodies with descriptive error messages
+- Database transactions: All multi-step operations (create + audit log, etc.) wrapped in atomic transactions
+- Pagination: Client-side pagination (20 items/page) on all list pages; backend supports `?page=1&limit=20` query params
+- Response logging: No response body logging (security)
+
+## Pagination Component
+- `client/src/components/data-pagination.tsx` - Reusable pagination UI + `usePagination` hook
+- Used on: aktivitas, kasus, tugas, pengumuman, notifikasi, pesan pages
+- Shows "Halaman X dari Y (N data)" info
+
 ## Database
 - PostgreSQL via DATABASE_URL
 - Schema push: `npm run db:push`

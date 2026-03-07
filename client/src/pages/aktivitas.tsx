@@ -17,6 +17,7 @@ import { StatusBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Search, Filter, Calendar, ArrowRight, Trash2 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
 
 export default function AktivitasPage() {
@@ -26,6 +27,7 @@ export default function AktivitasPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: activities, isLoading } = useQuery<Activity[]>({ queryKey: ["/api/activities"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
@@ -82,6 +84,8 @@ export default function AktivitasPage() {
     return matchSearch && matchStatus;
   }) || [];
 
+  const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
+  const pagedItems = getPageItems(currentPage);
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "du", "dk"].includes(user?.role || "");
   const canDelete = (a: Activity) => ["superadmin", "owner"].includes(user?.role || "") || a.createdBy === user?.id;
@@ -206,9 +210,9 @@ export default function AktivitasPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input data-testid="input-search-activity" placeholder="Cari aktivitas..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input data-testid="input-search-activity" placeholder="Cari aktivitas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
           <SelectTrigger data-testid="select-filter-status" className="w-48">
             <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" />
           </SelectTrigger>
@@ -227,7 +231,7 @@ export default function AktivitasPage() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(a => (
+          {pagedItems.map(a => (
             <Card key={a.id} className="hover-elevate" data-testid={`card-activity-${a.id}`}>
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -273,6 +277,7 @@ export default function AktivitasPage() {
               </CardContent>
             </Card>
           ))}
+          <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
     </div>

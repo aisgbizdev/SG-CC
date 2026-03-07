@@ -12,12 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Mail, MailOpen, Send, User, Clock } from "lucide-react";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Message } from "@shared/schema";
 
 export default function PesanPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: messages, isLoading } = useQuery<Message[]>({ queryKey: ["/api/messages"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
@@ -60,6 +62,9 @@ export default function PesanPage() {
   const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
   const otherUsers = usersData?.filter((u: any) => u.id !== user?.id) || [];
 
+  const allMessages = messages || [];
+  const { totalPages, totalItems, getPageItems } = usePagination(allMessages, 20);
+  const pagedItems = getPageItems(currentPage);
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -107,7 +112,7 @@ export default function PesanPage() {
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada pesan</p></CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {messages?.map(msg => {
+          {pagedItems.map(msg => {
             const isSender = msg.senderId === user?.id;
             const isUnread = !msg.isRead && !isSender;
             return (
@@ -140,6 +145,7 @@ export default function PesanPage() {
               </Card>
             );
           })}
+          <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
     </div>

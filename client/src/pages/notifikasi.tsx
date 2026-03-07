@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -5,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, CheckCheck, Clock, AlertTriangle, ListTodo, Megaphone, Mail, FileWarning } from "lucide-react";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Notification } from "@shared/schema";
 
 const iconMap: Record<string, any> = {
@@ -23,6 +25,7 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function NotifikasiPage() {
+  const [currentPage, setCurrentPage] = useState(1);
   const { data: notifications, isLoading } = useQuery<Notification[]>({ queryKey: ["/api/notifications"] });
 
   const readMutation = useMutation({
@@ -47,6 +50,9 @@ export default function NotifikasiPage() {
 
   const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
 
+  const allNotifications = notifications || [];
+  const { totalPages, totalItems, getPageItems } = usePagination(allNotifications, 20);
+  const pagedItems = getPageItems(currentPage);
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -72,7 +78,7 @@ export default function NotifikasiPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {notifications?.map(n => {
+          {pagedItems.map(n => {
             const Icon = iconMap[n.type] || Bell;
             return (
               <Card
@@ -98,6 +104,7 @@ export default function NotifikasiPage() {
               </Card>
             );
           })}
+          <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
     </div>

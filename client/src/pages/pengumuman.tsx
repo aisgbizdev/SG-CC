@@ -12,12 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Megaphone, Pin, Eye, Calendar, User } from "lucide-react";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Announcement } from "@shared/schema";
 
 export default function PengumumanPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: announcements, isLoading } = useQuery<Announcement[]>({ queryKey: ["/api/announcements"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
@@ -67,6 +69,9 @@ export default function PengumumanPage() {
   const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
   const canCreate = ["superadmin", "owner"].includes(user?.role || "");
 
+  const allAnnouncements = announcements || [];
+  const { totalPages, totalItems, getPageItems } = usePagination(allAnnouncements, 20);
+  const pagedItems = getPageItems(currentPage);
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -138,7 +143,7 @@ export default function PengumumanPage() {
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada pengumuman</p></CardContent></Card>
       ) : (
         <div className="space-y-4">
-          {announcements?.map(ann => (
+          {pagedItems.map(ann => (
             <Card key={ann.id} data-testid={`card-announcement-${ann.id}`} onClick={() => readMutation.mutate(ann.id)}>
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-start justify-between gap-2">
@@ -162,6 +167,7 @@ export default function PengumumanPage() {
               </CardContent>
             </Card>
           ))}
+          <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@ import { StatusBadge } from "./dashboard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2 } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 import type { Task, Company } from "@shared/schema";
 
 const STATUSES = ["Baru", "Sedang Dikerjakan", "Menunggu Review", "Selesai", "Terlambat"];
@@ -27,6 +28,7 @@ export default function TugasPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: tasks, isLoading } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
@@ -86,6 +88,8 @@ export default function TugasPage() {
     return matchSearch && matchStatus;
   }) || [];
 
+  const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
+  const pagedItems = getPageItems(currentPage);
   const getUserName = (id: number) => usersData?.find((u: any) => u.id === id)?.fullName || "Unknown";
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["superadmin", "owner"].includes(user?.role || "");
@@ -191,9 +195,9 @@ export default function TugasPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input data-testid="input-search-task" placeholder="Cari tugas..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input data-testid="input-search-task" placeholder="Cari tugas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
           <SelectTrigger className="w-48"><Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Status</SelectItem>
@@ -208,7 +212,7 @@ export default function TugasPage() {
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Belum ada tugas</p></CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(t => (
+          {pagedItems.map(t => (
             <Card key={t.id} className="hover-elevate cursor-pointer" data-testid={`card-task-${t.id}`} onClick={() => setSelectedTask(t)}>
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -234,6 +238,7 @@ export default function TugasPage() {
               </CardContent>
             </Card>
           ))}
+          <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
 

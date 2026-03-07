@@ -24,17 +24,25 @@ declare global {
 
 export function setupAuth(app: Express) {
   const PgStore = connectPgSimple(session);
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (!process.env.SESSION_SECRET) {
+    if (isProduction) {
+      throw new Error("SESSION_SECRET environment variable is required in production");
+    }
+    console.warn("WARNING: SESSION_SECRET not set, using default (not safe for production)");
+  }
 
   app.use(
     session({
       store: new PgStore({ pool, createTableIfMissing: true }),
-      secret: process.env.SESSION_SECRET || "sgcc-secret-key-2024",
+      secret: process.env.SESSION_SECRET || "sgcc-dev-only-secret",
       resave: false,
       saveUninitialized: false,
       cookie: {
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: false,
+        secure: isProduction,
         sameSite: "lax",
       },
     })

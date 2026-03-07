@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { eq, and, desc, or, sql, count, isNull, gte, lte } from "drizzle-orm";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates,
   tasks, announcements, announcementReads, comments, notifications, messages, auditLogs,
@@ -11,6 +12,9 @@ import {
   type InsertComment, type Comment, type InsertNotification, type Notification,
   type InsertMessage, type Message, type InsertAuditLog, type AuditLog,
 } from "@shared/schema";
+import * as schema from "@shared/schema";
+
+type TxOrDb = NodePgDatabase<typeof schema>;
 
 export interface IStorage {
   getCompanies(): Promise<Company[]>;
@@ -29,21 +33,21 @@ export interface IStorage {
 
   getActivities(companyId?: number): Promise<Activity[]>;
   getActivity(id: number): Promise<Activity | undefined>;
-  createActivity(data: InsertActivity): Promise<Activity>;
-  updateActivity(id: number, data: Partial<Activity>): Promise<Activity | undefined>;
+  createActivity(data: InsertActivity, tx?: TxOrDb): Promise<Activity>;
+  updateActivity(id: number, data: Partial<Activity>, tx?: TxOrDb): Promise<Activity | undefined>;
 
   getCases(companyId?: number): Promise<Case[]>;
   getCase(id: number): Promise<Case | undefined>;
-  createCase(data: InsertCase): Promise<Case>;
-  updateCase(id: number, data: Partial<Case>): Promise<Case | undefined>;
+  createCase(data: InsertCase, tx?: TxOrDb): Promise<Case>;
+  updateCase(id: number, data: Partial<Case>, tx?: TxOrDb): Promise<Case | undefined>;
 
   getCaseUpdates(caseId: number): Promise<CaseUpdate[]>;
-  createCaseUpdate(data: InsertCaseUpdate): Promise<CaseUpdate>;
+  createCaseUpdate(data: InsertCaseUpdate, tx?: TxOrDb): Promise<CaseUpdate>;
 
   getTasks(filters?: { assignedTo?: number; createdBy?: number; companyId?: number }): Promise<Task[]>;
   getTask(id: number): Promise<Task | undefined>;
-  createTask(data: InsertTask): Promise<Task>;
-  updateTask(id: number, data: Partial<Task>): Promise<Task | undefined>;
+  createTask(data: InsertTask, tx?: TxOrDb): Promise<Task>;
+  updateTask(id: number, data: Partial<Task>, tx?: TxOrDb): Promise<Task | undefined>;
 
   getAnnouncements(): Promise<Announcement[]>;
   getAnnouncement(id: number): Promise<Announcement | undefined>;
@@ -56,17 +60,19 @@ export interface IStorage {
 
   getNotifications(userId: number): Promise<Notification[]>;
   getUnreadNotificationCount(userId: number): Promise<number>;
-  createNotification(data: InsertNotification): Promise<Notification>;
+  createNotification(data: InsertNotification, tx?: TxOrDb): Promise<Notification>;
   markNotificationRead(id: number): Promise<void>;
   markAllNotificationsRead(userId: number): Promise<void>;
 
   getMessages(userId: number): Promise<Message[]>;
-  createMessage(data: InsertMessage): Promise<Message>;
+  createMessage(data: InsertMessage, tx?: TxOrDb): Promise<Message>;
   markMessageRead(id: number): Promise<void>;
 
-  createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
+  createAuditLog(data: InsertAuditLog, tx?: TxOrDb): Promise<AuditLog>;
 
   getDashboardStats(companyId?: number): Promise<any>;
+
+  transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -136,13 +142,15 @@ export class DatabaseStorage implements IStorage {
     return activity;
   }
 
-  async createActivity(data: InsertActivity): Promise<Activity> {
-    const [activity] = await db.insert(activities).values(data).returning();
+  async createActivity(data: InsertActivity, tx?: TxOrDb): Promise<Activity> {
+    const d = tx || db;
+    const [activity] = await d.insert(activities).values(data).returning();
     return activity;
   }
 
-  async updateActivity(id: number, data: Partial<Activity>): Promise<Activity | undefined> {
-    const [activity] = await db.update(activities).set({ ...data, updatedAt: new Date() }).where(eq(activities.id, id)).returning();
+  async updateActivity(id: number, data: Partial<Activity>, tx?: TxOrDb): Promise<Activity | undefined> {
+    const d = tx || db;
+    const [activity] = await d.update(activities).set({ ...data, updatedAt: new Date() }).where(eq(activities.id, id)).returning();
     return activity;
   }
 
@@ -158,13 +166,15 @@ export class DatabaseStorage implements IStorage {
     return c;
   }
 
-  async createCase(data: InsertCase): Promise<Case> {
-    const [c] = await db.insert(cases).values(data).returning();
+  async createCase(data: InsertCase, tx?: TxOrDb): Promise<Case> {
+    const d = tx || db;
+    const [c] = await d.insert(cases).values(data).returning();
     return c;
   }
 
-  async updateCase(id: number, data: Partial<Case>): Promise<Case | undefined> {
-    const [c] = await db.update(cases).set({ ...data, updatedAt: new Date() }).where(eq(cases.id, id)).returning();
+  async updateCase(id: number, data: Partial<Case>, tx?: TxOrDb): Promise<Case | undefined> {
+    const d = tx || db;
+    const [c] = await d.update(cases).set({ ...data, updatedAt: new Date() }).where(eq(cases.id, id)).returning();
     return c;
   }
 
@@ -172,8 +182,9 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(caseUpdates).where(eq(caseUpdates.caseId, caseId)).orderBy(desc(caseUpdates.createdAt));
   }
 
-  async createCaseUpdate(data: InsertCaseUpdate): Promise<CaseUpdate> {
-    const [update] = await db.insert(caseUpdates).values(data).returning();
+  async createCaseUpdate(data: InsertCaseUpdate, tx?: TxOrDb): Promise<CaseUpdate> {
+    const d = tx || db;
+    const [update] = await d.insert(caseUpdates).values(data).returning();
     return update;
   }
 
@@ -190,13 +201,15 @@ export class DatabaseStorage implements IStorage {
     return task;
   }
 
-  async createTask(data: InsertTask): Promise<Task> {
-    const [task] = await db.insert(tasks).values(data).returning();
+  async createTask(data: InsertTask, tx?: TxOrDb): Promise<Task> {
+    const d = tx || db;
+    const [task] = await d.insert(tasks).values(data).returning();
     return task;
   }
 
-  async updateTask(id: number, data: Partial<Task>): Promise<Task | undefined> {
-    const [task] = await db.update(tasks).set({ ...data, updatedAt: new Date() }).where(eq(tasks.id, id)).returning();
+  async updateTask(id: number, data: Partial<Task>, tx?: TxOrDb): Promise<Task | undefined> {
+    const d = tx || db;
+    const [task] = await d.update(tasks).set({ ...data, updatedAt: new Date() }).where(eq(tasks.id, id)).returning();
     return task;
   }
 
@@ -249,8 +262,9 @@ export class DatabaseStorage implements IStorage {
     return result?.count || 0;
   }
 
-  async createNotification(data: InsertNotification): Promise<Notification> {
-    const [notif] = await db.insert(notifications).values(data).returning();
+  async createNotification(data: InsertNotification, tx?: TxOrDb): Promise<Notification> {
+    const d = tx || db;
+    const [notif] = await d.insert(notifications).values(data).returning();
     return notif;
   }
 
@@ -268,8 +282,9 @@ export class DatabaseStorage implements IStorage {
     ).orderBy(desc(messages.createdAt));
   }
 
-  async createMessage(data: InsertMessage): Promise<Message> {
-    const [msg] = await db.insert(messages).values(data).returning();
+  async createMessage(data: InsertMessage, tx?: TxOrDb): Promise<Message> {
+    const d = tx || db;
+    const [msg] = await d.insert(messages).values(data).returning();
     return msg;
   }
 
@@ -277,8 +292,9 @@ export class DatabaseStorage implements IStorage {
     await db.update(messages).set({ isRead: true }).where(eq(messages.id, id));
   }
 
-  async createAuditLog(data: InsertAuditLog): Promise<AuditLog> {
-    const [log] = await db.insert(auditLogs).values(data).returning();
+  async createAuditLog(data: InsertAuditLog, tx?: TxOrDb): Promise<AuditLog> {
+    const d = tx || db;
+    const [log] = await d.insert(auditLogs).values(data).returning();
     return log;
   }
 
@@ -325,6 +341,10 @@ export class DatabaseStorage implements IStorage {
       recentCases,
       highRiskCases,
     };
+  }
+
+  async transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T> {
+    return db.transaction(fn);
   }
 }
 
