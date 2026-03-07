@@ -308,26 +308,29 @@ export class DatabaseStorage implements IStorage {
       : eq(cases.isArchived, false);
     const taskConditions = eq(tasks.isArchived, false);
 
-    const [totalActivities] = await db.select({ count: count() }).from(activities).where(actConditions);
-    const [totalCases] = await db.select({ count: count() }).from(cases).where(caseConditions);
-    const [activeCases] = await db.select({ count: count() }).from(cases).where(
-      and(caseConditions, sql`${cases.status} != 'Closed'`)
-    );
-    const [overdueCases] = await db.select({ count: count() }).from(cases).where(
-      and(caseConditions, sql`${cases.targetDate} < ${today}`, sql`${cases.status} != 'Closed'`)
-    );
-    const [totalTasks] = await db.select({ count: count() }).from(tasks).where(taskConditions);
-    const [pendingTasks] = await db.select({ count: count() }).from(tasks).where(
-      and(taskConditions, sql`${tasks.status} != 'Selesai'`)
-    );
-    const [totalAnnouncements] = await db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, false));
-
-    const recentActivities = await db.select().from(activities).where(actConditions).orderBy(desc(activities.createdAt)).limit(5);
-    const recentCases = await db.select().from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5);
-
-    const highRiskCases = await db.select().from(cases).where(
-      and(caseConditions, eq(cases.riskLevel, "High"), sql`${cases.status} != 'Closed'`)
-    ).orderBy(desc(cases.createdAt)).limit(5);
+    const [
+      [totalActivities],
+      [totalCases],
+      [activeCases],
+      [overdueCases],
+      [totalTasks],
+      [pendingTasks],
+      [totalAnnouncements],
+      recentActivities,
+      recentCases,
+      highRiskCases,
+    ] = await Promise.all([
+      db.select({ count: count() }).from(activities).where(actConditions),
+      db.select({ count: count() }).from(cases).where(caseConditions),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`)),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.targetDate} < ${today}`, sql`${cases.status} != 'Closed'`)),
+      db.select({ count: count() }).from(tasks).where(taskConditions),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`)),
+      db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, false)),
+      db.select().from(activities).where(actConditions).orderBy(desc(activities.createdAt)).limit(5),
+      db.select().from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5),
+      db.select().from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), sql`${cases.status} != 'Closed'`)).orderBy(desc(cases.createdAt)).limit(5),
+    ]);
 
     return {
       totalActivities: totalActivities?.count || 0,

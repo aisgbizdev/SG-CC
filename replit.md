@@ -96,11 +96,15 @@ client/src/
 - Company access check enforced on task deletion for owners
 
 ## Security & Performance
+- Trust proxy: `app.set("trust proxy", 1)` enabled for correct rate-limit IP detection behind proxy
 - Rate limiting: 100 req/min general API, 10 req/min login (express-rate-limit)
 - Session: SESSION_SECRET env var required; secure cookies in production
+- Error handling: Production 5xx errors return generic message; dev shows details
+- Frontend route protection: `/users` and `/companies` only rendered for superadmin role; unknown routes redirect to dashboard
 - Database indexes: 22 indexes on frequently queried columns (users, activities, cases, tasks, announcements, notifications, messages, audit_logs)
 - Zod validation: All POST/PATCH routes validate request bodies with descriptive error messages
 - Database transactions: All multi-step operations (create + audit log, etc.) wrapped in atomic transactions
+- Dashboard stats: 10 queries run in parallel via Promise.all for faster load
 - Pagination: Client-side pagination (20 items/page) on all list pages; backend supports `?page=1&limit=20` query params
 - Response logging: No response body logging (security)
 

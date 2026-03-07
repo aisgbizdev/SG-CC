@@ -44,8 +44,7 @@ export default function LoginPage() {
 
   const handleForgotUsername = async () => {
     try {
-      const res = await fetch(`/api/auth/secret-question/${forgotUsername}`);
-      if (!res.ok) throw new Error("Username tidak ditemukan");
+      const res = await apiRequest("GET", `/api/auth/secret-question/${forgotUsername}`);
       const data = await res.json();
       setSecretQuestion(data.question);
       setForgotStep("answer");

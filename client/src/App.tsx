@@ -103,9 +103,13 @@ function AuthenticatedApp() {
               <Route path="/notifikasi" component={NotifikasiPage} />
               <Route path="/pengaturan" component={PengaturanPage} />
               <Route path="/update-profil" component={UpdateProfilPage} />
-              <Route path="/users" component={UsersPage} />
-              <Route path="/companies" component={CompaniesPage} />
-              <Route component={NotFound} />
+              {user?.role === "superadmin" && (
+                <>
+                  <Route path="/users" component={UsersPage} />
+                  <Route path="/companies" component={CompaniesPage} />
+                </>
+              )}
+              <Route>{() => <Redirect to="/" />}</Route>
             </Switch>
           </main>
         </div>
