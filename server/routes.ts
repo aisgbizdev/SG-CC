@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import {
   insertCompanySchema,
+  insertMasterCategorySchema,
 } from "@shared/schema";
 
 const createUserSchema = z.object({
@@ -253,8 +254,14 @@ export async function registerRoutes(
   });
 
   app.post("/api/categories", requireRole("superadmin"), async (req, res) => {
-    const cat = await storage.createCategory(req.body);
-    res.json(cat);
+    try {
+      const parsed = insertMasterCategorySchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const cat = await storage.createCategory(parsed.data);
+      res.json(cat);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal membuat kategori" });
+    }
   });
 
   app.get("/api/activities", requireAuth, async (req, res) => {
@@ -578,7 +585,11 @@ export async function registerRoutes(
   });
 
   app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
-    await storage.markNotificationRead(parseInt(req.params.id));
+    const user = req.user as any;
+    const notification = await storage.getNotification(parseInt(req.params.id));
+    if (!notification) return res.status(404).json({ message: "Notifikasi tidak ditemukan" });
+    if (notification.userId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
+    await storage.markNotificationRead(notification.id);
     res.json({ success: true });
   });
 
@@ -612,7 +623,11 @@ export async function registerRoutes(
   });
 
   app.patch("/api/messages/:id/read", requireAuth, async (req, res) => {
-    await storage.markMessageRead(parseInt(req.params.id));
+    const user = req.user as any;
+    const message = await storage.getMessage(parseInt(req.params.id));
+    if (!message) return res.status(404).json({ message: "Pesan tidak ditemukan" });
+    if (message.receiverId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
+    await storage.markMessageRead(message.id);
     res.json({ success: true });
   });
 

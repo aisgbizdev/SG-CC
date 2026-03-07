@@ -58,12 +58,14 @@ export interface IStorage {
   getComments(entityType: string, entityId: number): Promise<Comment[]>;
   createComment(data: InsertComment): Promise<Comment>;
 
+  getNotification(id: number): Promise<Notification | undefined>;
   getNotifications(userId: number): Promise<Notification[]>;
   getUnreadNotificationCount(userId: number): Promise<number>;
   createNotification(data: InsertNotification, tx?: TxOrDb): Promise<Notification>;
   markNotificationRead(id: number): Promise<void>;
   markAllNotificationsRead(userId: number): Promise<void>;
 
+  getMessage(id: number): Promise<Message | undefined>;
   getMessages(userId: number): Promise<Message[]>;
   createMessage(data: InsertMessage, tx?: TxOrDb): Promise<Message>;
   markMessageRead(id: number): Promise<void>;
@@ -251,6 +253,11 @@ export class DatabaseStorage implements IStorage {
     return comment;
   }
 
+  async getNotification(id: number): Promise<Notification | undefined> {
+    const [notif] = await db.select().from(notifications).where(eq(notifications.id, id));
+    return notif;
+  }
+
   async getNotifications(userId: number): Promise<Notification[]> {
     return db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt));
   }
@@ -274,6 +281,11 @@ export class DatabaseStorage implements IStorage {
 
   async markAllNotificationsRead(userId: number): Promise<void> {
     await db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId));
+  }
+
+  async getMessage(id: number): Promise<Message | undefined> {
+    const [msg] = await db.select().from(messages).where(eq(messages.id, id));
+    return msg;
   }
 
   async getMessages(userId: number): Promise<Message[]> {
