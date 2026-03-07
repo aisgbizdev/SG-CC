@@ -41,6 +41,7 @@ export default function CompanyDetailPage() {
   const [companyForm, setCompanyForm] = useState({
     name: "", code: "", address: "", phone: "", email: "",
     directorName: "", foundedDate: "", licenseNumber: "",
+    duName: "", dkName: "",
   });
 
   const [branchForm, setBranchForm] = useState({
@@ -59,12 +60,22 @@ export default function CompanyDetailPage() {
 
   const updateCompanyMutation = useMutation({
     mutationFn: async (formData: any) => {
-      const res = await apiRequest("PATCH", `/api/companies/${companyId}`, formData);
+      const { duName, dkName, ...companyData } = formData;
+      const res = await apiRequest("PATCH", `/api/companies/${companyId}`, companyData);
+      const du = data?.users.find((u) => u.role === "du");
+      const dk = data?.users.find((u) => u.role === "dk");
+      if (du && duName && duName !== du.fullName) {
+        await apiRequest("PATCH", `/api/users/${du.id}`, { fullName: duName });
+      }
+      if (dk && dkName && dkName !== dk.fullName) {
+        await apiRequest("PATCH", `/api/users/${dk.id}`, { fullName: dkName });
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies", companyId] });
       queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({ title: "Berhasil", description: "Data PT berhasil diperbarui" });
       setEditOpen(false);
     },
@@ -141,11 +152,14 @@ export default function CompanyDetailPage() {
   const openEditCompany = () => {
     if (!data) return;
     const c = data.company;
+    const du = data.users.find((u) => u.role === "du");
+    const dk = data.users.find((u) => u.role === "dk");
     setCompanyForm({
       name: c.name || "", code: c.code || "", address: c.address || "",
       phone: c.phone || "", email: c.email || "",
       directorName: c.directorName || "", foundedDate: c.foundedDate || "",
       licenseNumber: c.licenseNumber || "",
+      duName: du?.fullName || "", dkName: dk?.fullName || "",
     });
     setEditOpen(true);
   };
@@ -184,6 +198,8 @@ export default function CompanyDetailPage() {
 
   const { company, branches: branchList, users: userList, rekapKasus, rekapAktivitas, rekapTugas, rekapPengumuman } = data;
   const totalKasus = Object.values(rekapKasus).reduce((sum, r) => sum + r.total, 0);
+  const duUser = userList.find((u) => u.role === "du");
+  const dkUser = userList.find((u) => u.role === "dk");
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-5xl mx-auto">
@@ -227,6 +243,8 @@ export default function CompanyDetailPage() {
             <InfoRow icon={<User className="w-4 h-4" />} label="Direktur Utama" value={company.directorName} />
             <InfoRow icon={<Calendar className="w-4 h-4" />} label="Tanggal Berdiri" value={company.foundedDate} />
             <InfoRow icon={<Shield className="w-4 h-4" />} label="No. Izin BAPPEBTI" value={company.licenseNumber} />
+            <InfoRow icon={<User className="w-4 h-4" />} label="Direktur Utama (DU)" value={duUser?.fullName} />
+            <InfoRow icon={<User className="w-4 h-4" />} label="Direktur Kepatuhan (DK)" value={dkUser?.fullName} />
           </div>
         </CardContent>
       </Card>
@@ -390,6 +408,16 @@ export default function CompanyDetailPage() {
               <div className="space-y-1.5">
                 <Label>No. Izin BAPPEBTI</Label>
                 <Input data-testid="input-edit-license" value={companyForm.licenseNumber} onChange={e => setCompanyForm({ ...companyForm, licenseNumber: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Nama DU</Label>
+                <Input data-testid="input-edit-du-name" value={companyForm.duName} onChange={e => setCompanyForm({ ...companyForm, duName: e.target.value })} placeholder="Nama Direktur Utama" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nama DK</Label>
+                <Input data-testid="input-edit-dk-name" value={companyForm.dkName} onChange={e => setCompanyForm({ ...companyForm, dkName: e.target.value })} placeholder="Nama Direktur Kepatuhan" />
               </div>
             </div>
           </div>
