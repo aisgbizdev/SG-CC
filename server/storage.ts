@@ -228,7 +228,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAnnouncement(id: number): Promise<Announcement | undefined> {
-    const [ann] = await db.select().from(announcements).where(eq(announcements.id, id));
+    const [ann] = await db.select().from(announcements).where(and(eq(announcements.id, id), eq(announcements.isArchived, false)));
     return ann;
   }
 

@@ -168,6 +168,11 @@ function canAccessCompany(user: any, companyId: number | null): boolean {
   return user.companyId === companyId;
 }
 
+function parseId(param: string): number | null {
+  if (!/^\d+$/.test(param)) return null;
+  return parseInt(param);
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -176,8 +181,12 @@ export async function registerRoutes(
   await seedData();
 
   app.get("/api/companies", requireAuth, async (_req, res) => {
-    const data = await storage.getCompanies();
-    res.json(data);
+    try {
+      const data = await storage.getCompanies();
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data perusahaan" });
+    }
   });
 
   app.post("/api/companies", requireRole("superadmin"), async (req, res) => {
@@ -192,13 +201,17 @@ export async function registerRoutes(
   });
 
   app.get("/api/users", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const data = await storage.getUsers();
-    const safe = data.map(({ password, secretAnswer, ...u }) => u);
-    if (["superadmin", "owner"].includes(user.role)) {
-      return res.json(safe);
+    try {
+      const user = req.user as any;
+      const data = await storage.getUsers();
+      const safe = data.map(({ password, secretAnswer, ...u }) => u);
+      if (["superadmin", "owner"].includes(user.role)) {
+        return res.json(safe);
+      }
+      return res.json(safe.filter((u: any) => u.companyId === user.companyId || ["superadmin", "owner"].includes(u.role)));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data user" });
     }
-    return res.json(safe.filter((u: any) => u.companyId === user.companyId || ["superadmin", "owner"].includes(u.role)));
   });
 
   app.post("/api/users", requireRole("superadmin"), async (req, res) => {
@@ -241,16 +254,24 @@ export async function registerRoutes(
   });
 
   app.get("/api/dashboard", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
-    const stats = await storage.getDashboardStats(companyId);
-    res.json(stats);
+    try {
+      const user = req.user as any;
+      const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
+      const stats = await storage.getDashboardStats(companyId);
+      res.json(stats);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data dashboard" });
+    }
   });
 
   app.get("/api/categories", requireAuth, async (req, res) => {
-    const type = req.query.type as string | undefined;
-    const data = await storage.getCategories(type);
-    res.json(data);
+    try {
+      const type = req.query.type as string | undefined;
+      const data = await storage.getCategories(type);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data kategori" });
+    }
   });
 
   app.post("/api/categories", requireRole("superadmin"), async (req, res) => {
@@ -265,19 +286,29 @@ export async function registerRoutes(
   });
 
   app.get("/api/activities", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
-    const data = await storage.getActivities(companyId);
-    const pagination = parsePagination(req.query);
-    res.json(paginateArray(data, pagination));
+    try {
+      const user = req.user as any;
+      const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
+      const data = await storage.getActivities(companyId);
+      const pagination = parsePagination(req.query);
+      res.json(paginateArray(data, pagination));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data aktivitas" });
+    }
   });
 
   app.get("/api/activities/:id", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const activity = await storage.getActivity(parseInt(req.params.id));
-    if (!activity) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
-    if (!canAccessCompany(user, activity.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-    res.json(activity);
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const activity = await storage.getActivity(id);
+      if (!activity) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
+      if (!canAccessCompany(user, activity.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      res.json(activity);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data aktivitas" });
+    }
   });
 
   app.post("/api/activities", requireRole("superadmin", "du", "dk"), async (req, res) => {
@@ -342,19 +373,29 @@ export async function registerRoutes(
   });
 
   app.get("/api/cases", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
-    const data = await storage.getCases(companyId);
-    const pagination = parsePagination(req.query);
-    res.json(paginateArray(data, pagination));
+    try {
+      const user = req.user as any;
+      const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
+      const data = await storage.getCases(companyId);
+      const pagination = parsePagination(req.query);
+      res.json(paginateArray(data, pagination));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data kasus" });
+    }
   });
 
   app.get("/api/cases/:id", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const c = await storage.getCase(parseInt(req.params.id));
-    if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-    if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-    res.json(c);
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const c = await storage.getCase(id);
+      if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      res.json(c);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data kasus" });
+    }
   });
 
   app.post("/api/cases", requireRole("superadmin", "du", "dk"), async (req, res) => {
@@ -415,12 +456,18 @@ export async function registerRoutes(
   });
 
   app.get("/api/cases/:id/updates", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const c = await storage.getCase(parseInt(req.params.id));
-    if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-    if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-    const data = await storage.getCaseUpdates(c.id);
-    res.json(data);
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const c = await storage.getCase(id);
+      if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      const data = await storage.getCaseUpdates(c.id);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data update kasus" });
+    }
   });
 
   app.post("/api/cases/:id/updates", requireAuth, async (req, res) => {
@@ -449,24 +496,34 @@ export async function registerRoutes(
   });
 
   app.get("/api/tasks", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    let filters: any = {};
-    if (["du", "dk"].includes(user.role)) {
-      filters.assignedTo = user.id;
+    try {
+      const user = req.user as any;
+      let filters: any = {};
+      if (["du", "dk"].includes(user.role)) {
+        filters.assignedTo = user.id;
+      }
+      const data = await storage.getTasks(filters);
+      const pagination = parsePagination(req.query);
+      res.json(paginateArray(data, pagination));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data tugas" });
     }
-    const data = await storage.getTasks(filters);
-    const pagination = parsePagination(req.query);
-    res.json(paginateArray(data, pagination));
   });
 
   app.get("/api/tasks/:id", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const task = await storage.getTask(parseInt(req.params.id));
-    if (!task) return res.status(404).json({ message: "Tugas tidak ditemukan" });
-    if (["du", "dk"].includes(user.role) && task.assignedTo !== user.id) {
-      return res.status(403).json({ message: "Akses ditolak" });
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const task = await storage.getTask(id);
+      if (!task) return res.status(404).json({ message: "Tugas tidak ditemukan" });
+      if (["du", "dk"].includes(user.role) && task.assignedTo !== user.id) {
+        return res.status(403).json({ message: "Akses ditolak" });
+      }
+      res.json(task);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data tugas" });
     }
-    res.json(task);
   });
 
   app.post("/api/tasks", requireRole("superadmin", "owner"), async (req, res) => {
@@ -526,9 +583,13 @@ export async function registerRoutes(
   });
 
   app.get("/api/announcements", requireAuth, async (req, res) => {
-    const data = await storage.getAnnouncements();
-    const pagination = parsePagination(req.query);
-    res.json(paginateArray(data, pagination));
+    try {
+      const data = await storage.getAnnouncements();
+      const pagination = parsePagination(req.query);
+      res.json(paginateArray(data, pagination));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data pengumuman" });
+    }
   });
 
   app.post("/api/announcements", requireRole("superadmin", "owner"), async (req, res) => {
@@ -576,19 +637,37 @@ export async function registerRoutes(
   });
 
   app.get("/api/announcements/:id/reads", requireAuth, async (req, res) => {
-    const reads = await storage.getAnnouncementReads(parseInt(req.params.id));
-    res.json(reads);
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const reads = await storage.getAnnouncementReads(id);
+      res.json(reads);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data" });
+    }
   });
 
   app.post("/api/announcements/:id/read", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const read = await storage.markAnnouncementRead({ announcementId: parseInt(req.params.id), userId: user.id });
-    res.json(read);
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const read = await storage.markAnnouncementRead({ announcementId: id, userId: user.id });
+      res.json(read);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menandai pengumuman" });
+    }
   });
 
   app.get("/api/comments/:entityType/:entityId", requireAuth, async (req, res) => {
-    const data = await storage.getComments(req.params.entityType, parseInt(req.params.entityId));
-    res.json(data);
+    try {
+      const entityId = parseId(req.params.entityId);
+      if (!entityId) return res.status(400).json({ message: "ID tidak valid" });
+      const data = await storage.getComments(req.params.entityType, entityId);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil komentar" });
+    }
   });
 
   app.post("/api/comments", requireAuth, async (req, res) => {
@@ -604,38 +683,60 @@ export async function registerRoutes(
   });
 
   app.get("/api/notifications", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const data = await storage.getNotifications(user.id);
-    const pagination = parsePagination(req.query);
-    res.json(paginateArray(data, pagination));
+    try {
+      const user = req.user as any;
+      const data = await storage.getNotifications(user.id);
+      const pagination = parsePagination(req.query);
+      res.json(paginateArray(data, pagination));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil notifikasi" });
+    }
   });
 
   app.get("/api/notifications/unread-count", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const count = await storage.getUnreadNotificationCount(user.id);
-    res.json({ count });
+    try {
+      const user = req.user as any;
+      const count = await storage.getUnreadNotificationCount(user.id);
+      res.json({ count });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil jumlah notifikasi" });
+    }
   });
 
   app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const notification = await storage.getNotification(parseInt(req.params.id));
-    if (!notification) return res.status(404).json({ message: "Notifikasi tidak ditemukan" });
-    if (notification.userId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
-    await storage.markNotificationRead(notification.id);
-    res.json({ success: true });
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const notification = await storage.getNotification(id);
+      if (!notification) return res.status(404).json({ message: "Notifikasi tidak ditemukan" });
+      if (notification.userId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
+      await storage.markNotificationRead(notification.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menandai notifikasi" });
+    }
   });
 
   app.post("/api/notifications/read-all", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    await storage.markAllNotificationsRead(user.id);
-    res.json({ success: true });
+    try {
+      const user = req.user as any;
+      await storage.markAllNotificationsRead(user.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menandai semua notifikasi" });
+    }
   });
 
   app.get("/api/messages", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const data = await storage.getMessages(user.id);
-    const pagination = parsePagination(req.query);
-    res.json(paginateArray(data, pagination));
+    try {
+      const user = req.user as any;
+      const data = await storage.getMessages(user.id);
+      const pagination = parsePagination(req.query);
+      res.json(paginateArray(data, pagination));
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil pesan" });
+    }
   });
 
   app.post("/api/messages", requireAuth, async (req, res) => {
@@ -655,20 +756,30 @@ export async function registerRoutes(
   });
 
   app.patch("/api/messages/:id/read", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const message = await storage.getMessage(parseInt(req.params.id));
-    if (!message) return res.status(404).json({ message: "Pesan tidak ditemukan" });
-    if (message.receiverId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
-    await storage.markMessageRead(message.id);
-    res.json({ success: true });
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const message = await storage.getMessage(id);
+      if (!message) return res.status(404).json({ message: "Pesan tidak ditemukan" });
+      if (message.receiverId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
+      await storage.markMessageRead(message.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menandai pesan" });
+    }
   });
 
   app.get("/api/profile", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    const fullUser = await storage.getUser(user.id);
-    if (!fullUser) return res.status(404).json({ message: "User tidak ditemukan" });
-    const { password: _, secretAnswer: __, ...safe } = fullUser;
-    res.json(safe);
+    try {
+      const user = req.user as any;
+      const fullUser = await storage.getUser(user.id);
+      if (!fullUser) return res.status(404).json({ message: "User tidak ditemukan" });
+      const { password: _, secretAnswer: __, ...safe } = fullUser;
+      res.json(safe);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil profil" });
+    }
   });
 
   app.patch("/api/profile", requireAuth, async (req, res) => {
@@ -753,13 +864,17 @@ export async function registerRoutes(
   });
 
   app.get("/api/kpi", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    if (["superadmin", "owner"].includes(user.role)) {
-      const data = await storage.getKpiAssessments();
-      res.json(data);
-    } else {
-      const data = await storage.getKpiAssessments(user.id);
-      res.json(data);
+    try {
+      const user = req.user as any;
+      if (["superadmin", "owner"].includes(user.role)) {
+        const data = await storage.getKpiAssessments();
+        res.json(data);
+      } else {
+        const data = await storage.getKpiAssessments(user.id);
+        res.json(data);
+      }
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data KPI" });
     }
   });
 
@@ -778,13 +893,19 @@ export async function registerRoutes(
   });
 
   app.get("/api/kpi/:id", requireAuth, async (req, res) => {
-    const kpi = await storage.getKpiAssessment(parseInt(req.params.id));
-    if (!kpi) return res.status(404).json({ message: "KPI tidak ditemukan" });
-    const user = req.user as any;
-    if (!["superadmin", "owner"].includes(user.role) && kpi.userId !== user.id) {
-      return res.status(403).json({ message: "Akses ditolak" });
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const kpi = await storage.getKpiAssessment(id);
+      if (!kpi) return res.status(404).json({ message: "KPI tidak ditemukan" });
+      const user = req.user as any;
+      if (!["superadmin", "owner"].includes(user.role) && kpi.userId !== user.id) {
+        return res.status(403).json({ message: "Akses ditolak" });
+      }
+      res.json(kpi);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data KPI" });
     }
-    res.json(kpi);
   });
 
   app.post("/api/kpi", requireRole("superadmin", "owner"), async (req, res) => {
