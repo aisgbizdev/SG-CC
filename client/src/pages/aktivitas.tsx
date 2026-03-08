@@ -414,7 +414,7 @@ export default function AktivitasPage() {
                   <div
                     key={u.id}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${personFilter === u.id.toString() ? "border-primary bg-primary/5" : "hover:border-primary/50"}`}
-                    onClick={() => { setPersonFilter(u.id.toString()); setCurrentPage(1); }}
+                    onClick={() => { setPersonFilter(u.id.toString()); setCurrentPage(1); setTimeout(() => document.getElementById("activity-list")?.scrollIntoView({ behavior: "smooth" }), 100); }}
                     data-testid={`card-person-${u.id}`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -516,12 +516,21 @@ export default function AktivitasPage() {
       ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}</div>
       ) : filtered.length === 0 ? (
-        <Card><CardContent className="py-12 text-center space-y-2">
-          <p className="text-muted-foreground">Belum ada aktivitas yang sesuai filter</p>
-          {canCreate && <p className="text-sm text-muted-foreground">Klik <strong>"+ Tambah Aktivitas"</strong> di atas untuk mencatat kegiatan harian Anda</p>}
+        <Card id="activity-list"><CardContent className="py-12 text-center space-y-2">
+          {personFilter !== "all" ? (
+            <>
+              <p className="text-muted-foreground font-medium">{usersData?.find((u: any) => u.id.toString() === personFilter)?.fullName || "Personil ini"} belum ada aktivitas tercatat</p>
+              <p className="text-sm text-muted-foreground">Belum ada kegiatan yang dicatat oleh personil ini</p>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground">Belum ada aktivitas yang sesuai filter</p>
+              {canCreate && <p className="text-sm text-muted-foreground">Klik <strong>"+ Tambah Aktivitas"</strong> di atas untuk mencatat kegiatan harian Anda</p>}
+            </>
+          )}
         </CardContent></Card>
       ) : (
-        <div className="space-y-3">
+        <div id="activity-list" className="space-y-3">
           {pagedItems.map(a => (
             <Card key={a.id} className="hover-elevate" data-testid={`card-activity-${a.id}`}>
               <CardContent className="p-4">
