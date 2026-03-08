@@ -506,8 +506,9 @@ export default function AktivitasPage() {
       ) : isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}</div>
       ) : filtered.length === 0 ? (
-        <Card><CardContent className="py-12 text-center">
+        <Card><CardContent className="py-12 text-center space-y-2">
           <p className="text-muted-foreground">Belum ada aktivitas yang sesuai filter</p>
+          {canCreate && <p className="text-sm text-muted-foreground">Klik <strong>"+ Tambah Aktivitas"</strong> di atas untuk mencatat kegiatan harian Anda</p>}
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
