@@ -44,8 +44,18 @@ export default function AktivitasPage() {
   const { data: categories } = useQuery<MasterCategory[]>({ queryKey: ["/api/categories"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"], enabled: isAdmin });
 
-  const duDkUsers = (usersData || []).filter((u: any) => ["du", "dk"].includes(u.role) && u.isActive);
+  const companyOrder = ["SGB", "RFB", "BPF", "KPF", "EWF"];
   const getCompanyCode = (companyId: number) => companiesData?.find(c => c.id === companyId)?.code || "";
+  const duDkUsers = (usersData || [])
+    .filter((u: any) => ["du", "dk"].includes(u.role) && u.isActive)
+    .sort((a: any, b: any) => {
+      const roleOrder = a.role === "du" ? 0 : 1;
+      const roleOrderB = b.role === "du" ? 0 : 1;
+      if (roleOrder !== roleOrderB) return roleOrder - roleOrderB;
+      const compA = companyOrder.indexOf(getCompanyCode(a.companyId));
+      const compB = companyOrder.indexOf(getCompanyCode(b.companyId));
+      return (compA === -1 ? 99 : compA) - (compB === -1 ? 99 : compB);
+    });
 
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
