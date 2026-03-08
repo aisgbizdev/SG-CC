@@ -326,6 +326,7 @@ export default function AktivitasPage() {
               {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
+          {["superadmin", "owner"].includes(user?.role || "") && (
           <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
             <SelectTrigger data-testid="select-filter-company" className="w-40">
               <SelectValue placeholder="Semua PT" />
@@ -335,6 +336,7 @@ export default function AktivitasPage() {
               {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
             </SelectContent>
           </Select>
+          )}
           <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setCurrentPage(1); }}>
             <SelectTrigger data-testid="select-filter-priority" className="w-40">
               <SelectValue placeholder="Semua Prioritas" />

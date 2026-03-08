@@ -133,6 +133,9 @@ export const cases = pgTable("cases", {
   ownerNote: text("owner_note"),
   duNote: text("du_note"),
   dkNote: text("dk_note"),
+  wpbName: text("wpb_name"),
+  managerName: text("manager_name"),
+  resolutionPath: text("resolution_path").notNull().default("Belum Ditentukan"),
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -146,6 +149,25 @@ export const cases = pgTable("cases", {
 export const insertCaseSchema = createInsertSchema(cases).omit({ id: true, createdAt: true, updatedAt: true, isArchived: true });
 export type InsertCase = z.infer<typeof insertCaseSchema>;
 export type Case = typeof cases.$inferSelect;
+
+export const caseMeetings = pgTable("case_meetings", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  caseId: integer("case_id").notNull(),
+  meetingDate: date("meeting_date").notNull(),
+  meetingType: text("meeting_type").notNull(),
+  participants: text("participants"),
+  location: text("location"),
+  result: text("result"),
+  notes: text("notes"),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_case_meetings_case_id").on(table.caseId),
+]);
+
+export const insertCaseMeetingSchema = createInsertSchema(caseMeetings).omit({ id: true, createdAt: true });
+export type InsertCaseMeeting = z.infer<typeof insertCaseMeetingSchema>;
+export type CaseMeeting = typeof caseMeetings.$inferSelect;
 
 export const caseUpdates = pgTable("case_updates", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

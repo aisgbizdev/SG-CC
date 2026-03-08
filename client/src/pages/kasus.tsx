@@ -21,7 +21,7 @@ import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarn
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Case, Company } from "@shared/schema";
+import type { Case, Company, Branch } from "@shared/schema";
 
 const BUCKETS = [
   "Pemeriksaan Pengaduan Baru", "Disetujui untuk Perdamaian", "Tidak Disetujui untuk Perdamaian",
@@ -29,6 +29,7 @@ const BUCKETS = [
 ];
 const RISK_LEVELS = ["Low", "Medium", "High"];
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
+const RESOLUTION_PATHS = ["Belum Ditentukan", "Mediasi Internal", "Mediasi BBJ", "Sidang Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
 
 export default function KasusPage() {
   usePageTitle("Kasus Pengaduan");
@@ -50,12 +51,23 @@ export default function KasusPage() {
   const [editingCase, setEditingCase] = useState<Case | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
+  const [branchFilter, setBranchFilter] = useState("all");
+  const [resolutionFilter, setResolutionFilter] = useState("all");
+  const isDuDk = ["du", "dk"].includes(user?.role || "");
+  const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
+
+  const { data: myBranches } = useQuery<Branch[]>({
+    queryKey: ["/api/branches/my-company"],
+    enabled: isDuDk,
+  });
+
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
     customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Open", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
+    wpbName: "", managerName: "", resolutionPath: "Belum Ditentukan",
   });
 
   const createMutation = useMutation({
@@ -87,20 +99,27 @@ export default function KasusPage() {
       accountNumber: form.accountNumber || null,
       branch: form.branch || null,
       picMain: form.picMain || null,
+      wpbName: form.wpbName || null,
+      managerName: form.managerName || null,
+      resolutionPath: form.resolutionPath,
     });
   };
 
   const riskOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
 
   const filtered = (cases?.filter(c => {
-    const matchSearch = c.caseCode.toLowerCase().includes(search.toLowerCase()) ||
-      c.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      (c.summary || "").toLowerCase().includes(search.toLowerCase());
+    const s = search.toLowerCase();
+    const matchSearch = c.caseCode.toLowerCase().includes(s) ||
+      c.customerName.toLowerCase().includes(s) ||
+      (c.summary || "").toLowerCase().includes(s) ||
+      (c.accountNumber || "").toLowerCase().includes(s);
     const matchRisk = riskFilter === "all" || c.riskLevel === riskFilter;
     const matchCompany = companyFilter === "all" || c.companyId?.toString() === companyFilter;
     const matchBucket = bucketFilter === "all" || c.bucket === bucketFilter;
     const matchStage = stageFilter === "all" || c.workflowStage === stageFilter;
-    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage;
+    const matchBranch = branchFilter === "all" || c.branch === branchFilter;
+    const matchResolution = resolutionFilter === "all" || c.resolutionPath === resolutionFilter;
+    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution;
   }) || []).sort((a, b) => {
     switch (sortBy) {
       case "date-asc": return a.dateReceived.localeCompare(b.dateReceived);
@@ -152,6 +171,7 @@ export default function KasusPage() {
     status: "Open", summary: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Open", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
+    wpbName: "", managerName: "", resolutionPath: "Belum Ditentukan",
   });
 
   const openEditDialog = (c: Case, e: React.MouseEvent) => {
@@ -174,6 +194,9 @@ export default function KasusPage() {
       progress: c.progress,
       targetDate: c.targetDate || "",
       companyId: c.companyId?.toString() || "",
+      wpbName: c.wpbName || "",
+      managerName: c.managerName || "",
+      resolutionPath: c.resolutionPath || "Belum Ditentukan",
     });
     setEditDialogOpen(true);
   };
@@ -201,6 +224,9 @@ export default function KasusPage() {
         workflowStage: form.workflowStage,
         progress: Number(form.progress),
         targetDate: form.targetDate || null,
+        wpbName: form.wpbName || null,
+        managerName: form.managerName || null,
+        resolutionPath: form.resolutionPath,
       },
     });
   };
@@ -278,6 +304,23 @@ export default function KasusPage() {
                     <Input data-testid="input-case-pic" placeholder="PIC" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>WPB</Label>
+                    <Input data-testid="input-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Manager</Label>
+                    <Input data-testid="input-case-manager" placeholder="Nama Manager" value={form.managerName} onChange={e => setForm({...form, managerName: e.target.value})} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Jalur Penyelesaian</Label>
+                  <Select value={form.resolutionPath} onValueChange={v => setForm({...form, resolutionPath: v})}>
+                    <SelectTrigger data-testid="select-case-resolution"><SelectValue /></SelectTrigger>
+                    <SelectContent>{RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-1.5">
                   <Label>Inti Pengaduan *</Label>
                   <Textarea data-testid="input-case-summary" placeholder="Ringkasan pengaduan" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
@@ -316,7 +359,7 @@ export default function KasusPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input data-testid="input-search-case" placeholder="Cari kode kasus, nasabah, atau ringkasan..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
+            <Input data-testid="input-search-case" placeholder="Cari kode kasus, no. akun, nasabah, atau ringkasan..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
           </div>
           <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
             <SelectTrigger data-testid="select-sort-case" className="w-48">
@@ -342,15 +385,28 @@ export default function KasusPage() {
               {RISK_LEVELS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-company-case" className="w-40">
-              <SelectValue placeholder="Semua PT" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua PT</SelectItem>
-              {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {isAdmin && (
+            <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
+              <SelectTrigger data-testid="select-filter-company-case" className="w-40">
+                <SelectValue placeholder="Semua PT" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua PT</SelectItem>
+                {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+          {isDuDk && myBranches && myBranches.length > 0 && (
+            <Select value={branchFilter} onValueChange={v => { setBranchFilter(v); setCurrentPage(1); }}>
+              <SelectTrigger data-testid="select-filter-branch-case" className="w-40">
+                <SelectValue placeholder="Semua Cabang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Cabang</SelectItem>
+                {myBranches.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={bucketFilter} onValueChange={v => { setBucketFilter(v); setCurrentPage(1); }}>
             <SelectTrigger data-testid="select-filter-bucket" className="w-52">
               <SelectValue placeholder="Semua Bucket" />
@@ -369,6 +425,15 @@ export default function KasusPage() {
               {WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={resolutionFilter} onValueChange={v => { setResolutionFilter(v); setCurrentPage(1); }}>
+            <SelectTrigger data-testid="select-filter-resolution" className="w-48">
+              <SelectValue placeholder="Semua Jalur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Jalur</SelectItem>
+              {RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -378,10 +443,12 @@ export default function KasusPage() {
         const byRisk = { High: 0, Medium: 0, Low: 0 } as Record<string, number>;
         const byBucket: Record<string, number> = {};
         const byStage: Record<string, number> = {};
+        const byResolution: Record<string, number> = {};
         src.forEach(c => {
           byRisk[c.riskLevel] = (byRisk[c.riskLevel] || 0) + 1;
           byBucket[c.bucket] = (byBucket[c.bucket] || 0) + 1;
           byStage[c.workflowStage] = (byStage[c.workflowStage] || 0) + 1;
+          byResolution[c.resolutionPath || "Belum Ditentukan"] = (byResolution[c.resolutionPath || "Belum Ditentukan"] || 0) + 1;
         });
         return (
           <Card data-testid="card-case-summary">
@@ -391,7 +458,7 @@ export default function KasusPage() {
                 <span>Ringkasan</span>
                 <Badge variant="secondary" className="ml-1" data-testid="text-total-cases">{total} kasus</Badge>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
                 <div>
                   <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Risk Level</p>
                   <div className="space-y-1">
@@ -425,6 +492,17 @@ export default function KasusPage() {
                     ))}
                   </div>
                 </div>
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> Jalur</p>
+                  <div className="space-y-1 max-h-28 overflow-y-auto">
+                    {Object.entries(byResolution).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between gap-2">
+                        <span className="truncate">{k}</span>
+                        <span className="font-medium flex-shrink-0">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -445,7 +523,8 @@ export default function KasusPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <Link href={`/kasus/${c.id}`} className="flex-1 min-w-0 space-y-1.5 cursor-pointer">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-sm">{c.caseCode}</h3>
+                      {c.accountNumber && <span className="font-semibold text-sm text-primary" data-testid={`text-account-${c.id}`}>{c.accountNumber}</span>}
+                      <span className="text-xs text-muted-foreground">{c.caseCode}</span>
                       <RiskBadge level={c.riskLevel} />
                       <StatusBadge status={c.status} />
                     </div>
@@ -455,6 +534,9 @@ export default function KasusPage() {
                       <span>{getCompanyName(c.companyId)}</span>
                       {c.branch && <span>{c.branch}</span>}
                       <span>{c.workflowStage}</span>
+                      {c.resolutionPath && c.resolutionPath !== "Belum Ditentukan" && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0" data-testid={`badge-resolution-${c.id}`}>{c.resolutionPath}</Badge>
+                      )}
                     </div>
                   </Link>
                   <div className="flex items-center gap-3 flex-shrink-0">
@@ -530,6 +612,23 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-pic" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>WPB</Label>
+                <Input data-testid="input-edit-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Manager</Label>
+                <Input data-testid="input-edit-case-manager" placeholder="Nama Manager" value={form.managerName} onChange={e => setForm({...form, managerName: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Jalur Penyelesaian</Label>
+              <Select value={form.resolutionPath} onValueChange={v => setForm({...form, resolutionPath: v})}>
+                <SelectTrigger data-testid="select-edit-case-resolution"><SelectValue /></SelectTrigger>
+                <SelectContent>{RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <Label>Inti Pengaduan *</Label>
               <Textarea data-testid="input-edit-case-summary" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
@@ -546,7 +645,7 @@ export default function KasusPage() {
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
                   <SelectTrigger data-testid="select-edit-case-status"><SelectValue /></SelectTrigger>
-                  <SelectContent>{WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{["Open", "In Progress", "Closed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">

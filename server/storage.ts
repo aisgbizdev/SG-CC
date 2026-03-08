@@ -2,7 +2,7 @@ import { db } from "./db";
 import { eq, and, desc, or, sql, count, isNull, gte, lte } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
-  companies, users, masterCategories, activities, cases, caseUpdates,
+  companies, users, masterCategories, activities, cases, caseUpdates, caseMeetings,
   tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments, branches,
   type InsertCompany, type Company, type InsertUser, type User,
   type InsertMasterCategory, type MasterCategory,
@@ -13,6 +13,7 @@ import {
   type InsertMessage, type Message, type InsertAuditLog, type AuditLog,
   type InsertKpiAssessment, type KpiAssessment,
   type InsertBranch, type Branch,
+  type InsertCaseMeeting, type CaseMeeting,
 } from "@shared/schema";
 import * as schema from "@shared/schema";
 
@@ -89,6 +90,10 @@ export interface IStorage {
   createKpiAssessment(data: InsertKpiAssessment): Promise<KpiAssessment>;
   calculateKpiForUser(userId: number, period: string): Promise<any>;
   calculateLiveKpi(userId: number): Promise<any>;
+
+  getMeetingsByCase(caseId: number): Promise<CaseMeeting[]>;
+  createMeeting(data: InsertCaseMeeting): Promise<CaseMeeting>;
+  deleteMeeting(id: number): Promise<void>;
 
   transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T>;
 }
@@ -621,6 +626,19 @@ export class DatabaseStorage implements IStorage {
         totalItems,
       },
     };
+  }
+
+  async getMeetingsByCase(caseId: number): Promise<CaseMeeting[]> {
+    return db.select().from(caseMeetings).where(eq(caseMeetings.caseId, caseId)).orderBy(desc(caseMeetings.meetingDate));
+  }
+
+  async createMeeting(data: InsertCaseMeeting): Promise<CaseMeeting> {
+    const [meeting] = await db.insert(caseMeetings).values(data).returning();
+    return meeting;
+  }
+
+  async deleteMeeting(id: number): Promise<void> {
+    await db.delete(caseMeetings).where(eq(caseMeetings.id, id));
   }
 
   async transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T> {

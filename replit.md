@@ -173,10 +173,22 @@ client/src/
 - Radar chart SVG untuk visualisasi 8 aspek
 - Coaching fields: strengths (kekuatan), improvements (area perbaikan), notes (catatan coaching)
 - **Dasar Penilaian**: section collapsible yang menjelaskan rumus, sumber data, bobot, dan grade (di expanded Live & History)
-- **Papan Peringkat**: ranking DU/DK berdasarkan skor KPI Live (sorted by totalScore desc), top 3 highlight medali, dinamis berubah mengikuti skor
+- **Papan Peringkat**: ranking DU dan DK **dipisahkan** — 2 section side-by-side ("Peringkat DU" & "Peringkat DK"), masing-masing 5 orang, ranking 1-5
 - Akses: superadmin/owner lihat semua DU/DK; DU/DK hanya lihat KPI sendiri
 - API: GET /api/kpi/live, GET /api/kpi/live/:userId, GET /api/kpi, POST /api/kpi, GET /api/kpi/:id
 - Frontend: `client/src/pages/kpi.tsx` — route `/kpi` (2 tabs: KPI Live + Riwayat Penilaian)
+
+## Case Meetings (Pertemuan)
+- Tabel `case_meetings`: id, case_id, meeting_date, meeting_type, participants, location, result, notes, created_by, created_at
+- 6 tipe pertemuan: Mediasi Nasabah, Musyawarah Pialang, Mediasi BBJ, Sidang Bappebti, Negosiasi Internal, Lainnya
+- API: GET/POST /api/cases/:id/meetings, DELETE /api/meetings/:id
+- Frontend: tab "Pertemuan" di halaman detail kasus (kasus-detail.tsx)
+- Case fields tambahan: wpbName (WPB), managerName (Manager), resolutionPath (Jalur Penyelesaian)
+- Jalur Penyelesaian options: Belum Ditentukan, Mediasi Internal, Mediasi BBJ, Sidang Bappebti, BAKTI, Pengadilan, Kepolisian
+- No. Akun tampil prominent di list kasus, searchable
+- Filter cabang untuk DK/DU di halaman Kasus (bukan PT)
+- Filter Jalur Penyelesaian tersedia di halaman Kasus
+- Ringkasan statistik kasus menampilkan breakdown per Jalur Penyelesaian
 
 ## Database
 - PostgreSQL via DATABASE_URL

@@ -26,6 +26,24 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_branches_company_id ON branches(company_id)`);
     await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`);
+    await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS wpb_name text`);
+    await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS manager_name text`);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS case_meetings (
+        id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        case_id integer NOT NULL,
+        meeting_date date NOT NULL,
+        meeting_type text NOT NULL,
+        participants text,
+        location text,
+        result text,
+        notes text,
+        created_by integer NOT NULL,
+        created_at timestamp NOT NULL DEFAULT now()
+      )
+    `);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_case_meetings_case_id ON case_meetings(case_id)`);
+    await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS resolution_path text NOT NULL DEFAULT 'Belum Ditentukan'`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);

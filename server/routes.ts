@@ -9,7 +9,7 @@ import {
   insertCompanySchema,
   insertMasterCategorySchema,
   insertBranchSchema,
-  cases, activities, tasks, announcements,
+  cases, activities, tasks, announcements, caseMeetings,
 } from "@shared/schema";
 import { eq, and, or, sql as dsql } from "drizzle-orm";
 import { db } from "./db";
@@ -73,6 +73,9 @@ const caseBodySchema = z.object({
   ownerNote: z.string().optional().nullable(),
   duNote: z.string().optional().nullable(),
   dkNote: z.string().optional().nullable(),
+  wpbName: z.string().optional().nullable(),
+  managerName: z.string().optional().nullable(),
+  resolutionPath: z.string().optional(),
 });
 const casePatchSchema = caseBodySchema.partial();
 
@@ -1047,6 +1050,84 @@ export async function registerRoutes(
       res.json(kpi);
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal mengambil data KPI" });
+    }
+  });
+
+  app.get("/api/branches/my-company", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user.companyId) return res.json([]);
+      const branchList = await storage.getBranchesByCompany(user.companyId);
+      res.json(branchList);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data cabang" });
+    }
+  });
+
+  app.get("/api/cases/:id/meetings", requireAuth, async (req, res) => {
+    try {
+      const caseId = parseId(req.params.id);
+      if (!caseId) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const c = await storage.getCase(caseId);
+      if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      const meetings = await storage.getMeetingsByCase(caseId);
+      res.json(meetings);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data pertemuan" });
+    }
+  });
+
+  app.post("/api/cases/:id/meetings", requireAuth, async (req, res) => {
+    try {
+      const caseId = parseId(req.params.id);
+      if (!caseId) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const c = await storage.getCase(caseId);
+      if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      const meetingSchema = z.object({
+        meetingDate: z.string().min(1, "Tanggal pertemuan wajib diisi"),
+        meetingType: z.string().min(1, "Jenis pertemuan wajib diisi"),
+        participants: z.string().optional().nullable(),
+        location: z.string().optional().nullable(),
+        result: z.string().optional().nullable(),
+        notes: z.string().optional().nullable(),
+      });
+      const parsed = meetingSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const meeting = await storage.createMeeting({
+        caseId,
+        meetingDate: parsed.data.meetingDate,
+        meetingType: parsed.data.meetingType,
+        participants: parsed.data.participants || null,
+        location: parsed.data.location || null,
+        result: parsed.data.result || null,
+        notes: parsed.data.notes || null,
+        createdBy: user.id,
+      });
+      res.json(meeting);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menambah pertemuan" });
+    }
+  });
+
+  app.delete("/api/meetings/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const allMeetings = await db.select().from(caseMeetings).where(eq(caseMeetings.id, id));
+      if (allMeetings.length === 0) return res.status(404).json({ message: "Pertemuan tidak ditemukan" });
+      const meeting = allMeetings[0];
+      if (user.role !== "superadmin" && meeting.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat atau superadmin yang bisa menghapus pertemuan" });
+      }
+      await storage.deleteMeeting(id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal menghapus pertemuan" });
     }
   });
 

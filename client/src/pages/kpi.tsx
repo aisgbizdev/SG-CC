@@ -607,45 +607,68 @@ export default function KpiPage() {
             </div>
           )}
 
-          {filteredLive.length > 0 && (
-            <Card data-testid="card-papan-peringkat">
-              <CardContent className="p-4 sm:p-6">
-                <h3 className="text-base font-bold mb-1 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-500" /> Papan Peringkat
-                </h3>
-                <p className="text-xs text-muted-foreground mb-4">Diurutkan berdasarkan skor total tertinggi — ranking berubah dinamis mengikuti performa</p>
-                <div className="space-y-2">
-                  {[...filteredLive].sort((a, b) => b.totalScore - a.totalScore).map((kpi, idx) => {
-                    const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);
-                    const medalColor = idx === 0 ? "text-amber-500" : idx === 1 ? "text-slate-400" : idx === 2 ? "text-amber-700" : "text-muted-foreground";
-                    const bgHighlight = idx === 0 ? "bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30" : idx === 1 ? "bg-slate-50/50 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800/30" : idx === 2 ? "bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800/30" : "";
-                    return (
-                      <div key={kpi.userId} className={`flex items-center gap-3 p-3 rounded-lg border ${bgHighlight || "border-transparent"}`} data-testid={`row-ranking-${idx + 1}`}>
-                        <div className="flex items-center justify-center w-8 shrink-0">
-                          {idx < 3 ? (
-                            <Medal className={`w-5 h-5 ${medalColor}`} />
-                          ) : (
-                            <span className="text-sm font-bold text-muted-foreground">#{idx + 1}</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm truncate" data-testid={`text-ranking-name-${idx + 1}`}>{kpi.fullName}</span>
-                            <Badge variant="outline" className="text-[10px] px-1.5 h-5">{kpi.role === "du" ? "DU" : "DK"}</Badge>
-                            <Badge variant="outline" className="text-[10px] px-1.5 h-5">{getCompanyName(kpi.companyId)}</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className={`text-lg font-bold ${kpi.totalScore >= 85 ? "text-emerald-600" : kpi.totalScore >= 70 ? "text-blue-600" : kpi.totalScore >= 55 ? "text-amber-600" : "text-red-600"}`}>{kpi.totalScore}</span>
-                          <Badge className={`${gradeCls} text-[10px]`}>{grade}</Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
+          {filteredLive.length > 0 && (() => {
+            const duRanked = [...filteredLive].filter(k => k.role === "du").sort((a, b) => b.totalScore - a.totalScore).slice(0, 5);
+            const dkRanked = [...filteredLive].filter(k => k.role === "dk").sort((a, b) => b.totalScore - a.totalScore).slice(0, 5);
+
+            const renderRankingRow = (kpi: LiveKpi, idx: number, roleLabel: string) => {
+              const { grade, className: gradeCls } = getGrade(kpi.totalScore);
+              const medalColor = idx === 0 ? "text-amber-500" : idx === 1 ? "text-slate-400" : idx === 2 ? "text-amber-700" : "text-muted-foreground";
+              const bgHighlight = idx === 0 ? "bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30" : idx === 1 ? "bg-slate-50/50 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800/30" : idx === 2 ? "bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800/30" : "";
+              return (
+                <div key={kpi.userId} className={`flex items-center gap-3 p-3 rounded-lg border ${bgHighlight || "border-transparent"}`} data-testid={`row-ranking-${roleLabel.toLowerCase()}-${idx + 1}`}>
+                  <div className="flex items-center justify-center w-8 shrink-0">
+                    {idx < 3 ? (
+                      <Medal className={`w-5 h-5 ${medalColor}`} />
+                    ) : (
+                      <span className="text-sm font-bold text-muted-foreground">#{idx + 1}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm truncate" data-testid={`text-ranking-${roleLabel.toLowerCase()}-name-${idx + 1}`}>{kpi.fullName}</span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 h-5">{getCompanyName(kpi.companyId)}</Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-lg font-bold ${kpi.totalScore >= 85 ? "text-emerald-600" : kpi.totalScore >= 70 ? "text-blue-600" : kpi.totalScore >= 55 ? "text-amber-600" : "text-red-600"}`}>{kpi.totalScore}</span>
+                    <Badge className={`${gradeCls} text-[10px]`}>{grade}</Badge>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              );
+            };
+
+            return (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {duRanked.length > 0 && (
+                  <Card data-testid="card-peringkat-du">
+                    <CardContent className="p-4 sm:p-6">
+                      <h3 className="text-base font-bold mb-1 flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-amber-500" /> Peringkat DU
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-4">Top 5 DU berdasarkan skor tertinggi</p>
+                      <div className="space-y-2">
+                        {duRanked.map((kpi, idx) => renderRankingRow(kpi, idx, "DU"))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {dkRanked.length > 0 && (
+                  <Card data-testid="card-peringkat-dk">
+                    <CardContent className="p-4 sm:p-6">
+                      <h3 className="text-base font-bold mb-1 flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-amber-500" /> Peringkat DK
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-4">Top 5 DK berdasarkan skor tertinggi</p>
+                      <div className="space-y-2">
+                        {dkRanked.map((kpi, idx) => renderRankingRow(kpi, idx, "DK"))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            );
+          })()}
         </>
       )}
 
