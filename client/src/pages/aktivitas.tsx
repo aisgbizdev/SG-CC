@@ -17,7 +17,7 @@ import { StatusBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil, ArrowUpDown, BarChart3 } from "lucide-react";
+import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil, ArrowUpDown, BarChart3, Users, User } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -35,10 +35,17 @@ export default function AktivitasPage() {
   const [sortBy, setSortBy] = useState("date-desc");
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
+  const [personFilter, setPersonFilter] = useState("all");
+
+  const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
 
   const { data: activities, isLoading, isError, refetch } = useQuery<Activity[]>({ queryKey: ["/api/activities"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
   const { data: categories } = useQuery<MasterCategory[]>({ queryKey: ["/api/categories"] });
+  const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"], enabled: isAdmin });
+
+  const duDkUsers = (usersData || []).filter((u: any) => ["du", "dk"].includes(u.role) && u.isActive);
+  const getCompanyCode = (companyId: number) => companiesData?.find(c => c.id === companyId)?.code || "";
 
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -96,7 +103,8 @@ export default function AktivitasPage() {
     const matchStatus = statusFilter === "all" || a.status === statusFilter;
     const matchCompany = companyFilter === "all" || a.companyId?.toString() === companyFilter;
     const matchPriority = priorityFilter === "all" || a.priority === priorityFilter;
-    return matchSearch && matchStatus && matchCompany && matchPriority;
+    const matchPerson = personFilter === "all" || a.createdBy?.toString() === personFilter;
+    return matchSearch && matchStatus && matchCompany && matchPriority && matchPerson;
   }) || []).sort((a, b) => {
     switch (sortBy) {
       case "date-asc": return a.date.localeCompare(b.date);
@@ -326,7 +334,7 @@ export default function AktivitasPage() {
               {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
-          {["superadmin", "owner"].includes(user?.role || "") && (
+          {isAdmin && (
           <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
             <SelectTrigger data-testid="select-filter-company" className="w-40">
               <SelectValue placeholder="Semua PT" />
@@ -348,8 +356,102 @@ export default function AktivitasPage() {
               <SelectItem value="Low">Low</SelectItem>
             </SelectContent>
           </Select>
+          {isAdmin && duDkUsers.length > 0 && (
+            <Select value={personFilter} onValueChange={v => { setPersonFilter(v); setCurrentPage(1); }}>
+              <SelectTrigger data-testid="select-filter-person" className="w-48">
+                <User className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Personil" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Personil</SelectItem>
+                {duDkUsers.map((u: any) => (
+                  <SelectItem key={u.id} value={u.id.toString()}>{u.fullName} ({u.role.toUpperCase()})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
+
+      {isAdmin && !isLoading && activities && duDkUsers.length > 0 && (() => {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+        const ws = new Date(now);
+        ws.setDate(ws.getDate() - ws.getDay());
+        const weekStartStr = `${ws.getFullYear()}-${String(ws.getMonth()+1).padStart(2,"0")}-${String(ws.getDate()).padStart(2,"0")}`;
+
+        const userStats = duDkUsers.map((u: any) => {
+          const userActivities = activities.filter(a => a.createdBy === u.id);
+          const todayCount = userActivities.filter(a => a.date === today).length;
+          const weekCount = userActivities.filter(a => a.date >= weekStartStr).length;
+          const statusCounts: Record<string, number> = {};
+          userActivities.forEach(a => { statusCounts[a.status] = (statusCounts[a.status] || 0) + 1; });
+          const topStatus = Object.entries(statusCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+          const avgProgress = userActivities.length > 0 ? Math.round(userActivities.reduce((s, a) => s + a.progress, 0) / userActivities.length) : 0;
+          const beban = todayCount >= 4 ? "Padat" : todayCount >= 2 ? "Normal" : "Ringan";
+          return { ...u, todayCount, weekCount, topStatus, avgProgress, beban, total: userActivities.length };
+        });
+
+        return (
+          <Card data-testid="card-kesibukan-dudk">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Users className="w-4 h-4 text-primary" />
+                <span>Kesibukan DU/DK</span>
+                <Badge variant="secondary" className="ml-1">Hari Ini: {today}</Badge>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {userStats.map((u: any) => (
+                  <div
+                    key={u.id}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${personFilter === u.id.toString() ? "border-primary bg-primary/5" : "hover:border-primary/50"}`}
+                    onClick={() => { setPersonFilter(u.id.toString()); setCurrentPage(1); }}
+                    data-testid={`card-person-${u.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{u.fullName}</p>
+                        <p className="text-xs text-muted-foreground">{u.role.toUpperCase()} {getCompanyCode(u.companyId) ? `- ${getCompanyCode(u.companyId)}` : ""}</p>
+                      </div>
+                      <Badge
+                        variant={u.beban === "Padat" ? "destructive" : u.beban === "Normal" ? "default" : "secondary"}
+                        className="text-[10px] flex-shrink-0"
+                        data-testid={`badge-beban-${u.id}`}
+                      >
+                        {u.beban}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center p-1.5 rounded bg-muted/50">
+                        <p className="font-bold text-base">{u.todayCount}</p>
+                        <p className="text-muted-foreground">Hari Ini</p>
+                      </div>
+                      <div className="text-center p-1.5 rounded bg-muted/50">
+                        <p className="font-bold text-base">{u.weekCount}</p>
+                        <p className="text-muted-foreground">Minggu Ini</p>
+                      </div>
+                      <div className="text-center p-1.5 rounded bg-muted/50">
+                        <p className="font-bold text-base">{u.total}</p>
+                        <p className="text-muted-foreground">Total</p>
+                      </div>
+                    </div>
+                    {u.total > 0 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Progress value={u.avgProgress} className="h-1.5 flex-1" />
+                        <span className="text-xs text-muted-foreground">{u.avgProgress}%</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {personFilter !== "all" && (
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setPersonFilter("all")} data-testid="button-clear-person-filter">
+                  Tampilkan semua personil
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {!isLoading && !isError && activities && activities.length > 0 && (() => {
         const src = filtered;
@@ -421,6 +523,7 @@ export default function AktivitasPage() {
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{a.date}</span>
                       <span>{getCompanyName(a.companyId)}</span>
+                      {isAdmin && usersData && (() => { const creator = usersData.find((u: any) => u.id === a.createdBy); return creator ? <span className="flex items-center gap-1"><User className="w-3 h-3" />{creator.fullName}</span> : null; })()}
                       {a.priority === "High" && <span className="text-red-500 font-medium">Prioritas Tinggi</span>}
                     </div>
                     {a.description && <p className="text-xs text-muted-foreground line-clamp-1">{a.description}</p>}

@@ -190,6 +190,14 @@ client/src/
 - Filter Jalur Penyelesaian tersedia di halaman Kasus
 - Ringkasan statistik kasus menampilkan breakdown per Jalur Penyelesaian
 
+## Monitor Kesibukan DU/DK (Aktivitas)
+- Panel "Kesibukan DU/DK" di halaman Aktivitas (hanya superadmin/owner)
+- Menampilkan setiap DU/DK: jumlah aktivitas hari ini, minggu ini, total, rata-rata progress
+- Indikator beban kerja: Ringan (0-1), Normal (2-3), Padat (4+) dengan badge warna
+- Klik nama DU/DK = filter aktivitas ke orang tersebut
+- Filter "Semua Personil" dropdown untuk filter per orang
+- Nama pembuat aktivitas tampil di card list untuk admin
+
 ## Database
 - PostgreSQL via DATABASE_URL
 - Schema push: `npm run db:push`
