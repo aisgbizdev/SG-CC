@@ -212,7 +212,10 @@ export default function DashboardPage() {
                     <div className="p-3 rounded-md bg-muted/50 hover-elevate cursor-pointer space-y-1.5" data-testid={`card-case-${c.id}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium line-clamp-1">{c.caseCode}</p>
+                          <div className="flex items-center gap-2">
+                            {c.accountNumber && <span className="text-sm font-semibold text-primary">{c.accountNumber}</span>}
+                            <span className="text-xs text-muted-foreground">{c.caseCode}</span>
+                          </div>
                           <p className="text-xs text-muted-foreground truncate">{c.customerName}</p>
                         </div>
                         <RiskBadge level={c.riskLevel} />
@@ -247,7 +250,11 @@ export default function DashboardPage() {
                 <Link key={c.id} href={`/kasus/${c.id}`}>
                   <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 hover-elevate cursor-pointer" data-testid={`card-high-risk-${c.id}`}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{c.caseCode} - {c.customerName}</p>
+                      <div className="flex items-center gap-2">
+                        {c.accountNumber && <span className="text-sm font-semibold text-primary">{c.accountNumber}</span>}
+                        <span className="text-xs text-muted-foreground">{c.caseCode}</span>
+                        <span className="text-sm">- {c.customerName}</span>
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{c.summary}</p>
                     </div>
                     <div className="text-right flex-shrink-0 space-y-1">
