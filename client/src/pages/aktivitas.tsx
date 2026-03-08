@@ -130,7 +130,7 @@ export default function AktivitasPage() {
   const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
   const pagedItems = getPageItems(currentPage);
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
-  const canCreate = ["superadmin", "du", "dk"].includes(user?.role || "");
+  const canCreate = ["du", "dk"].includes(user?.role || "");
   const canDelete = (a: Activity) => ["superadmin", "owner"].includes(user?.role || "") || a.createdBy === user?.id;
   const activityCategories = categories?.filter(c => c.type === "activity") || [];
 

@@ -68,8 +68,8 @@ export default function DashboardPage() {
     );
   }
 
-  const canAddActivity = ["superadmin", "du", "dk"].includes(user?.role || "");
-  const canAddCase = ["superadmin", "du", "dk"].includes(user?.role || "");
+  const canAddActivity = ["du", "dk"].includes(user?.role || "");
+  const canAddCase = ["du", "dk"].includes(user?.role || "");
 
   const getCompanyName = (id: number) => companiesData?.find((c: any) => c.id === id)?.code || "-";
 
