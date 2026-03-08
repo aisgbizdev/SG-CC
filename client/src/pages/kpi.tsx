@@ -20,7 +20,7 @@ import {
   Activity, FileWarning, ListTodo, TrendingUp,
   Clock, Zap, Briefcase, BarChart2, ChevronDown, ChevronUp,
   Award, ThumbsUp, AlertTriangle, BookOpen, Info, Trophy, Medal,
-  Calendar, CalendarDays, CalendarRange,
+  Calendar, CalendarDays, CalendarRange, Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -490,181 +490,143 @@ export default function KpiPage() {
                 <p className="text-muted-foreground" data-testid="text-empty-live">Belum ada data KPI</p>
               </CardContent>
             </Card>
-          ) : (
-            <div className="space-y-3">
-              {[...filteredLive].sort((a, b) => {
-                const companyOrder = (companiesData || []).map(c => c.id);
-                const aCompIdx = companyOrder.indexOf(a.companyId ?? -1);
-                const bCompIdx = companyOrder.indexOf(b.companyId ?? -1);
-                if (aCompIdx !== bCompIdx) return aCompIdx - bCompIdx;
-                const roleOrder = { du: 0, dk: 1 } as Record<string, number>;
-                return (roleOrder[a.role] ?? 2) - (roleOrder[b.role] ?? 2);
-              }).map((kpi, idx) => {
-                const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);
-                const isExpanded = expandedLiveId === kpi.userId;
-                return (
-                  <Card key={kpi.userId} data-testid={`card-live-kpi-${kpi.userId}`} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <button
-                        className="w-full p-4 text-left flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-muted/30 transition-colors"
-                        onClick={() => setExpandedLiveId(isExpanded ? null : kpi.userId)}
-                        data-testid={`button-expand-live-${kpi.userId}`}
-                      >
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground w-8">
-                          #{idx + 1}
-                        </div>
-                        <div className="flex-1 space-y-1.5">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="flex items-center gap-1.5">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-semibold" data-testid={`text-live-name-${kpi.userId}`}>{kpi.fullName}</span>
-                            </div>
-                            <Badge variant="outline">{kpi.role === "du" ? "DU" : "DK"}</Badge>
-                            <Badge variant="outline">
-                              <Building2 className="w-3 h-3 mr-1" />
-                              {getCompanyName(kpi.companyId)}
-                            </Badge>
-                            <Badge className={gradeCls}>{grade} - {label}</Badge>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas</span>
-                            <span className="flex items-center gap-1"><FileWarning className="w-3 h-3" /> {kpi.details.casesCompleted}/{kpi.details.casesTotal} kasus</span>
-                            <span className="flex items-center gap-1"><ListTodo className="w-3 h-3" /> {kpi.details.tasksCompleted}/{kpi.details.tasksTotal} tugas</span>
-                            {kpi.details.totalOverdue > 0 && (
-                              <span className="flex items-center gap-1 text-red-500"><AlertTriangle className="w-3 h-3" /> {kpi.details.totalOverdue} overdue</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <ScoreCircle score={kpi.totalScore} size="sm" />
-                          {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                        </div>
-                      </button>
+          ) : (() => {
+            const duList = [...filteredLive].filter(k => k.role === "du").sort((a, b) => b.totalScore - a.totalScore);
+            const dkList = [...filteredLive].filter(k => k.role === "dk").sort((a, b) => b.totalScore - a.totalScore);
 
-                      {isExpanded && (
-                        <div className="border-t px-4 py-4 space-y-4 bg-muted/10">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
-                                <Target className="w-4 h-4" /> Radar Kompetensi
-                              </h4>
-                              <RadarChart scores={kpi.scores} size={220} />
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
-                                <BarChart3 className="w-4 h-4" /> Detail 8 Aspek
-                              </h4>
-                              <div className="space-y-2">
-                                {ASPECT_LABELS.map(a => {
-                                  const val = kpi.scores[a.key] || 0;
-                                  const Icon = a.icon;
-                                  return (
-                                    <div key={a.key} className="flex items-center gap-1.5">
-                                      <Icon className={`w-3.5 h-3.5 ${a.color} flex-shrink-0`} />
-                                      <span className="text-xs w-24 sm:w-32 truncate" title={a.label}>{a.label}</span>
-                                      <div className="flex-1 bg-muted rounded-full h-2 min-w-[40px]">
-                                        <div
-                                          className={`h-2 rounded-full transition-all ${val >= 85 ? "bg-emerald-500" : val >= 70 ? "bg-blue-500" : val >= 55 ? "bg-amber-500" : "bg-red-500"}`}
-                                          style={{ width: `${val}%` }}
-                                        />
-                                      </div>
-                                      <span className="text-xs font-medium w-7 text-right">{val}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-                            <Card className="bg-muted/50">
-                              <CardContent className="p-3">
-                                <p className="text-lg font-bold">{kpi.details.totalItems}</p>
-                                <p className="text-xs text-muted-foreground">Total Item</p>
-                              </CardContent>
-                            </Card>
-                            <Card className="bg-muted/50">
-                              <CardContent className="p-3">
-                                <p className="text-lg font-bold">{kpi.details.avgProgress}%</p>
-                                <p className="text-xs text-muted-foreground">Avg Progress</p>
-                              </CardContent>
-                            </Card>
-                            <Card className={kpi.details.totalOverdue > 0 ? "bg-red-50 dark:bg-red-900/10" : "bg-muted/50"}>
-                              <CardContent className="p-3">
-                                <p className={`text-lg font-bold ${kpi.details.totalOverdue > 0 ? "text-red-600" : ""}`}>{kpi.details.totalOverdue}</p>
-                                <p className="text-xs text-muted-foreground">Overdue</p>
-                              </CardContent>
-                            </Card>
-                          </div>
-
-                          <DasarPenilaianSection />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {filteredLive.length > 0 && (() => {
-            const duRanked = [...filteredLive].filter(k => k.role === "du").sort((a, b) => b.totalScore - a.totalScore).slice(0, 5);
-            const dkRanked = [...filteredLive].filter(k => k.role === "dk").sort((a, b) => b.totalScore - a.totalScore).slice(0, 5);
-
-            const renderRankingRow = (kpi: LiveKpi, idx: number, roleLabel: string) => {
-              const { grade, className: gradeCls } = getGrade(kpi.totalScore);
+            const renderKpiCard = (kpi: LiveKpi, idx: number) => {
+              const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);
+              const isExpanded = expandedLiveId === kpi.userId;
               const medalColor = idx === 0 ? "text-amber-500" : idx === 1 ? "text-slate-400" : idx === 2 ? "text-amber-700" : "text-muted-foreground";
-              const bgHighlight = idx === 0 ? "bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30" : idx === 1 ? "bg-slate-50/50 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800/30" : idx === 2 ? "bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800/30" : "";
               return (
-                <div key={kpi.userId} className={`flex items-center gap-3 p-3 rounded-lg border ${bgHighlight || "border-transparent"}`} data-testid={`row-ranking-${roleLabel.toLowerCase()}-${idx + 1}`}>
-                  <div className="flex items-center justify-center w-8 shrink-0">
-                    {idx < 3 ? (
-                      <Medal className={`w-5 h-5 ${medalColor}`} />
-                    ) : (
-                      <span className="text-sm font-bold text-muted-foreground">#{idx + 1}</span>
+                <Card key={kpi.userId} data-testid={`card-live-kpi-${kpi.userId}`} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <button
+                      className="w-full p-4 text-left flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-muted/30 transition-colors"
+                      onClick={() => setExpandedLiveId(isExpanded ? null : kpi.userId)}
+                      data-testid={`button-expand-live-${kpi.userId}`}
+                    >
+                      <div className="flex items-center justify-center w-8 shrink-0">
+                        {idx < 3 ? (
+                          <Medal className={`w-5 h-5 ${medalColor}`} />
+                        ) : (
+                          <span className="text-sm font-bold text-muted-foreground">#{idx + 1}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-semibold" data-testid={`text-live-name-${kpi.userId}`}>{kpi.fullName}</span>
+                          </div>
+                          <Badge variant="outline">
+                            <Building2 className="w-3 h-3 mr-1" />
+                            {getCompanyName(kpi.companyId)}
+                          </Badge>
+                          <Badge className={gradeCls}>{grade} - {label}</Badge>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas</span>
+                          <span className="flex items-center gap-1"><FileWarning className="w-3 h-3" /> {kpi.details.casesCompleted}/{kpi.details.casesTotal} kasus</span>
+                          <span className="flex items-center gap-1"><ListTodo className="w-3 h-3" /> {kpi.details.tasksCompleted}/{kpi.details.tasksTotal} tugas</span>
+                          {kpi.details.totalOverdue > 0 && (
+                            <span className="flex items-center gap-1 text-red-500"><AlertTriangle className="w-3 h-3" /> {kpi.details.totalOverdue} overdue</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <ScoreCircle score={kpi.totalScore} size="sm" />
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t px-4 py-4 space-y-4 bg-muted/10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
+                              <Target className="w-4 h-4" /> Radar Kompetensi
+                            </h4>
+                            <RadarChart scores={kpi.scores} size={220} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
+                              <BarChart3 className="w-4 h-4" /> Detail 8 Aspek
+                            </h4>
+                            <div className="space-y-2">
+                              {ASPECT_LABELS.map(a => {
+                                const val = kpi.scores[a.key] || 0;
+                                const Icon = a.icon;
+                                return (
+                                  <div key={a.key} className="flex items-center gap-1.5">
+                                    <Icon className={`w-3.5 h-3.5 ${a.color} flex-shrink-0`} />
+                                    <span className="text-xs w-24 sm:w-32 truncate" title={a.label}>{a.label}</span>
+                                    <div className="flex-1 bg-muted rounded-full h-2 min-w-[40px]">
+                                      <div
+                                        className={`h-2 rounded-full transition-all ${val >= 85 ? "bg-emerald-500" : val >= 70 ? "bg-blue-500" : val >= 55 ? "bg-amber-500" : "bg-red-500"}`}
+                                        style={{ width: `${val}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-xs font-medium w-7 text-right">{val}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+                          <Card className="bg-muted/50">
+                            <CardContent className="p-3">
+                              <p className="text-lg font-bold">{kpi.details.totalItems}</p>
+                              <p className="text-xs text-muted-foreground">Total Item</p>
+                            </CardContent>
+                          </Card>
+                          <Card className="bg-muted/50">
+                            <CardContent className="p-3">
+                              <p className="text-lg font-bold">{kpi.details.avgProgress}%</p>
+                              <p className="text-xs text-muted-foreground">Avg Progress</p>
+                            </CardContent>
+                          </Card>
+                          <Card className={kpi.details.totalOverdue > 0 ? "bg-red-50 dark:bg-red-900/10" : "bg-muted/50"}>
+                            <CardContent className="p-3">
+                              <p className={`text-lg font-bold ${kpi.details.totalOverdue > 0 ? "text-red-600" : ""}`}>{kpi.details.totalOverdue}</p>
+                              <p className="text-xs text-muted-foreground">Overdue</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        <DasarPenilaianSection />
+                      </div>
                     )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm truncate" data-testid={`text-ranking-${roleLabel.toLowerCase()}-name-${idx + 1}`}>{kpi.fullName}</span>
-                      <Badge variant="outline" className="text-[10px] px-1.5 h-5">{getCompanyName(kpi.companyId)}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className={`text-lg font-bold ${kpi.totalScore >= 85 ? "text-emerald-600" : kpi.totalScore >= 70 ? "text-blue-600" : kpi.totalScore >= 55 ? "text-amber-600" : "text-red-600"}`}>{kpi.totalScore}</span>
-                    <Badge className={`${gradeCls} text-[10px]`}>{grade}</Badge>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             };
 
             return (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {duRanked.length > 0 && (
-                  <Card data-testid="card-peringkat-du">
-                    <CardContent className="p-4 sm:p-6">
-                      <h3 className="text-base font-bold mb-1 flex items-center gap-2">
-                        <Trophy className="w-5 h-5 text-amber-500" /> Peringkat DU
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-4">Top 5 DU berdasarkan skor tertinggi</p>
-                      <div className="space-y-2">
-                        {duRanked.map((kpi, idx) => renderRankingRow(kpi, idx, "DU"))}
-                      </div>
-                    </CardContent>
-                  </Card>
+              <div className="space-y-6">
+                {duList.length > 0 && (
+                  <div>
+                    <h3 className="text-base font-bold mb-3 flex items-center gap-2" data-testid="heading-peringkat-du">
+                      <Trophy className="w-5 h-5 text-amber-500" /> Peringkat DU
+                      <Badge variant="secondary" className="ml-1">{duList.length} orang</Badge>
+                    </h3>
+                    <div className="space-y-3">
+                      {duList.map((kpi, idx) => renderKpiCard(kpi, idx))}
+                    </div>
+                  </div>
                 )}
-                {dkRanked.length > 0 && (
-                  <Card data-testid="card-peringkat-dk">
-                    <CardContent className="p-4 sm:p-6">
-                      <h3 className="text-base font-bold mb-1 flex items-center gap-2">
-                        <Trophy className="w-5 h-5 text-amber-500" /> Peringkat DK
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-4">Top 5 DK berdasarkan skor tertinggi</p>
-                      <div className="space-y-2">
-                        {dkRanked.map((kpi, idx) => renderRankingRow(kpi, idx, "DK"))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                {dkList.length > 0 && (
+                  <div>
+                    <h3 className="text-base font-bold mb-3 flex items-center gap-2" data-testid="heading-peringkat-dk">
+                      <Trophy className="w-5 h-5 text-amber-500" /> Peringkat DK
+                      <Badge variant="secondary" className="ml-1">{dkList.length} orang</Badge>
+                    </h3>
+                    <div className="space-y-3">
+                      {dkList.map((kpi, idx) => renderKpiCard(kpi, idx))}
+                    </div>
+                  </div>
                 )}
               </div>
             );
