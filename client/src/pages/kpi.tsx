@@ -16,12 +16,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   BarChart3, Plus, User, Building2, Target,
   Activity, FileWarning, ListTodo, TrendingUp,
   Clock, Zap, Briefcase, BarChart2, ChevronDown, ChevronUp,
   Award, ThumbsUp, AlertTriangle, BookOpen, Info, Trophy, Medal,
-  Calendar, CalendarDays, CalendarRange, Download,
+  Calendar, CalendarDays, CalendarRange, Download, FileText, FileSpreadsheet, FileType,
 } from "lucide-react";
+import { downloadPDF, downloadExcel, downloadWord } from "@/lib/download";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { KpiAssessment, User as UserType, Company } from "@shared/schema";
@@ -415,36 +419,160 @@ export default function KpiPage() {
         </div>
         {isAdmin && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => {
-              const rows: string[] = [];
-              rows.push(["Nama", "Jabatan", "PT", "Skor", "Grade", "Aktivitas", "Kasus", "Tugas", "Overdue", ...ASPECT_LABELS.map(a => a.label)].join(","));
-              const allSorted = [...(filteredLive || [])].sort((a, b) => {
-                if (a.role !== b.role) return a.role === "du" ? -1 : 1;
-                return b.totalScore - a.totalScore;
-              });
-              allSorted.forEach(kpi => {
-                const { grade } = getGrade(kpi.totalScore);
-                rows.push([
-                  `"${kpi.fullName}"`, kpi.role.toUpperCase(), getCompanyName(kpi.companyId),
-                  kpi.totalScore, grade,
-                  `${kpi.details.activitiesCompleted}/${kpi.details.activitiesTotal}`,
-                  `${kpi.details.casesCompleted}/${kpi.details.casesTotal}`,
-                  `${kpi.details.tasksCompleted}/${kpi.details.tasksTotal}`,
-                  kpi.details.totalOverdue,
-                  ...ASPECT_LABELS.map(a => kpi.scores[a.key] || 0),
-                ].join(","));
-              });
-              const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `KPI_Live_${new Date().toISOString().slice(0, 10)}.csv`;
-              a.click();
-              URL.revokeObjectURL(url);
-              toast({ title: "Laporan KPI berhasil diunduh" });
-            }} data-testid="button-export-kpi">
-              <Download className="w-4 h-4 mr-1" /> Export CSV
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" data-testid="button-export-kpi">
+                  <Download className="w-4 h-4 mr-1" /> Export
+                  <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem data-testid="menu-export-csv" onClick={() => {
+                  const rows: string[] = [];
+                  rows.push(["Nama", "Jabatan", "PT", "Skor", "Grade", "Aktivitas", "Kasus", "Tugas", "Overdue", ...ASPECT_LABELS.map(a => a.label)].join(","));
+                  const allSorted = [...(filteredLive || [])].sort((a, b) => {
+                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    return b.totalScore - a.totalScore;
+                  });
+                  allSorted.forEach(kpi => {
+                    const { grade } = getGrade(kpi.totalScore);
+                    rows.push([
+                      `"${kpi.fullName}"`, kpi.role.toUpperCase(), getCompanyName(kpi.companyId),
+                      kpi.totalScore, grade,
+                      `${kpi.details.activitiesCompleted}/${kpi.details.activitiesTotal}`,
+                      `${kpi.details.casesCompleted}/${kpi.details.casesTotal}`,
+                      `${kpi.details.tasksCompleted}/${kpi.details.tasksTotal}`,
+                      kpi.details.totalOverdue,
+                      ...ASPECT_LABELS.map(a => kpi.scores[a.key] || 0),
+                    ].join(","));
+                  });
+                  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `KPI_Live_${new Date().toISOString().slice(0, 10)}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast({ title: "Laporan KPI berhasil diunduh (CSV)" });
+                }}>
+                  <FileText className="w-4 h-4 mr-2 text-muted-foreground" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem data-testid="menu-export-excel" onClick={() => {
+                  const columns = [
+                    { header: "Nama", key: "nama", width: 24 },
+                    { header: "Jabatan", key: "jabatan", width: 10 },
+                    { header: "PT", key: "pt", width: 10 },
+                    { header: "Skor", key: "skor", width: 8 },
+                    { header: "Grade", key: "grade", width: 8 },
+                    { header: "Aktivitas", key: "aktivitas", width: 14 },
+                    { header: "Kasus", key: "kasus", width: 14 },
+                    { header: "Tugas", key: "tugas", width: 14 },
+                    { header: "Overdue", key: "overdue", width: 10 },
+                    ...ASPECT_LABELS.map(a => ({ header: a.label, key: a.key, width: 18 })),
+                  ];
+                  const allSorted = [...(filteredLive || [])].sort((a, b) => {
+                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    return b.totalScore - a.totalScore;
+                  });
+                  const data = allSorted.map(kpi => {
+                    const { grade } = getGrade(kpi.totalScore);
+                    const row: Record<string, any> = {
+                      nama: kpi.fullName,
+                      jabatan: kpi.role.toUpperCase(),
+                      pt: getCompanyName(kpi.companyId),
+                      skor: kpi.totalScore,
+                      grade,
+                      aktivitas: `${kpi.details.activitiesCompleted}/${kpi.details.activitiesTotal}`,
+                      kasus: `${kpi.details.casesCompleted}/${kpi.details.casesTotal}`,
+                      tugas: `${kpi.details.tasksCompleted}/${kpi.details.tasksTotal}`,
+                      overdue: kpi.details.totalOverdue,
+                    };
+                    ASPECT_LABELS.forEach(a => { row[a.key] = kpi.scores[a.key] || 0; });
+                    return row;
+                  });
+                  downloadExcel("KPI Live", columns, data, `KPI_Live_${new Date().toISOString().slice(0, 10)}`);
+                  toast({ title: "Laporan KPI berhasil diunduh (Excel)" });
+                }}>
+                  <FileSpreadsheet className="w-4 h-4 mr-2 text-green-600" /> Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem data-testid="menu-export-pdf" onClick={() => {
+                  const columns = [
+                    { header: "Nama", key: "nama", width: 24 },
+                    { header: "Jabatan", key: "jabatan", width: 10 },
+                    { header: "PT", key: "pt", width: 10 },
+                    { header: "Skor", key: "skor", width: 8 },
+                    { header: "Grade", key: "grade", width: 8 },
+                    { header: "Aktivitas", key: "aktivitas", width: 14 },
+                    { header: "Kasus", key: "kasus", width: 14 },
+                    { header: "Tugas", key: "tugas", width: 14 },
+                    { header: "Overdue", key: "overdue", width: 10 },
+                    ...ASPECT_LABELS.map(a => ({ header: a.label, key: a.key, width: 18 })),
+                  ];
+                  const allSorted = [...(filteredLive || [])].sort((a, b) => {
+                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    return b.totalScore - a.totalScore;
+                  });
+                  const data = allSorted.map(kpi => {
+                    const { grade } = getGrade(kpi.totalScore);
+                    const row: Record<string, any> = {
+                      nama: kpi.fullName,
+                      jabatan: kpi.role.toUpperCase(),
+                      pt: getCompanyName(kpi.companyId),
+                      skor: kpi.totalScore,
+                      grade,
+                      aktivitas: `${kpi.details.activitiesCompleted}/${kpi.details.activitiesTotal}`,
+                      kasus: `${kpi.details.casesCompleted}/${kpi.details.casesTotal}`,
+                      tugas: `${kpi.details.tasksCompleted}/${kpi.details.tasksTotal}`,
+                      overdue: kpi.details.totalOverdue,
+                    };
+                    ASPECT_LABELS.forEach(a => { row[a.key] = kpi.scores[a.key] || 0; });
+                    return row;
+                  });
+                  downloadPDF("Laporan KPI Live - SG Control Center", columns, data, `KPI_Live_${new Date().toISOString().slice(0, 10)}`);
+                  toast({ title: "Laporan KPI berhasil diunduh (PDF)" });
+                }}>
+                  <FileText className="w-4 h-4 mr-2 text-red-500" /> PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem data-testid="menu-export-word" onClick={async () => {
+                  const columns = [
+                    { header: "Nama", key: "nama", width: 2400 },
+                    { header: "Jabatan", key: "jabatan", width: 1200 },
+                    { header: "PT", key: "pt", width: 1200 },
+                    { header: "Skor", key: "skor", width: 900 },
+                    { header: "Grade", key: "grade", width: 900 },
+                    { header: "Aktivitas", key: "aktivitas", width: 1400 },
+                    { header: "Kasus", key: "kasus", width: 1400 },
+                    { header: "Tugas", key: "tugas", width: 1400 },
+                    { header: "Overdue", key: "overdue", width: 1000 },
+                    ...ASPECT_LABELS.map(a => ({ header: a.label, key: a.key, width: 1400 })),
+                  ];
+                  const allSorted = [...(filteredLive || [])].sort((a, b) => {
+                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    return b.totalScore - a.totalScore;
+                  });
+                  const data = allSorted.map(kpi => {
+                    const { grade } = getGrade(kpi.totalScore);
+                    const row: Record<string, any> = {
+                      nama: kpi.fullName,
+                      jabatan: kpi.role.toUpperCase(),
+                      pt: getCompanyName(kpi.companyId),
+                      skor: kpi.totalScore,
+                      grade,
+                      aktivitas: `${kpi.details.activitiesCompleted}/${kpi.details.activitiesTotal}`,
+                      kasus: `${kpi.details.casesCompleted}/${kpi.details.casesTotal}`,
+                      tugas: `${kpi.details.tasksCompleted}/${kpi.details.tasksTotal}`,
+                      overdue: kpi.details.totalOverdue,
+                    };
+                    ASPECT_LABELS.forEach(a => { row[a.key] = kpi.scores[a.key] || 0; });
+                    return row;
+                  });
+                  await downloadWord("Laporan KPI Live - SG Control Center", columns, data, `KPI_Live_${new Date().toISOString().slice(0, 10)}`);
+                  toast({ title: "Laporan KPI berhasil diunduh (Word)" });
+                }}>
+                  <FileType className="w-4 h-4 mr-2 text-blue-600" /> Word
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button onClick={() => { resetForm(); setDialogOpen(true); }} data-testid="button-tambah-kpi">
               <Plus className="w-4 h-4 mr-1" /> Simpan Penilaian
             </Button>

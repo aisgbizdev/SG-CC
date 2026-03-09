@@ -213,7 +213,7 @@ export default function DashboardPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            {c.accountNumber && <span className="text-sm font-semibold text-primary">{c.accountNumber}</span>}
+                            <span className="text-sm font-semibold text-primary" data-testid={`text-account-recent-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
                             <span className="text-xs text-muted-foreground">{c.caseCode}</span>
                           </div>
                           <p className="text-xs text-muted-foreground truncate">{c.customerName}</p>
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 hover-elevate cursor-pointer" data-testid={`card-high-risk-${c.id}`}>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        {c.accountNumber && <span className="text-sm font-semibold text-primary">{c.accountNumber}</span>}
+                        <span className="text-sm font-semibold text-primary" data-testid={`text-account-highrisk-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
                         <span className="text-xs text-muted-foreground">{c.caseCode}</span>
                         <span className="text-sm">- {c.customerName}</span>
                       </div>

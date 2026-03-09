@@ -523,7 +523,7 @@ export default function KasusPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <Link href={`/kasus/${c.id}`} className="flex-1 min-w-0 space-y-1.5 cursor-pointer">
                     <div className="flex items-center gap-2 flex-wrap">
-                      {c.accountNumber && <span className="font-semibold text-sm text-primary" data-testid={`text-account-${c.id}`}>{c.accountNumber}</span>}
+                      <span className="font-semibold text-sm text-primary" data-testid={`text-account-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
                       <span className="text-xs text-muted-foreground">{c.caseCode}</span>
                       <RiskBadge level={c.riskLevel} />
                       <StatusBadge status={c.status} />

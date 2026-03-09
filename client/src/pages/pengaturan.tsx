@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Lock, User, Shield, Building2, Pencil } from "lucide-react";
+import { Lock, User, Shield, Building2, Pencil, Book } from "lucide-react";
 import { Link } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 
@@ -105,6 +105,52 @@ export default function PengaturanPage() {
           <Button data-testid="button-change-password" onClick={handleChangePassword} disabled={changePwMutation.isPending}>
             {changePwMutation.isPending ? "Memproses..." : "Ganti Password"}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3 px-5 pt-5">
+          <h3 className="font-semibold flex items-center gap-2"><Book className="w-4 h-4" /> Panduan Kode Kasus</h3>
+        </CardHeader>
+        <CardContent className="px-5 pb-5 space-y-4">
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Format kode kasus adalah: <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">[PT]-[JENIS]-[NOMOR]</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Contoh: EWF-BAP-002</p>
+            </div>
+            <div className="border-t pt-3 space-y-2.5">
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-BAP">BAP</p>
+                <p className="text-sm text-muted-foreground">Bappebti — pengaduan jalur Bappebti</p>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-PID">PID</p>
+                <p className="text-sm text-muted-foreground">Pidana — kasus tindak pidana</p>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-PMR">PMR</p>
+                <p className="text-sm text-muted-foreground">Pemeriksaan — tahap pemeriksaan internal</p>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-PNB">PNB</p>
+                <p className="text-sm text-muted-foreground">Pengaduan Nasabah Baru</p>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-POL">POL</p>
+                <p className="text-sm text-muted-foreground">Polisi — kasus dilaporkan ke kepolisian</p>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-SBL">SBL</p>
+                <p className="text-sm text-muted-foreground">Sengketa BBJ/Lainnya</p>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" data-testid="text-code-STL">STL</p>
+                <p className="text-sm text-muted-foreground">Settlement — jalur penyelesaian</p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
