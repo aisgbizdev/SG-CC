@@ -202,7 +202,7 @@ client/src/
 - Case fields tambahan: wpbName (WPB), managerName (Manager), resolutionPath (Jalur Penyelesaian)
 - Jalur Penyelesaian options: Belum Ditentukan, Mediasi Internal, Mediasi BBJ, Sidang Bappebti, BAKTI, Pengadilan, Kepolisian
 - No. Akun tampil prominent di list kasus, searchable
-- Filter cabang untuk DK/DU di halaman Kasus (bukan PT)
+- Filter cabang dinamis di halaman Kasus: superadmin/owner pilih PT → muncul dropdown cabang PT tersebut; DK/DU tetap lihat cabang PT sendiri
 - Filter Jalur Penyelesaian tersedia di halaman Kasus
 - Ringkasan statistik kasus menampilkan breakdown per Jalur Penyelesaian
 

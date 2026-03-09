@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, companies, masterCategories, activities, cases, tasks, announcements, notifications, comments, caseUpdates, announcementReads, messages, auditLogs } from "@shared/schema";
+import { users, companies, masterCategories, activities, cases, tasks, announcements, notifications, comments, caseUpdates, announcementReads, messages, auditLogs, branches } from "@shared/schema";
 import { count, eq, sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
@@ -120,6 +120,7 @@ export async function seedData() {
   }
 
   await seedCasesFromJson();
+  await seedBranchesFromCases();
   await verifyDataIntegrity();
 }
 
@@ -209,6 +210,38 @@ async function seedCasesFromJson() {
   }
 
   console.log(`Seed kasus selesai: ${inserted} ditambahkan, ${skipped} sudah ada (skip).`);
+}
+
+async function seedBranchesFromCases() {
+  const existingBranches = await db.select().from(branches);
+  const existingSet = new Set(existingBranches.map(b => `${b.companyId}::${b.name}`));
+
+  const allCases = await db.select({ branch: cases.branch, companyId: cases.companyId }).from(cases)
+    .where(sql`${cases.branch} IS NOT NULL AND ${cases.branch} != ''`);
+
+  const toInsert: { companyId: number; name: string }[] = [];
+  const seen = new Set<string>();
+  for (const c of allCases) {
+    if (c.branch && c.companyId) {
+      const key = `${c.companyId}::${c.branch}`;
+      if (!seen.has(key) && !existingSet.has(key)) {
+        seen.add(key);
+        toInsert.push({ companyId: c.companyId, name: c.branch });
+      }
+    }
+  }
+
+  for (const b of toInsert) {
+    await db.insert(branches).values({
+      companyId: b.companyId,
+      name: b.name,
+      isActive: true,
+    });
+  }
+
+  if (toInsert.length > 0) {
+    console.log(`Seed cabang selesai: ${toInsert.length} cabang ditambahkan dari data kasus.`);
+  }
 }
 
 async function verifyDataIntegrity() {

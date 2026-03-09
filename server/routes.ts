@@ -312,6 +312,19 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/companies/:id/branches", requireAuth, async (req, res) => {
+    try {
+      const companyId = parseId(req.params.id);
+      if (companyId === null) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      if (!canAccessCompany(user, companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      const branchList = await storage.getBranchesByCompany(companyId);
+      res.json(branchList);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data cabang" });
+    }
+  });
+
   app.post("/api/companies/:id/branches", requireRole("superadmin"), async (req, res) => {
     try {
       const companyId = parseId(req.params.id);

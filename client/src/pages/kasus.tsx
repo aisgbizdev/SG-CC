@@ -61,6 +61,18 @@ export default function KasusPage() {
     enabled: isDuDk,
   });
 
+  const { data: companyBranches } = useQuery<Branch[]>({
+    queryKey: ["/api/companies", companyFilter, "branches"],
+    queryFn: async () => {
+      const res = await fetch(`/api/companies/${companyFilter}/branches`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAdmin && companyFilter !== "all",
+  });
+
+  const availableBranches = isDuDk ? myBranches : (companyFilter !== "all" ? companyBranches : undefined);
+
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
     customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
@@ -386,7 +398,7 @@ export default function KasusPage() {
             </SelectContent>
           </Select>
           {isAdmin && (
-            <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
+            <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setBranchFilter("all"); setCurrentPage(1); }}>
               <SelectTrigger data-testid="select-filter-company-case" className="w-40">
                 <SelectValue placeholder="Semua PT" />
               </SelectTrigger>
@@ -396,14 +408,14 @@ export default function KasusPage() {
               </SelectContent>
             </Select>
           )}
-          {isDuDk && myBranches && myBranches.length > 0 && (
+          {availableBranches && availableBranches.length > 0 && (
             <Select value={branchFilter} onValueChange={v => { setBranchFilter(v); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-branch-case" className="w-40">
+              <SelectTrigger data-testid="select-filter-branch-case" className="w-44">
                 <SelectValue placeholder="Semua Cabang" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Cabang</SelectItem>
-                {myBranches.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                {availableBranches.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
           )}
