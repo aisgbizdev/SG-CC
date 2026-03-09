@@ -80,11 +80,27 @@ client/src/
 
 ## PWA (Progressive Web App)
 - Manifest: `client/public/manifest.json`
-- Service Worker: `client/public/sw.js` (network-first strategy, offline fallback)
+- Service Worker: `client/public/sw.js` (network-first strategy, offline fallback, push notification handler)
 - Icons: `client/public/icon-192.png`, `client/public/icon-512.png`
 - Splash screen: inline CSS in `client/index.html` (navy gradient, logo pulse animation, auto-fade 1.5s)
 - Mobile-optimized: responsive padding (`p-3 sm:p-6`), sidebar drawer on mobile, viewport meta with user-scalable
 - Installable: manifest configured with standalone display, maskable icons
+
+## Web Push Notifications
+- Backend: `web-push` library with VAPID keys (env vars: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL)
+- Table: `push_subscriptions` (userId, endpoint, p256dh, auth, createdAt)
+- API routes: GET `/api/push/vapid-key`, POST `/api/push/subscribe`, DELETE `/api/push/subscribe`
+- `sendPushToUser(userId, payload)` helper in routes.ts — sends to all user subscriptions, auto-cleans expired (410/404)
+- Push triggered on: new task assignment, new message, new announcement
+- Frontend hook: `client/src/hooks/use-push-notifications.ts` (subscribe/unsubscribe/check status)
+- Sidebar banner: prompt to enable push if not subscribed (dismissible, stored in localStorage)
+- Pengaturan page: toggle card to enable/disable push notifications
+- Service worker handles `push` event (show notification) and `notificationclick` event (navigate to URL)
+
+## User Management
+- Superadmin can deactivate users (PATCH isActive=false) — badge "Nonaktif" shown
+- Reactivate with "Aktifkan Kembali" button
+- Cannot deactivate self or other superadmins
 
 ## Download/Export
 - PDF (jspdf + jspdf-autotable), Excel (xlsx), Word (docx + file-saver)

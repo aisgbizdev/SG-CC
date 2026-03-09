@@ -38,3 +38,10 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.shared]
+VAPID_PUBLIC_KEY = "BN6C5QSwKTDqD8EAPa5FO1uLr1fkRKhU-4LtyDrGSfvr_JaX9zI6fCKqdMb42wqu_ffqVQZ36Gt090g4k7wNxz0"
+VAPID_PRIVATE_KEY = "ddg6Ur3_Ig518Rcb8PlVjVZETV02ZZ5EWfKj1jszRr0"
+VAPID_EMAIL = "mailto:admin@sgcc.co.id"

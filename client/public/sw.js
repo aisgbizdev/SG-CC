@@ -63,3 +63,41 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+self.addEventListener('push', function(event) {
+  if (!event.data) return;
+  try {
+    var data = event.data.json();
+    var options = {
+      body: data.body || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      data: { url: data.url || '/' },
+      tag: 'sgcc-' + Date.now(),
+      renotify: true,
+    };
+    event.waitUntil(self.registration.showNotification(data.title || 'SG Control Center', options));
+  } catch (e) {
+    console.error('Push parse error:', e);
+  }
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var url = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      for (var i = 0; i < clientList.length; i++) {
+        var client = clientList[i];
+        if ('focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});

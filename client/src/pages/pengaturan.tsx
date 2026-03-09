@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Lock, User, Shield, Building2, Pencil, Book } from "lucide-react";
+import { Lock, User, Shield, Building2, Pencil, Book, BellRing } from "lucide-react";
 import { Link } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export default function PengaturanPage() {
   usePageTitle("Pengaturan");
@@ -46,6 +47,23 @@ export default function PengaturanPage() {
       return;
     }
     changePwMutation.mutate({ currentPassword, newPassword });
+  };
+
+  const push = usePushNotifications();
+
+  const handleTogglePush = async () => {
+    if (push.isSubscribed) {
+      const ok = await push.unsubscribe();
+      if (ok) toast({ title: "Notifikasi Push Dinonaktifkan", description: "Anda tidak akan menerima notifikasi push lagi" });
+    } else {
+      const ok = await push.subscribe();
+      if (ok) {
+        toast({ title: "Notifikasi Push Aktif", description: "Anda akan menerima notifikasi di browser ini" });
+        localStorage.removeItem("sgcc_push_dismissed");
+      } else if (push.permission === "denied") {
+        toast({ title: "Izin Ditolak", description: "Aktifkan notifikasi di pengaturan browser Anda", variant: "destructive" });
+      }
+    }
   };
 
   const initials = user?.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() || "";
@@ -107,6 +125,35 @@ export default function PengaturanPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {push.isSupported && (
+        <Card>
+          <CardHeader className="pb-3 px-5 pt-5">
+            <h3 className="font-semibold flex items-center gap-2"><BellRing className="w-4 h-4" /> Notifikasi Push</h3>
+          </CardHeader>
+          <CardContent className="px-5 pb-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm">
+                  {push.isSubscribed ? "Notifikasi push aktif di browser ini" : "Aktifkan notifikasi push untuk mendapatkan pemberitahuan real-time"}
+                </p>
+                {push.permission === "denied" && (
+                  <p className="text-xs text-destructive mt-1">Izin notifikasi ditolak. Ubah di pengaturan browser Anda.</p>
+                )}
+              </div>
+              <Button
+                data-testid="button-toggle-push"
+                variant={push.isSubscribed ? "outline" : "default"}
+                size="sm"
+                onClick={handleTogglePush}
+                disabled={push.permission === "denied"}
+              >
+                {push.isSubscribed ? "Nonaktifkan" : "Aktifkan"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3 px-5 pt-5">

@@ -12,18 +12,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Shield, Building2, User, KeyRound } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Shield, Building2, User, KeyRound, Trash2, RotateCcw } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Company } from "@shared/schema";
 
 export default function UsersPage() {
   usePageTitle("Manajemen User");
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const isSuperadmin = currentUser?.role === "superadmin";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetUserId, setResetUserId] = useState<number | null>(null);
   const [resetUserName, setResetUserName] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [toggleActiveDialog, setToggleActiveDialog] = useState<{ open: boolean; userId: number | null; userName: string; currentlyActive: boolean }>({ open: false, userId: null, userName: "", currentlyActive: true });
 
   const { data: usersData, isLoading } = useQuery<any[]>({ queryKey: ["/api/users"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
@@ -64,6 +68,27 @@ export default function UsersPage() {
       toast({ title: "Gagal", description: err.message || "Gagal reset password", variant: "destructive" });
     },
   });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ userId, isActive }: { userId: number; isActive: boolean }) => {
+      const res = await apiRequest("PATCH", `/api/users/${userId}`, { isActive });
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({ title: "Berhasil", description: variables.isActive ? "User berhasil diaktifkan kembali" : "User berhasil dinonaktifkan" });
+      setToggleActiveDialog({ open: false, userId: null, userName: "", currentlyActive: true });
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal mengubah status user", variant: "destructive" });
+    },
+  });
+
+  const handleToggleActive = () => {
+    if (toggleActiveDialog.userId) {
+      toggleActiveMutation.mutate({ userId: toggleActiveDialog.userId, isActive: !toggleActiveDialog.currentlyActive });
+    }
+  };
 
   const handleResetPassword = () => {
     if (!newPassword || newPassword.length < 8) {
@@ -191,7 +216,10 @@ export default function UsersPage() {
                       <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{getCompanyName(u.companyId)}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {!u.isActive && (
+                      <Badge variant="destructive" data-testid={`badge-inactive-${u.id}`}>Nonaktif</Badge>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -200,6 +228,27 @@ export default function UsersPage() {
                     >
                       <KeyRound className="w-3 h-3 mr-1" /> Reset
                     </Button>
+                    {isSuperadmin && u.id !== currentUser?.id && u.role !== "superadmin" && (
+                      u.isActive ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          data-testid={`button-deactivate-${u.id}`}
+                          onClick={() => setToggleActiveDialog({ open: true, userId: u.id, userName: u.fullName, currentlyActive: true })}
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" /> Nonaktifkan
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          data-testid={`button-activate-${u.id}`}
+                          onClick={() => setToggleActiveDialog({ open: true, userId: u.id, userName: u.fullName, currentlyActive: false })}
+                        >
+                          <RotateCcw className="w-3 h-3 mr-1" /> Aktifkan
+                        </Button>
+                      )
+                    )}
                     <Badge variant={u.isActive ? "default" : "secondary"}>
                       {getRoleLabel(u.role)}
                     </Badge>
@@ -232,6 +281,27 @@ export default function UsersPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={toggleActiveDialog.open} onOpenChange={(open) => { if (!open) setToggleActiveDialog({ open: false, userId: null, userName: "", currentlyActive: true }); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle data-testid="text-toggle-active-title">
+              {toggleActiveDialog.currentlyActive ? "Nonaktifkan User" : "Aktifkan Kembali User"}
+            </AlertDialogTitle>
+            <AlertDialogDescription data-testid="text-toggle-active-desc">
+              {toggleActiveDialog.currentlyActive
+                ? `Nonaktifkan user ${toggleActiveDialog.userName}? User tidak akan bisa login lagi.`
+                : `Aktifkan kembali user ${toggleActiveDialog.userName}? User akan bisa login kembali.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-toggle">Batal</AlertDialogCancel>
+            <AlertDialogAction data-testid="button-confirm-toggle" onClick={handleToggleActive} disabled={toggleActiveMutation.isPending}>
+              {toggleActiveMutation.isPending ? "Memproses..." : toggleActiveDialog.currentlyActive ? "Nonaktifkan" : "Aktifkan"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

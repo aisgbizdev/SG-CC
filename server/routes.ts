@@ -5,14 +5,44 @@ import { setupAuth, requireAuth, requireRole } from "./auth";
 import { seedData } from "./seed";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import webpush from "web-push";
 import {
   insertCompanySchema,
   insertMasterCategorySchema,
   insertBranchSchema,
-  cases, activities, tasks, announcements, caseMeetings,
+  cases, activities, tasks, announcements, caseMeetings, pushSubscriptions,
 } from "@shared/schema";
 import { eq, and, or, sql as dsql } from "drizzle-orm";
 import { db } from "./db";
+
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || "mailto:admin@sgcc.co.id",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY,
+  );
+}
+
+async function sendPushToUser(userId: number, payload: { title: string; body: string; url?: string }) {
+  try {
+    const subs = await storage.getPushSubscriptions(userId);
+    const results = await Promise.allSettled(
+      subs.map(sub =>
+        webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify(payload),
+        ).catch(async (err: any) => {
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await storage.deletePushSubscription(sub.endpoint);
+          }
+        })
+      )
+    );
+    return results;
+  } catch (err) {
+    console.error("Push notification error:", err);
+  }
+}
 
 const createUserSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
@@ -359,6 +389,15 @@ export async function registerRoutes(
         delete updateData.companyId;
         delete updateData.isActive;
       }
+      if (updateData.isActive !== undefined && currentUser.role === "superadmin") {
+        if (id === currentUser.id) {
+          return res.status(400).json({ message: "Tidak bisa menonaktifkan akun sendiri" });
+        }
+        const targetUser = await storage.getUser(id);
+        if (targetUser && targetUser.role === "superadmin") {
+          return res.status(400).json({ message: "Tidak bisa menonaktifkan superadmin lain" });
+        }
+      }
       if (updateData.password) {
         updateData.password = await bcrypt.hash(updateData.password, 10);
       }
@@ -655,6 +694,7 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "create", entityType: "task", entityId: t.id, details: `Membuat tugas: ${t.title}` }, tx);
         return t;
       });
+      sendPushToUser(task.assignedTo, { title: "Tugas Baru", body: `Anda mendapat tugas baru: ${task.title}`, url: "/tugas" });
       res.json(task);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal membuat tugas" });
@@ -716,6 +756,10 @@ export async function registerRoutes(
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
       const ann = await storage.createAnnouncement({ ...parsed.data, createdBy: user.id });
+      const allUsers = await storage.getUsers();
+      allUsers.filter(u => u.isActive && u.id !== user.id).forEach(u => {
+        sendPushToUser(u.id, { title: "Pengumuman Baru", body: ann.title, url: "/pengumuman" });
+      });
       res.json(ann);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal membuat pengumuman" });
@@ -846,6 +890,37 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/push/vapid-key", (req, res) => {
+    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || "" });
+  });
+
+  app.post("/api/push/subscribe", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { endpoint, keys } = req.body;
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ message: "Invalid subscription data" });
+      }
+      const sub = await storage.savePushSubscription(user.id, endpoint, keys.p256dh, keys.auth);
+      res.json({ success: true, id: sub.id });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menyimpan subscription" });
+    }
+  });
+
+  app.delete("/api/push/subscribe", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { endpoint } = req.body;
+      if (endpoint) {
+        await storage.deletePushSubscriptionByUser(user.id, endpoint);
+      }
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus subscription" });
+    }
+  });
+
   app.get("/api/messages", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
@@ -867,6 +942,7 @@ export async function registerRoutes(
         await storage.createNotification({ userId: m.receiverId, type: "new_message", title: "Pesan Baru", message: `Anda mendapat pesan baru dari ${user.fullName}`, entityType: "message", entityId: m.id, priority: "medium" }, tx);
         return m;
       });
+      sendPushToUser(msg.receiverId, { title: "Pesan Baru", body: `Pesan baru dari ${user.fullName}`, url: "/pesan" });
       res.json(msg);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal mengirim pesan" });

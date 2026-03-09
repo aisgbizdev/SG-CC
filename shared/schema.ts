@@ -350,6 +350,19 @@ export const insertKpiAssessmentSchema = createInsertSchema(kpiAssessments).omit
 export type InsertKpiAssessment = z.infer<typeof insertKpiAssessmentSchema>;
 export type KpiAssessment = typeof kpiAssessments.$inferSelect;
 
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: integer("user_id").notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_push_sub_user").on(table.userId),
+]);
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),

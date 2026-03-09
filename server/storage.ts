@@ -4,6 +4,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates, caseMeetings,
   tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments, branches,
+  pushSubscriptions,
   type InsertCompany, type Company, type InsertUser, type User,
   type InsertMasterCategory, type MasterCategory,
   type InsertActivity, type Activity, type InsertCase, type Case,
@@ -14,6 +15,7 @@ import {
   type InsertKpiAssessment, type KpiAssessment,
   type InsertBranch, type Branch,
   type InsertCaseMeeting, type CaseMeeting,
+  type PushSubscription,
 } from "@shared/schema";
 import * as schema from "@shared/schema";
 
@@ -94,6 +96,11 @@ export interface IStorage {
   getMeetingsByCase(caseId: number): Promise<CaseMeeting[]>;
   createMeeting(data: InsertCaseMeeting): Promise<CaseMeeting>;
   deleteMeeting(id: number): Promise<void>;
+
+  getPushSubscriptions(userId: number): Promise<PushSubscription[]>;
+  savePushSubscription(userId: number, endpoint: string, p256dh: string, auth: string): Promise<PushSubscription>;
+  deletePushSubscription(endpoint: string): Promise<void>;
+  deletePushSubscriptionByUser(userId: number, endpoint: string): Promise<void>;
 
   transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T>;
 }
@@ -639,6 +646,24 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMeeting(id: number): Promise<void> {
     await db.delete(caseMeetings).where(eq(caseMeetings.id, id));
+  }
+
+  async getPushSubscriptions(userId: number): Promise<PushSubscription[]> {
+    return db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+  }
+
+  async savePushSubscription(userId: number, endpoint: string, p256dh: string, auth: string): Promise<PushSubscription> {
+    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+    const [sub] = await db.insert(pushSubscriptions).values({ userId, endpoint, p256dh, auth }).returning();
+    return sub;
+  }
+
+  async deletePushSubscription(endpoint: string): Promise<void> {
+    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+  }
+
+  async deletePushSubscriptionByUser(userId: number, endpoint: string): Promise<void> {
+    await db.delete(pushSubscriptions).where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, endpoint)));
   }
 
   async transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T> {

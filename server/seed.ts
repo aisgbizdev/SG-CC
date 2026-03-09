@@ -44,6 +44,17 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_case_meetings_case_id ON case_meetings(case_id)`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS resolution_path text NOT NULL DEFAULT 'Belum Ditentukan'`);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        user_id integer NOT NULL,
+        endpoint text NOT NULL,
+        p256dh text NOT NULL,
+        auth text NOT NULL,
+        created_at timestamp NOT NULL DEFAULT now()
+      )
+    `);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);

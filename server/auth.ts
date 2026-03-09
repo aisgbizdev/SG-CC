@@ -166,12 +166,20 @@ export function setupAuth(app: Express) {
 
 export function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Belum login" });
+  if (req.user && req.user.isActive === false) {
+    req.logout(() => {});
+    return res.status(401).json({ message: "Akun Anda telah dinonaktifkan" });
+  }
   next();
 }
 
 export function requireRole(...roles: string[]) {
   return (req: any, res: any, next: any) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Belum login" });
+    if (req.user && req.user.isActive === false) {
+      req.logout(() => {});
+      return res.status(401).json({ message: "Akun Anda telah dinonaktifkan" });
+    }
     if (!roles.includes(req.user.role)) return res.status(403).json({ message: "Akses ditolak" });
     next();
   };
