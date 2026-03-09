@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Megaphone, Pin, Eye, Calendar, User, Pencil, Trash2 } from "lucide-react";
+import { Plus, Megaphone, Pin, Eye, Calendar, User, Pencil, Trash2, Check } from "lucide-react";
+import { getRoleLabel } from "@/lib/auth";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -36,11 +37,54 @@ export default function PengumumanPage() {
     targetType: "all", targetValue: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: "", isPinned: false,
+    selectedRecipients: [] as string[],
   };
 
   const [form, setForm] = useState(emptyForm);
 
   const [editForm, setEditForm] = useState(emptyForm);
+
+  const otherUsers = usersData?.filter((u: any) => u.id !== user?.id && u.isActive !== false) || [];
+
+  const toggleRecipient = (uid: string, isEdit = false) => {
+    if (isEdit) {
+      setEditForm(prev => ({
+        ...prev,
+        selectedRecipients: prev.selectedRecipients.includes(uid)
+          ? prev.selectedRecipients.filter(id => id !== uid)
+          : [...prev.selectedRecipients, uid],
+      }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        selectedRecipients: prev.selectedRecipients.includes(uid)
+          ? prev.selectedRecipients.filter(id => id !== uid)
+          : [...prev.selectedRecipients, uid],
+      }));
+    }
+  };
+
+  const toggleSelectAllRecipients = (isEdit = false) => {
+    const allIds = otherUsers.map((u: any) => u.id.toString());
+    if (isEdit) {
+      setEditForm(prev => ({
+        ...prev,
+        selectedRecipients: prev.selectedRecipients.length === allIds.length ? [] : allIds,
+      }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        selectedRecipients: prev.selectedRecipients.length === allIds.length ? [] : allIds,
+      }));
+    }
+  };
+
+  const buildTarget = (recipients: string[]) => {
+    if (recipients.length === 0 || recipients.length === otherUsers.length) {
+      return { targetType: "all", targetValue: null };
+    }
+    return { targetType: "users", targetValue: recipients.join(",") };
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -102,10 +146,15 @@ export default function PengumumanPage() {
       toast({ title: "Error", description: "Judul dan isi wajib diisi", variant: "destructive" });
       return;
     }
+    const target = buildTarget(form.selectedRecipients);
     createMutation.mutate({
-      ...form,
+      title: form.title,
+      content: form.content,
+      priority: form.priority,
+      startDate: form.startDate,
       endDate: form.endDate || null,
-      targetValue: form.targetValue || null,
+      isPinned: form.isPinned,
+      ...target,
     });
   };
 
@@ -115,18 +164,24 @@ export default function PengumumanPage() {
       return;
     }
     if (!selectedAnnouncement) return;
+    const target = buildTarget(editForm.selectedRecipients);
     updateMutation.mutate({
       id: selectedAnnouncement.id,
       data: {
-        ...editForm,
+        title: editForm.title,
+        content: editForm.content,
+        priority: editForm.priority,
+        startDate: editForm.startDate,
         endDate: editForm.endDate || null,
-        targetValue: editForm.targetValue || null,
+        isPinned: editForm.isPinned,
+        ...target,
       },
     });
   };
 
   const openEditDialog = (ann: Announcement) => {
     setSelectedAnnouncement(ann);
+    const allIds = otherUsers.map((u: any) => u.id.toString());
     setEditForm({
       title: ann.title,
       content: ann.content,
@@ -136,6 +191,7 @@ export default function PengumumanPage() {
       startDate: ann.startDate || new Date().toISOString().split("T")[0],
       endDate: ann.endDate || "",
       isPinned: ann.isPinned || false,
+      selectedRecipients: ann.targetType === "users" && ann.targetValue ? ann.targetValue.split(",") : allIds,
     });
     setEditDialogOpen(true);
   };
@@ -179,7 +235,45 @@ export default function PengumumanPage() {
                   <Label>Isi Pengumuman *</Label>
                   <Textarea data-testid="input-announcement-content" placeholder="Isi pengumuman" value={form.content} onChange={e => setForm({...form, content: e.target.value})} className="min-h-[120px]" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Target Penerima {form.selectedRecipients.length > 0 && form.selectedRecipients.length < otherUsers.length && <span className="text-xs text-muted-foreground ml-1">({form.selectedRecipients.length} dipilih)</span>}</Label>
+                  <div className="border rounded-md max-h-[180px] overflow-y-auto" data-testid="select-announcement-recipients">
+                    <div
+                      className="flex items-center gap-2 px-3 py-2 border-b cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => toggleSelectAllRecipients(false)}
+                      data-testid="checkbox-select-all-recipients"
+                    >
+                      <div className={`flex items-center justify-center w-4 h-4 rounded border ${otherUsers.length > 0 && (form.selectedRecipients.length === 0 || form.selectedRecipients.length === otherUsers.length) ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                        {(form.selectedRecipients.length === 0 || form.selectedRecipients.length === otherUsers.length) && <Check className="w-3 h-3" />}
+                      </div>
+                      <span className="text-sm font-medium">Semua User</span>
+                    </div>
+                    {otherUsers.map((u: any) => {
+                      const isSelected = form.selectedRecipients.includes(u.id.toString()) || form.selectedRecipients.length === 0;
+                      return (
+                        <div
+                          key={u.id}
+                          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors"
+                          onClick={() => {
+                            if (form.selectedRecipients.length === 0) {
+                              const allIds = otherUsers.map((x: any) => x.id.toString());
+                              setForm(prev => ({ ...prev, selectedRecipients: allIds.filter(id => id !== u.id.toString()) }));
+                            } else {
+                              toggleRecipient(u.id.toString(), false);
+                            }
+                          }}
+                          data-testid={`checkbox-recipient-${u.id}`}
+                        >
+                          <div className={`flex items-center justify-center w-4 h-4 rounded border ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                            {isSelected && <Check className="w-3 h-3" />}
+                          </div>
+                          <span className="text-sm">{u.fullName} ({getRoleLabel(u.role)})</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Prioritas</Label>
                     <Select value={form.priority} onValueChange={v => setForm({...form, priority: v})}>
@@ -190,19 +284,6 @@ export default function PengumumanPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Target Penerima</Label>
-                    <Select value={form.targetType} onValueChange={v => setForm({...form, targetType: v})}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Semua User</SelectItem>
-                        <SelectItem value="role">Per Role</SelectItem>
-                        <SelectItem value="company">Per PT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Tanggal Mulai</Label>
                     <Input type="date" value={form.startDate} onChange={e => setForm({...form, startDate: e.target.value})} />
@@ -267,7 +348,7 @@ export default function PengumumanPage() {
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{ann.startDate}</span>
                   <span className="flex items-center gap-1">
                     <Megaphone className="w-3 h-3" />
-                    {ann.targetType === "all" ? "Semua User" : ann.targetType === "role" ? `Role: ${ann.targetValue}` : `PT: ${ann.targetValue}`}
+                    {ann.targetType === "all" ? "Semua User" : ann.targetType === "users" ? `${(ann.targetValue || "").split(",").length} penerima` : ann.targetType === "role" ? `Role: ${ann.targetValue}` : `PT: ${ann.targetValue}`}
                   </span>
                 </div>
               </CardContent>
@@ -289,7 +370,45 @@ export default function PengumumanPage() {
               <Label>Isi Pengumuman *</Label>
               <Textarea data-testid="input-edit-announcement-content" placeholder="Isi pengumuman" value={editForm.content} onChange={e => setEditForm({...editForm, content: e.target.value})} className="min-h-[120px]" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Target Penerima {editForm.selectedRecipients.length > 0 && editForm.selectedRecipients.length < otherUsers.length && <span className="text-xs text-muted-foreground ml-1">({editForm.selectedRecipients.length} dipilih)</span>}</Label>
+              <div className="border rounded-md max-h-[180px] overflow-y-auto" data-testid="select-edit-announcement-recipients">
+                <div
+                  className="flex items-center gap-2 px-3 py-2 border-b cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => toggleSelectAllRecipients(true)}
+                  data-testid="checkbox-edit-select-all-recipients"
+                >
+                  <div className={`flex items-center justify-center w-4 h-4 rounded border ${otherUsers.length > 0 && (editForm.selectedRecipients.length === 0 || editForm.selectedRecipients.length === otherUsers.length) ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                    {(editForm.selectedRecipients.length === 0 || editForm.selectedRecipients.length === otherUsers.length) && <Check className="w-3 h-3" />}
+                  </div>
+                  <span className="text-sm font-medium">Semua User</span>
+                </div>
+                {otherUsers.map((u: any) => {
+                  const isSelected = editForm.selectedRecipients.includes(u.id.toString()) || editForm.selectedRecipients.length === 0;
+                  return (
+                    <div
+                      key={u.id}
+                      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => {
+                        if (editForm.selectedRecipients.length === 0) {
+                          const allIds = otherUsers.map((x: any) => x.id.toString());
+                          setEditForm(prev => ({ ...prev, selectedRecipients: allIds.filter(id => id !== u.id.toString()) }));
+                        } else {
+                          toggleRecipient(u.id.toString(), true);
+                        }
+                      }}
+                      data-testid={`checkbox-edit-recipient-${u.id}`}
+                    >
+                      <div className={`flex items-center justify-center w-4 h-4 rounded border ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                        {isSelected && <Check className="w-3 h-3" />}
+                      </div>
+                      <span className="text-sm">{u.fullName} ({getRoleLabel(u.role)})</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Prioritas</Label>
                 <Select value={editForm.priority} onValueChange={v => setEditForm({...editForm, priority: v})}>
@@ -300,19 +419,6 @@ export default function PengumumanPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label>Target Penerima</Label>
-                <Select value={editForm.targetType} onValueChange={v => setEditForm({...editForm, targetType: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua User</SelectItem>
-                    <SelectItem value="role">Per Role</SelectItem>
-                    <SelectItem value="company">Per PT</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Tanggal Mulai</Label>
                 <Input type="date" value={editForm.startDate} onChange={e => setEditForm({...editForm, startDate: e.target.value})} />

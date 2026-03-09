@@ -16,7 +16,7 @@ import { StatusBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown, Pencil, X, BarChart3 } from "lucide-react";
+import { Plus, Search, Filter, Calendar, User, ArrowRight, Trash2, ArrowUpDown, Pencil, X, BarChart3, Check } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -44,26 +44,10 @@ export default function TugasPage() {
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
 
   const [form, setForm] = useState({
-    title: "", description: "", assignedTo: "", companyId: "",
+    title: "", description: "", selectedAssignees: [] as string[], companyId: "",
     priority: "Medium", deadline: "", notes: "",
   });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/tasks", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-      toast({ title: "Berhasil", description: "Tugas berhasil dibuat" });
-      setDialogOpen(false);
-      setForm({ title: "", description: "", assignedTo: "", companyId: "", priority: "Medium", deadline: "", notes: "" });
-    },
-    onError: (err: any) => {
-      toast({ title: "Gagal", description: err.message || "Gagal membuat tugas", variant: "destructive" });
-    },
-  });
+  const [isSending, setIsSending] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
@@ -83,17 +67,64 @@ export default function TugasPage() {
     },
   });
 
-  const handleSubmit = () => {
-    if (!form.title || !form.assignedTo) {
+  const handleSubmit = async () => {
+    if (!form.title || form.selectedAssignees.length === 0) {
       toast({ title: "Error", description: "Judul dan penerima tugas wajib diisi", variant: "destructive" });
       return;
     }
-    createMutation.mutate({
-      ...form,
-      assignedTo: parseInt(form.assignedTo),
-      companyId: form.companyId ? parseInt(form.companyId) : null,
-      deadline: form.deadline || null,
-    });
+    setIsSending(true);
+    try {
+      const results = await Promise.allSettled(
+        form.selectedAssignees.map(uid =>
+          apiRequest("POST", "/api/tasks", {
+            title: form.title,
+            description: form.description,
+            assignedTo: parseInt(uid),
+            companyId: form.companyId ? parseInt(form.companyId) : null,
+            priority: form.priority,
+            deadline: form.deadline || null,
+            notes: form.notes,
+          })
+        )
+      );
+      const successIds: string[] = [];
+      const failedIds: string[] = [];
+      form.selectedAssignees.forEach((uid, i) => {
+        if (results[i].status === "fulfilled") successIds.push(uid);
+        else failedIds.push(uid);
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      if (failedIds.length === 0) {
+        toast({ title: "Berhasil", description: `${successIds.length} tugas berhasil dibuat` });
+        setDialogOpen(false);
+        setForm({ title: "", description: "", selectedAssignees: [], companyId: "", priority: "Medium", deadline: "", notes: "" });
+      } else {
+        toast({ title: "Sebagian Berhasil", description: `${successIds.length} berhasil, ${failedIds.length} gagal`, variant: "destructive" });
+        setForm(prev => ({ ...prev, selectedAssignees: failedIds }));
+      }
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message || "Gagal membuat tugas", variant: "destructive" });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const toggleAssignee = (uid: string) => {
+    setForm(prev => ({
+      ...prev,
+      selectedAssignees: prev.selectedAssignees.includes(uid)
+        ? prev.selectedAssignees.filter(id => id !== uid)
+        : [...prev.selectedAssignees, uid],
+    }));
+  };
+
+  const toggleSelectAllAssignees = () => {
+    const allIds = assignableUsers.map((u: any) => u.id.toString());
+    setForm(prev => ({
+      ...prev,
+      selectedAssignees: prev.selectedAssignees.length === allIds.length ? [] : allIds,
+    }));
   };
 
   const priorityOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
@@ -216,18 +247,38 @@ export default function TugasPage() {
                   <Label>Deskripsi</Label>
                   <Textarea data-testid="input-task-description" placeholder="Deskripsi tugas" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Ditugaskan kepada *</Label>
-                    <Select value={form.assignedTo} onValueChange={v => setForm({...form, assignedTo: v})}>
-                      <SelectTrigger data-testid="select-task-assignee"><SelectValue placeholder="Pilih penerima" /></SelectTrigger>
-                      <SelectContent>
-                        {assignableUsers.map((u: any) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>{u.fullName} ({getRoleLabel(u.role)})</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-1.5">
+                  <Label>Ditugaskan kepada * {form.selectedAssignees.length > 0 && <span className="text-xs text-muted-foreground ml-1">({form.selectedAssignees.length} dipilih)</span>}</Label>
+                  <div className="border rounded-md max-h-[180px] overflow-y-auto" data-testid="select-task-assignee">
+                    <div
+                      className="flex items-center gap-2 px-3 py-2 border-b cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={toggleSelectAllAssignees}
+                      data-testid="checkbox-select-all-assignees"
+                    >
+                      <div className={`flex items-center justify-center w-4 h-4 rounded border ${assignableUsers.length > 0 && form.selectedAssignees.length === assignableUsers.length ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                        {assignableUsers.length > 0 && form.selectedAssignees.length === assignableUsers.length && <Check className="w-3 h-3" />}
+                      </div>
+                      <span className="text-sm font-medium">Pilih Semua</span>
+                    </div>
+                    {assignableUsers.map((u: any) => {
+                      const isSelected = form.selectedAssignees.includes(u.id.toString());
+                      return (
+                        <div
+                          key={u.id}
+                          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors"
+                          onClick={() => toggleAssignee(u.id.toString())}
+                          data-testid={`checkbox-assignee-${u.id}`}
+                        >
+                          <div className={`flex items-center justify-center w-4 h-4 rounded border ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                            {isSelected && <Check className="w-3 h-3" />}
+                          </div>
+                          <span className="text-sm">{u.fullName} ({getRoleLabel(u.role)})</span>
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>PT Terkait</Label>
                     <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v})}>
@@ -235,8 +286,6 @@ export default function TugasPage() {
                       <SelectContent>{companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Prioritas</Label>
                     <Select value={form.priority} onValueChange={v => setForm({...form, priority: v})}>
@@ -253,8 +302,8 @@ export default function TugasPage() {
                     <Input data-testid="input-task-deadline" type="date" value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} />
                   </div>
                 </div>
-                <Button data-testid="button-submit-task" onClick={handleSubmit} className="w-full" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Menyimpan..." : "Simpan Tugas"}
+                <Button data-testid="button-submit-task" onClick={handleSubmit} className="w-full" disabled={isSending}>
+                  {isSending ? "Menyimpan..." : `Simpan Tugas${form.selectedAssignees.length > 1 ? ` (${form.selectedAssignees.length} orang)` : ""}`}
                 </Button>
               </div>
             </DialogContent>
