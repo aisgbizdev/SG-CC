@@ -414,9 +414,41 @@ export default function KpiPage() {
           <p className="text-sm text-muted-foreground">Monitoring performa DU & DK secara real-time</p>
         </div>
         {isAdmin && (
-          <Button onClick={() => { resetForm(); setDialogOpen(true); }} data-testid="button-tambah-kpi">
-            <Plus className="w-4 h-4 mr-1" /> Simpan Penilaian
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => {
+              const rows: string[] = [];
+              rows.push(["Nama", "Jabatan", "PT", "Skor", "Grade", "Aktivitas", "Kasus", "Tugas", "Overdue", ...ASPECT_LABELS.map(a => a.label)].join(","));
+              const allSorted = [...(filteredLive || [])].sort((a, b) => {
+                if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                return b.totalScore - a.totalScore;
+              });
+              allSorted.forEach(kpi => {
+                const { grade } = getGrade(kpi.totalScore);
+                rows.push([
+                  `"${kpi.fullName}"`, kpi.role.toUpperCase(), getCompanyName(kpi.companyId),
+                  kpi.totalScore, grade,
+                  `${kpi.details.activitiesCompleted}/${kpi.details.activitiesTotal}`,
+                  `${kpi.details.casesCompleted}/${kpi.details.casesTotal}`,
+                  `${kpi.details.tasksCompleted}/${kpi.details.tasksTotal}`,
+                  kpi.details.totalOverdue,
+                  ...ASPECT_LABELS.map(a => kpi.scores[a.key] || 0),
+                ].join(","));
+              });
+              const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `KPI_Live_${new Date().toISOString().slice(0, 10)}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast({ title: "Laporan KPI berhasil diunduh" });
+            }} data-testid="button-export-kpi">
+              <Download className="w-4 h-4 mr-1" /> Export CSV
+            </Button>
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }} data-testid="button-tambah-kpi">
+              <Plus className="w-4 h-4 mr-1" /> Simpan Penilaian
+            </Button>
+          </div>
         )}
       </div>
 
