@@ -120,7 +120,7 @@ export async function seedData() {
   }
 
   await seedCasesFromJson();
-  await seedBranchesFromCases();
+  await seedBranchesFromMaster();
   await verifyDataIntegrity();
 }
 
@@ -212,35 +212,96 @@ async function seedCasesFromJson() {
   console.log(`Seed kasus selesai: ${inserted} ditambahkan, ${skipped} sudah ada (skip).`);
 }
 
-async function seedBranchesFromCases() {
+async function seedBranchesFromMaster() {
+  const masterBranches: Record<string, string[]> = {
+    SGB: ["BALI", "MAKASSAR", "PALEMBANG", "SEMARANG", "TCC"],
+    RFB: ["AXA", "AXA 2", "AXA 3", "BALIKPAPAN", "BANDUNG", "DBS", "JOGYA", "MEDAN", "PALEMBANG", "PEKANBARU", "SEMARANG", "SOLO", "SURABAYA", "SURABAYA 7"],
+    BPF: ["BANDUNG", "BANJARMASIN", "ET", "JAMBI", "LAMPUNG", "MEDAN", "MLNG", "PEKANBARU", "PONTK", "SEMARANG", "SURABAYA"],
+    KPF: ["BALI", "BANDUNG", "JOGYA", "MAKASSAR", "MAREIN", "SEMARANG", "SURABAYA"],
+    EWF: ["CIREBON", "CYBER", "MEDAN", "MNDO", "SBY2", "SMG3", "SSC", "SURABAYA 6 (ALBET)", "SURABAYA 6 (M NAIM)"],
+  };
+
+  const companyList = await storage.getCompanies();
+  const companyMap: Record<string, number> = {};
+  for (const c of companyList) {
+    companyMap[c.code] = c.id;
+  }
+
   const existingBranches = await db.select().from(branches);
-  const existingSet = new Set(existingBranches.map(b => `${b.companyId}::${b.name}`));
+  const existingByCompany = new Map<number, Set<string>>();
+  for (const b of existingBranches) {
+    if (!existingByCompany.has(b.companyId)) existingByCompany.set(b.companyId, new Set());
+    existingByCompany.get(b.companyId)!.add(b.name);
+  }
 
-  const allCases = await db.select({ branch: cases.branch, companyId: cases.companyId }).from(cases)
-    .where(sql`${cases.branch} IS NOT NULL AND ${cases.branch} != ''`);
+  let inserted = 0;
+  let removed = 0;
 
-  const toInsert: { companyId: number; name: string }[] = [];
-  const seen = new Set<string>();
-  for (const c of allCases) {
-    if (c.branch && c.companyId) {
-      const key = `${c.companyId}::${c.branch}`;
-      if (!seen.has(key) && !existingSet.has(key)) {
-        seen.add(key);
-        toInsert.push({ companyId: c.companyId, name: c.branch });
+  for (const [code, branchNames] of Object.entries(masterBranches)) {
+    const companyId = companyMap[code];
+    if (!companyId) continue;
+
+    const masterSet = new Set(branchNames);
+    const existingNames = existingByCompany.get(companyId) || new Set();
+
+    for (const existing of existingBranches.filter(b => b.companyId === companyId)) {
+      if (!masterSet.has(existing.name)) {
+        await db.delete(branches).where(eq(branches.id, existing.id));
+        removed++;
+      }
+    }
+
+    for (const name of branchNames) {
+      if (!existingNames.has(name)) {
+        await db.insert(branches).values({ companyId, name, isActive: true });
+        inserted++;
       }
     }
   }
 
-  for (const b of toInsert) {
-    await db.insert(branches).values({
-      companyId: b.companyId,
-      name: b.name,
-      isActive: true,
-    });
+  if (inserted > 0 || removed > 0) {
+    console.log(`Seed cabang: ${inserted} ditambahkan, ${removed} dihapus (sinkronisasi dengan data master).`);
   }
 
-  if (toInsert.length > 0) {
-    console.log(`Seed cabang selesai: ${toInsert.length} cabang ditambahkan dari data kasus.`);
+  const branchRenames: { companyCode: string; oldName: string; newName: string }[] = [
+    { companyCode: "SGB", oldName: "Jakarta Selatan", newName: "TCC" },
+    { companyCode: "SGB", oldName: "Cabang Jakarta Selatan", newName: "TCC" },
+    { companyCode: "SGB", oldName: "TCC Jakarta", newName: "TCC" },
+    { companyCode: "SGB", oldName: "Makassar", newName: "MAKASSAR" },
+    { companyCode: "SGB", oldName: "Semarang", newName: "SEMARANG" },
+    { companyCode: "RFB", oldName: "PUSAT AXA-1", newName: "AXA" },
+    { companyCode: "RFB", oldName: "PUSAT AXA-2", newName: "AXA 2" },
+    { companyCode: "RFB", oldName: "PUSAT AXA-3", newName: "AXA 3" },
+    { companyCode: "RFB", oldName: "PKU", newName: "PEKANBARU" },
+    { companyCode: "RFB", oldName: "PLM", newName: "PALEMBANG" },
+    { companyCode: "RFB", oldName: "SBY-CW", newName: "SURABAYA" },
+    { companyCode: "RFB", oldName: "YGY", newName: "JOGYA" },
+    { companyCode: "RFB", oldName: "Bandung", newName: "BANDUNG" },
+    { companyCode: "BPF", oldName: "Bandung", newName: "BANDUNG" },
+    { companyCode: "BPF", oldName: "Banjarmasin", newName: "BANJARMASIN" },
+    { companyCode: "BPF", oldName: "Equity Tower", newName: "ET" },
+    { companyCode: "BPF", oldName: "Jambi", newName: "JAMBI" },
+    { companyCode: "BPF", oldName: "Lampung", newName: "LAMPUNG" },
+    { companyCode: "BPF", oldName: "Malang", newName: "MLNG" },
+    { companyCode: "BPF", oldName: "Medan", newName: "MEDAN" },
+    { companyCode: "BPF", oldName: "Pacific Place Mall JKT", newName: "ET" },
+    { companyCode: "BPF", oldName: "Pekanbaru", newName: "PEKANBARU" },
+    { companyCode: "BPF", oldName: "Pontianak", newName: "PONTK" },
+    { companyCode: "BPF", oldName: "Semarang", newName: "SEMARANG" },
+    { companyCode: "BPF", oldName: "Surabaya", newName: "SURABAYA" },
+    { companyCode: "EWF", oldName: "Cirebon", newName: "CIREBON" },
+    { companyCode: "EWF", oldName: "Jakarta", newName: "CYBER" },
+    { companyCode: "EWF", oldName: "Manado", newName: "MNDO" },
+    { companyCode: "EWF", oldName: "Samarinda", newName: "SSC" },
+    { companyCode: "EWF", oldName: "Semarang", newName: "SMG3" },
+    { companyCode: "EWF", oldName: "Surabaya Trillium", newName: "SBY2" },
+  ];
+
+  for (const r of branchRenames) {
+    const cid = companyMap[r.companyCode];
+    if (cid) {
+      await db.execute(sql`UPDATE cases SET branch = ${r.newName} WHERE branch = ${r.oldName} AND company_id = ${cid}`);
+    }
   }
 }
 
