@@ -5,7 +5,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, CheckCheck, Clock, AlertTriangle, ListTodo, Megaphone, Mail, FileWarning } from "lucide-react";
+import { Bell, CheckCheck, Clock, AlertTriangle, ListTodo, Megaphone, Mail, FileWarning, RefreshCw, MessageCircle, Calendar, CheckCircle, ShieldAlert, MailWarning, BarChart3, Activity } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -13,8 +13,24 @@ import type { Notification } from "@shared/schema";
 
 const iconMap: Record<string, any> = {
   task_assigned: ListTodo,
+  task_updated: ListTodo,
+  task_completed: CheckCircle,
+  task_overdue: AlertTriangle,
+  task_stale: Clock,
+  new_activity: Activity,
+  activity_updated: RefreshCw,
+  new_case: FileWarning,
+  case_updated: RefreshCw,
+  case_completed: CheckCircle,
+  case_high_risk: ShieldAlert,
+  case_stale: Clock,
+  new_comment: MessageCircle,
+  new_announcement: Megaphone,
   announcement: Megaphone,
   new_message: Mail,
+  message_unread: MailWarning,
+  new_meeting: Calendar,
+  daily_summary: BarChart3,
   overdue: AlertTriangle,
   comment: FileWarning,
 };

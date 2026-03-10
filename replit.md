@@ -24,6 +24,7 @@ server/
   routes.ts         - API routes
   storage.ts        - Storage layer (CRUD operations)
   seed.ts           - Demo data seeder
+  reminders.ts      - Automated reminder scheduler
 client/src/
   App.tsx            - Root app + routing
   lib/auth.tsx       - Auth context + hooks
@@ -91,11 +92,26 @@ client/src/
 - Table: `push_subscriptions` (userId, endpoint, p256dh, auth, createdAt)
 - API routes: GET `/api/push/vapid-key`, POST `/api/push/subscribe`, DELETE `/api/push/subscribe`
 - `sendPushToUser(userId, payload)` helper in routes.ts — sends to all user subscriptions, auto-cleans expired (410/404)
-- Push triggered on: new task assignment, new message, new announcement
+- Push triggered on: all notification types (activity, case, task, comment, meeting, announcement, reminder)
 - Frontend hook: `client/src/hooks/use-push-notifications.ts` (subscribe/unsubscribe/check status)
 - Sidebar banner: prompt to enable push if not subscribed (dismissible, stored in localStorage)
 - Pengaturan page: toggle card to enable/disable push notifications
 - Service worker handles `push` event (show notification) and `notificationclick` event (navigate to URL)
+
+## Notification System
+- Helper: `notifyAdminsAndOwners(companyId, type, title, message, entityType, entityId, excludeUserId, priority)` in routes.ts
+- Notifies all superadmins + all owners (owners have null companyId = multi-company access)
+- Notification types: new_activity, activity_updated, new_case, case_updated, case_high_risk, case_completed, task_updated, task_completed, task_assigned, new_comment, new_announcement, new_meeting
+- Reminder types: task_overdue, task_stale, case_stale, message_unread, daily_summary
+- Automated reminders: `server/reminders.ts` — `startReminders()` called on server start
+  - Runs every 1 hour (first run after 30s delay)
+  - Overdue tasks (deadline passed) → assignee + admins/owners
+  - Stale cases (no update >7 days) → creator + admins/owners
+  - Stale tasks (progress <50%, >7 days old) → assignee + admins/owners
+  - Unread messages (>24 hours) → recipient
+  - Daily summary (8 AM WIB) → all superadmins + owners
+  - Deduplication: skips if similar notification exists within 24 hours
+- UI icons mapped in notifikasi.tsx for all 20+ notification types
 
 ## User Management
 - Superadmin can deactivate users (PATCH isActive=false) — badge "Nonaktif" shown

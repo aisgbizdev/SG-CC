@@ -23,6 +23,37 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
+async function notifyAdminsAndOwners(
+  companyId: number | null,
+  type: string,
+  title: string,
+  message: string,
+  entityType: string | null,
+  entityId: number | null,
+  excludeUserId: number,
+  priority: string = "medium",
+) {
+  try {
+    const allUsers = await storage.getUsers();
+    const targets = allUsers.filter(u => {
+      if (!u.isActive || u.id === excludeUserId) return false;
+      if (u.role === "superadmin") return true;
+      if (u.role === "owner") return true;
+      return false;
+    });
+    for (const target of targets) {
+      await storage.createNotification({
+        userId: target.id, type, title, message,
+        entityType, entityId, priority,
+      });
+      const urlMap: Record<string, string> = { case: "/kasus", activity: "/aktivitas", task: "/tugas", announcement: "/pengumuman", message: "/pesan" };
+      sendPushToUser(target.id, { title, body: message, url: urlMap[entityType || ""] || "/" });
+    }
+  } catch (err) {
+    console.error("Error notifying admins:", err);
+  }
+}
+
 async function sendPushToUser(userId: number, payload: { title: string; body: string; url?: string }) {
   try {
     const subs = await storage.getPushSubscriptions(userId);
@@ -495,6 +526,7 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "create", entityType: "activity", entityId: act.id, details: `Membuat aktivitas: ${act.title}` }, tx);
         return act;
       });
+      notifyAdminsAndOwners(activity.companyId, "new_activity", "Aktivitas Baru", `${user.fullName} membuat aktivitas: ${activity.title}`, "activity", activity.id, user.id);
       res.json(activity);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal membuat aktivitas" });
@@ -517,6 +549,7 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "activity", entityId: existing.id, details: `Mengupdate aktivitas: ${existing.title}` }, tx);
         return act;
       });
+      notifyAdminsAndOwners(existing.companyId, "activity_updated", "Aktivitas Diperbarui", `${user.fullName} memperbarui aktivitas: ${existing.title}`, "activity", existing.id, user.id);
       res.json(activity);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update aktivitas" });
@@ -578,6 +611,7 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "create", entityType: "case", entityId: newCase.id, details: `Membuat kasus: ${newCase.caseCode}` }, tx);
         return newCase;
       });
+      notifyAdminsAndOwners(c.companyId, "new_case", "Kasus Pengaduan Baru", `${user.fullName} membuat kasus: ${c.caseCode}`, "case", c.id, user.id);
       res.json(c);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal membuat kasus" });
@@ -600,6 +634,13 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "case", entityId: existing.id, details: `Mengupdate kasus: ${existing.caseCode}` }, tx);
         return updated;
       });
+      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", `${user.fullName} memperbarui kasus: ${existing.caseCode}`, "case", existing.id, user.id);
+      if (casePatchParsed.data.riskLevel === "High" && existing.riskLevel !== "High") {
+        notifyAdminsAndOwners(existing.companyId, "case_high_risk", "Kasus Risiko Tinggi", `Kasus ${existing.caseCode} dinaikkan ke risiko TINGGI oleh ${user.fullName}`, "case", existing.id, user.id, "high");
+      }
+      if (casePatchParsed.data.progress === 100 && existing.progress !== 100) {
+        notifyAdminsAndOwners(existing.companyId, "case_completed", "Kasus Selesai", `Kasus ${existing.caseCode} telah mencapai 100% oleh ${user.fullName}`, "case", existing.id, user.id);
+      }
       res.json(c);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update kasus" });
@@ -726,11 +767,19 @@ export async function registerRoutes(
         const duDkParsed = taskDuDkPatchSchema.safeParse(req.body);
         if (!duDkParsed.success) return res.status(400).json(formatZodError(duDkParsed.error));
         const task = await storage.updateTask(existing.id, duDkParsed.data);
+        notifyAdminsAndOwners(existing.companyId, "task_updated", "Tugas Diperbarui", `${user.fullName} memperbarui tugas: ${existing.title}`, "task", existing.id, user.id);
+        if (duDkParsed.data.progress === 100 && existing.progress !== 100) {
+          notifyAdminsAndOwners(existing.companyId, "task_completed", "Tugas Selesai", `${user.fullName} menyelesaikan tugas: ${existing.title}`, "task", existing.id, user.id);
+        }
         return res.json(task);
       }
       const taskPatchParsed = taskPatchSchema.safeParse(req.body);
       if (!taskPatchParsed.success) return res.status(400).json(formatZodError(taskPatchParsed.error));
       const task = await storage.updateTask(existing.id, taskPatchParsed.data);
+      if (taskPatchParsed.data.assignedTo && taskPatchParsed.data.assignedTo !== existing.assignedTo) {
+        await storage.createNotification({ userId: taskPatchParsed.data.assignedTo, type: "task_assigned", title: "Tugas Baru", message: `Anda mendapat tugas baru: ${existing.title}`, entityType: "task", entityId: existing.id, priority: existing.priority === "High" ? "high" : "medium" });
+        sendPushToUser(taskPatchParsed.data.assignedTo, { title: "Tugas Baru", body: `Anda mendapat tugas baru: ${existing.title}`, url: "/tugas" });
+      }
       res.json(task);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update tugas" });
@@ -770,9 +819,15 @@ export async function registerRoutes(
       const user = req.user as any;
       const ann = await storage.createAnnouncement({ ...parsed.data, createdBy: user.id });
       const allUsers = await storage.getUsers();
-      allUsers.filter(u => u.isActive && u.id !== user.id).forEach(u => {
+      let targetUsers = allUsers.filter(u => u.isActive && u.id !== user.id);
+      if (parsed.data.targetType === "users" && parsed.data.targetValue) {
+        const targetIds = new Set(parsed.data.targetValue.split(",").map((id: string) => parseInt(id.trim())));
+        targetUsers = targetUsers.filter(u => targetIds.has(u.id));
+      }
+      for (const u of targetUsers) {
+        await storage.createNotification({ userId: u.id, type: "new_announcement", title: "Pengumuman Baru", message: ann.title, entityType: "announcement", entityId: ann.id, priority: "medium" });
         sendPushToUser(u.id, { title: "Pengumuman Baru", body: ann.title, url: "/pengumuman" });
-      });
+      }
       res.json(ann);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal membuat pengumuman" });
@@ -851,6 +906,21 @@ export async function registerRoutes(
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
       const comment = await storage.createComment({ ...parsed.data, createdBy: user.id });
+      const entityType = parsed.data.entityType;
+      const entityId = parsed.data.entityId;
+      let companyId: number | null = null;
+      let entityTitle = "";
+      if (entityType === "case") {
+        const entity = await storage.getCase(entityId);
+        if (entity) { companyId = entity.companyId; entityTitle = entity.caseCode; }
+      } else if (entityType === "activity") {
+        const entity = await storage.getActivity(entityId);
+        if (entity) { companyId = entity.companyId; entityTitle = entity.title; }
+      } else if (entityType === "task") {
+        const entity = await storage.getTask(entityId);
+        if (entity) { companyId = entity.companyId; entityTitle = entity.title; }
+      }
+      notifyAdminsAndOwners(companyId, "new_comment", "Komentar Baru", `${user.fullName} mengomentari ${entityType === "case" ? "kasus" : entityType === "activity" ? "aktivitas" : "tugas"}: ${entityTitle}`, entityType, entityId, user.id);
       res.json(comment);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal menambah komentar" });
@@ -1196,6 +1266,7 @@ export async function registerRoutes(
         notes: parsed.data.notes || null,
         createdBy: user.id,
       });
+      notifyAdminsAndOwners(c.companyId, "new_meeting", "Pertemuan Kasus Baru", `${user.fullName} menjadwalkan pertemuan untuk kasus ${c.caseCode}`, "case", caseId, user.id);
       res.json(meeting);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal menambah pertemuan" });
