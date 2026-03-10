@@ -142,10 +142,6 @@ async function seedCasesFromJson() {
   for (const code of sampleCodes) {
     await db.update(cases).set({ isArchived: true }).where(eq(cases.caseCode, code));
   }
-  await db.update(activities).set({ isArchived: true }).where(eq(activities.isArchived, false));
-  await db.update(tasks).set({ isArchived: true }).where(eq(tasks.isArchived, false));
-  await db.update(announcements).set({ isArchived: true }).where(eq(announcements.isArchived, false));
-  console.log("Data sample lama diarsipkan.");
 
   const existingCases = await db.select({ caseCode: cases.caseCode }).from(cases);
   const existingCodes = new Set(existingCases.map(c => c.caseCode));
