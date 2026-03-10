@@ -61,8 +61,31 @@ async function runMigrations() {
   }
 }
 
+async function restoreArchivedUserData() {
+  const [archivedAct] = await db.select({ count: count() }).from(activities).where(eq(activities.isArchived, true));
+  const [activeAct] = await db.select({ count: count() }).from(activities).where(eq(activities.isArchived, false));
+  const [archivedTask] = await db.select({ count: count() }).from(tasks).where(eq(tasks.isArchived, true));
+  const [activeTask] = await db.select({ count: count() }).from(tasks).where(eq(tasks.isArchived, false));
+  const [archivedAnn] = await db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, true));
+  const [activeAnn] = await db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, false));
+
+  const needsRestore =
+    (archivedAct.count > 0 && activeAct.count === 0) ||
+    (archivedTask.count > 0 && activeTask.count === 0) ||
+    (archivedAnn.count > 0 && activeAnn.count === 0);
+
+  if (needsRestore) {
+    console.log("Memulihkan data yang ter-archive secara tidak sengaja...");
+    await db.update(activities).set({ isArchived: false }).where(eq(activities.isArchived, true));
+    await db.update(tasks).set({ isArchived: false }).where(eq(tasks.isArchived, true));
+    await db.update(announcements).set({ isArchived: false }).where(eq(announcements.isArchived, true));
+    console.log(`Dipulihkan: ${archivedAct.count} aktivitas, ${archivedTask.count} tugas, ${archivedAnn.count} pengumuman`);
+  }
+}
+
 export async function seedData() {
   await runMigrations();
+  await restoreArchivedUserData();
 
   const [existing] = await db.select({ count: count() }).from(users);
   if (!existing || existing.count === 0) {
