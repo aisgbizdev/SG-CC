@@ -10,5 +10,7 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL,
+    // Neon requires SSL; explicit flag avoids timeout when sslmode is ignored
+    ssl: true,
   },
 });
