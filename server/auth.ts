@@ -25,6 +25,13 @@ declare global {
 export function setupAuth(app: Express) {
   const PgStore = connectPgSimple(session);
   const isProduction = process.env.NODE_ENV === "production";
+  // Allow forcing cookie.secure on/off via env. Default: true only on production with https.
+  const secureCookie =
+    process.env.SESSION_SECURE === "true"
+      ? true
+      : process.env.SESSION_SECURE === "false"
+        ? false
+        : isProduction;
 
   if (!process.env.SESSION_SECRET) {
     if (isProduction) {
@@ -42,7 +49,7 @@ export function setupAuth(app: Express) {
       cookie: {
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: isProduction,
+        secure: secureCookie,
         sameSite: "lax",
       },
     })
