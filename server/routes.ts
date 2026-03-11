@@ -46,8 +46,10 @@ async function notifyAdminsAndOwners(
         userId: target.id, type, title, message,
         entityType, entityId, priority,
       });
-      const urlMap: Record<string, string> = { case: "/kasus", activity: "/aktivitas", task: "/tugas", announcement: "/pengumuman", message: "/pesan" };
-      sendPushToUser(target.id, { title, body: message, url: urlMap[entityType || ""] || "/" });
+      const detailRoutes: Record<string, string> = { case: "/kasus", activity: "/aktivitas" };
+      const listRoutes: Record<string, string> = { task: "/tugas", announcement: "/pengumuman", message: "/pesan" };
+      const pushUrl = (detailRoutes[entityType || ""] && entityId) ? `${detailRoutes[entityType || ""]}/${entityId}` : listRoutes[entityType || ""] || "/";
+      sendPushToUser(target.id, { title, body: message, url: pushUrl });
     }
   } catch (err) {
     console.error("Error notifying admins:", err);

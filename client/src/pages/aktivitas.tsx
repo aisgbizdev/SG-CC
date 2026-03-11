@@ -36,6 +36,7 @@ export default function AktivitasPage() {
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
   const [personFilter, setPersonFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState("hari");
 
   const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
 
@@ -384,30 +385,56 @@ export default function AktivitasPage() {
 
       {isAdmin && !isLoading && activities && duDkUsers.length > 0 && (() => {
         const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
-        const ws = new Date(now);
-        ws.setDate(ws.getDate() - ws.getDay());
-        const weekStartStr = `${ws.getFullYear()}-${String(ws.getMonth()+1).padStart(2,"0")}-${String(ws.getDate()).padStart(2,"0")}`;
+        const fmtDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        const today = fmtDate(now);
+        const ws = new Date(now); ws.setDate(ws.getDate() - ws.getDay());
+        const weekStart = fmtDate(ws);
+        const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-01`;
+        const q = Math.floor(now.getMonth() / 3);
+        const quarterStart = `${now.getFullYear()}-${String(q * 3 + 1).padStart(2,"0")}-01`;
+        const yearStart = `${now.getFullYear()}-01-01`;
+
+        const periodLabels: Record<string, string> = { hari: "Hari Ini", minggu: "Minggu Ini", bulan: "Bulan Ini", kuartal: `Q${q+1} ${now.getFullYear()}`, tahun: `Tahun ${now.getFullYear()}`, semua: "Semua Waktu" };
+        const periodStart: Record<string, string | null> = { hari: today, minggu: weekStart, bulan: monthStart, kuartal: quarterStart, tahun: yearStart, semua: null };
+
+        const prevPeriodLabels: Record<string, string> = { hari: "Minggu Ini", minggu: "Bulan Ini", bulan: "Kuartal Ini", kuartal: "Tahun Ini", tahun: "Semua", semua: "" };
+        const prevPeriodStart: Record<string, string | null> = { hari: weekStart, minggu: monthStart, bulan: quarterStart, kuartal: yearStart, tahun: null, semua: null };
 
         const userStats = duDkUsers.map((u: any) => {
           const userActivities = activities.filter(a => a.createdBy === u.id);
-          const todayCount = userActivities.filter(a => a.date === today).length;
-          const weekCount = userActivities.filter(a => a.date >= weekStartStr).length;
-          const statusCounts: Record<string, number> = {};
-          userActivities.forEach(a => { statusCounts[a.status] = (statusCounts[a.status] || 0) + 1; });
-          const topStatus = Object.entries(statusCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+          const pStart = periodStart[periodFilter];
+          const periodCount = pStart ? userActivities.filter(a => a.date >= pStart).length : userActivities.length;
+          const ppStart = prevPeriodStart[periodFilter];
+          const prevCount = ppStart ? userActivities.filter(a => a.date >= ppStart).length : userActivities.length;
           const avgProgress = userActivities.length > 0 ? Math.round(userActivities.reduce((s, a) => s + a.progress, 0) / userActivities.length) : 0;
-          const beban = todayCount >= 4 ? "Padat" : todayCount >= 2 ? "Normal" : "Ringan";
-          return { ...u, todayCount, weekCount, topStatus, avgProgress, beban, total: userActivities.length };
+          const thresholdMap: Record<string, [number, number]> = { hari: [4, 2], minggu: [15, 8], bulan: [40, 20], kuartal: [100, 50], tahun: [300, 150], semua: [300, 150] };
+          const [high, mid] = thresholdMap[periodFilter] || [4, 2];
+          const beban = periodCount >= high ? "Padat" : periodCount >= mid ? "Normal" : "Ringan";
+          return { ...u, periodCount, prevCount, avgProgress, beban, total: userActivities.length };
         });
 
         return (
           <Card data-testid="card-kesibukan-dudk">
             <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Users className="w-4 h-4 text-primary" />
-                <span>Kesibukan DU/DK</span>
-                <Badge variant="secondary" className="ml-1">Hari Ini: {today}</Badge>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Users className="w-4 h-4 text-primary" />
+                  <span>Kesibukan DU/DK</span>
+                </div>
+                <div className="flex flex-wrap gap-1 sm:ml-auto">
+                  {(["hari", "minggu", "bulan", "kuartal", "tahun", "semua"] as const).map(p => (
+                    <Button
+                      key={p}
+                      variant={periodFilter === p ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => setPeriodFilter(p)}
+                      data-testid={`button-period-${p}`}
+                    >
+                      {periodLabels[p]}
+                    </Button>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {userStats.map((u: any) => (
@@ -432,13 +459,15 @@ export default function AktivitasPage() {
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="text-center p-1.5 rounded bg-muted/50">
-                        <p className="font-bold text-base">{u.todayCount}</p>
-                        <p className="text-muted-foreground">Hari Ini</p>
+                        <p className="font-bold text-base">{u.periodCount}</p>
+                        <p className="text-muted-foreground">{periodLabels[periodFilter]}</p>
                       </div>
-                      <div className="text-center p-1.5 rounded bg-muted/50">
-                        <p className="font-bold text-base">{u.weekCount}</p>
-                        <p className="text-muted-foreground">Minggu Ini</p>
-                      </div>
+                      {periodFilter !== "semua" && (
+                        <div className="text-center p-1.5 rounded bg-muted/50">
+                          <p className="font-bold text-base">{u.prevCount}</p>
+                          <p className="text-muted-foreground">{prevPeriodLabels[periodFilter]}</p>
+                        </div>
+                      )}
                       <div className="text-center p-1.5 rounded bg-muted/50">
                         <p className="font-bold text-base">{u.total}</p>
                         <p className="text-muted-foreground">Total</p>

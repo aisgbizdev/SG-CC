@@ -47,8 +47,10 @@ async function createReminderNotification(userId: number, type: string, title: s
   const exists = await hasSimilarNotification(userId, type, entityId);
   if (exists) return;
   await storage.createNotification({ userId, type, title, message, entityType, entityId, priority });
-  const urlMap: Record<string, string> = { case: "/kasus", activity: "/aktivitas", task: "/tugas", announcement: "/pengumuman", message: "/pesan" };
-  sendPushToUser(userId, { title, body: message, url: urlMap[entityType] || "/" });
+  const detailRoutes: Record<string, string> = { case: "/kasus", activity: "/aktivitas" };
+  const listRoutes: Record<string, string> = { task: "/tugas", announcement: "/pengumuman", message: "/pesan" };
+  const pushUrl = (detailRoutes[entityType] && entityId) ? `${detailRoutes[entityType]}/${entityId}` : listRoutes[entityType] || "/";
+  sendPushToUser(userId, { title, body: message, url: pushUrl });
 }
 
 async function checkOverdueTasks() {

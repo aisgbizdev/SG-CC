@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,8 +43,20 @@ const priorityColors: Record<string, string> = {
   low: "",
 };
 
+function getNotificationUrl(n: Notification): string | null {
+  const entityType = n.entityType;
+  const entityId = n.entityId;
+  if (!entityType) return null;
+  const detailRoutes: Record<string, string> = { activity: "/aktivitas", case: "/kasus" };
+  const listRoutes: Record<string, string> = { task: "/tugas", announcement: "/pengumuman", message: "/pesan" };
+  if (detailRoutes[entityType] && entityId) return `${detailRoutes[entityType]}/${entityId}`;
+  if (listRoutes[entityType]) return listRoutes[entityType];
+  return null;
+}
+
 export default function NotifikasiPage() {
   usePageTitle("Notifikasi");
+  const [, navigate] = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const { data: notifications, isLoading, isError, refetch } = useQuery<Notification[]>({ queryKey: ["/api/notifications"] });
 
@@ -106,7 +119,11 @@ export default function NotifikasiPage() {
                 key={n.id}
                 className={`hover-elevate cursor-pointer ${!n.isRead ? priorityColors[n.priority] || "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
                 data-testid={`card-notification-${n.id}`}
-                onClick={() => { if (!n.isRead) readMutation.mutate(n.id); }}
+                onClick={() => {
+                  if (!n.isRead) readMutation.mutate(n.id);
+                  const url = getNotificationUrl(n);
+                  if (url) navigate(url);
+                }}
               >
                 <CardContent className="p-3 flex items-start gap-3">
                   <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${!n.isRead ? "bg-primary/10" : "bg-muted"}`}>
