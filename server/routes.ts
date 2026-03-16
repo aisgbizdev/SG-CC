@@ -190,6 +190,7 @@ const messageBodySchema = z.object({
   receiverId: z.number().int(),
   subject: z.string().optional().nullable(),
   content: z.string().min(1, "Pesan wajib diisi"),
+  tag: z.string().optional().nullable(),
 });
 
 const profilePatchSchema = z.object({
@@ -1022,12 +1023,15 @@ export async function registerRoutes(
       const parsed = messageBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
+      const isPerluArahan = parsed.data.tag === "perlu_arahan";
+      const notifTitle = isPerluArahan ? "Pesan Perlu Arahan" : "Pesan Baru";
+      const notifPriority = isPerluArahan ? "high" : "medium";
       const msg = await storage.transaction(async (tx) => {
         const m = await storage.createMessage({ ...parsed.data, senderId: user.id }, tx);
-        await storage.createNotification({ userId: m.receiverId, type: "new_message", title: "Pesan Baru", message: `Anda mendapat pesan baru dari ${user.fullName}`, entityType: "message", entityId: m.id, priority: "medium" }, tx);
+        await storage.createNotification({ userId: m.receiverId, type: "new_message", title: notifTitle, message: `Anda mendapat ${isPerluArahan ? "pesan yang memerlukan arahan" : "pesan baru"} dari ${user.fullName}`, entityType: "message", entityId: m.id, priority: notifPriority }, tx);
         return m;
       });
-      sendPushToUser(msg.receiverId, { title: "Pesan Baru", body: `Pesan baru dari ${user.fullName}`, url: "/pesan" });
+      sendPushToUser(msg.receiverId, { title: notifTitle, body: `${isPerluArahan ? "Pesan perlu arahan" : "Pesan baru"} dari ${user.fullName}`, url: "/pesan" });
       res.json(msg);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal mengirim pesan" });

@@ -55,6 +55,7 @@ async function runMigrations() {
       )
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
+    await db.execute(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS tag text`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);

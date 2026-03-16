@@ -289,6 +289,7 @@ export const messages = pgTable("messages", {
   subject: text("subject"),
   content: text("content").notNull(),
   isRead: boolean("is_read").notNull().default(false),
+  tag: text("tag"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("idx_messages_sender_id").on(table.senderId),
