@@ -479,7 +479,7 @@ export default function KasusPage() {
             </SelectContent>
           </Select>
           <Select
-            value={viewFilter ? (viewFilter === "active" ? "_view_active" : "_view_closed") : stageFilter}
+            value={stageFilter}
             onValueChange={v => {
               if (viewFilter) {
                 setViewFilter(null);
@@ -488,7 +488,6 @@ export default function KasusPage() {
               setStageFilter(v);
               setCurrentPage(1);
             }}
-            disabled={!!viewFilter}
           >
             <SelectTrigger data-testid="select-filter-stage" className="w-44">
               <SelectValue placeholder="Semua Stage" />
@@ -497,8 +496,6 @@ export default function KasusPage() {
               <SelectItem value="all">Semua Stage</SelectItem>
               <SelectItem value="waiting">Menunggu Keputusan</SelectItem>
               {WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              {viewFilter === "active" && <SelectItem value="_view_active">Kasus Aktif</SelectItem>}
-              {viewFilter === "closed" && <SelectItem value="_view_closed">Kasus Selesai</SelectItem>}
             </SelectContent>
           </Select>
           <Select value={resolutionFilter} onValueChange={v => { setResolutionFilter(v); setCurrentPage(1); }}>
