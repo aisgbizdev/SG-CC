@@ -100,6 +100,7 @@ export default function NotifikasiPage() {
     onSuccess: () => {
       invalidateNotifications();
       setConfirmDialog(null);
+      setCurrentPage(1);
       toast({ title: "Berhasil", description: "Notifikasi yang sudah dibaca berhasil dihapus" });
     },
   });
