@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -36,11 +36,13 @@ export default function KasusPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [location] = useLocation();
+  const urlParams = new URLSearchParams(location.split("?")[1] || "");
+  const stageParam = urlParams.get("stage");
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [bucketFilter, setBucketFilter] = useState("all");
-  const [stageFilter, setStageFilter] = useState("all");
+  const [stageFilter, setStageFilter] = useState(stageParam === "waiting" ? "waiting" : "all");
   const [sortBy, setSortBy] = useState("date-desc");
   const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,6 +55,14 @@ export default function KasusPage() {
 
   const [branchFilter, setBranchFilter] = useState("all");
   const [resolutionFilter, setResolutionFilter] = useState("all");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.split("?")[1] || "");
+    const stage = params.get("stage");
+    if (stage === "waiting") {
+      setStageFilter("waiting");
+    }
+  }, [location]);
   const isDuDk = ["du", "dk"].includes(user?.role || "");
   const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
 
@@ -128,7 +138,8 @@ export default function KasusPage() {
     const matchRisk = riskFilter === "all" || c.riskLevel === riskFilter;
     const matchCompany = companyFilter === "all" || c.companyId?.toString() === companyFilter;
     const matchBucket = bucketFilter === "all" || c.bucket === bucketFilter;
-    const matchStage = stageFilter === "all" || c.workflowStage === stageFilter;
+    const waitingStages = ["Proses Regulator", "Settlement / Deadlock"];
+    const matchStage = stageFilter === "all" || (stageFilter === "waiting" ? waitingStages.includes(c.workflowStage) && c.status !== "Closed" : c.workflowStage === stageFilter);
     const matchBranch = branchFilter === "all" || c.branch === branchFilter;
     const matchResolution = resolutionFilter === "all" || c.resolutionPath === resolutionFilter;
     return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution;
@@ -434,6 +445,7 @@ export default function KasusPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Stage</SelectItem>
+              <SelectItem value="waiting">Menunggu Keputusan</SelectItem>
               {WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>

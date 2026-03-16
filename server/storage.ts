@@ -381,6 +381,14 @@ export class DatabaseStorage implements IStorage {
       : eq(cases.isArchived, false);
     const taskConditions = eq(tasks.isArchived, false);
 
+    const waitingCondition = and(
+      caseConditions,
+      sql`${cases.status} != 'Closed'`,
+      sql`${cases.workflowStage} IN ('Proses Regulator', 'Settlement / Deadlock')`
+    );
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const [
       [totalActivities],
       [totalCases],
@@ -388,6 +396,8 @@ export class DatabaseStorage implements IStorage {
       [overdueCases],
       [completedActivities],
       [closedCases],
+      [waitingCases],
+      [longWaitingCases],
       [totalTasks],
       [pendingTasks],
       [completedTasks],
@@ -398,10 +408,12 @@ export class DatabaseStorage implements IStorage {
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actConditions),
       db.select({ count: count() }).from(cases).where(caseConditions),
-      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`)),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`, sql`${cases.workflowStage} NOT IN ('Proses Regulator', 'Settlement / Deadlock')`)),
       db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.targetDate} < ${today}`, sql`${cases.status} != 'Closed'`)),
       db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"))),
       db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"))),
+      db.select({ count: count() }).from(cases).where(waitingCondition),
+      db.select({ count: count() }).from(cases).where(and(waitingCondition, sql`${cases.updatedAt} < ${thirtyDaysAgo}`)),
       db.select({ count: count() }).from(tasks).where(taskConditions),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`)),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"))),
@@ -418,6 +430,8 @@ export class DatabaseStorage implements IStorage {
       activeCases: activeCases?.count || 0,
       closedCases: closedCases?.count || 0,
       overdueCases: overdueCases?.count || 0,
+      waitingCases: waitingCases?.count || 0,
+      longWaitingCases: longWaitingCases?.count || 0,
       totalTasks: totalTasks?.count || 0,
       pendingTasks: pendingTasks?.count || 0,
       completedTasks: completedTasks?.count || 0,

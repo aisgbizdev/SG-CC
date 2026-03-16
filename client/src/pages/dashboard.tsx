@@ -47,8 +47,8 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="p-3 sm:p-6 space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => <Skeleton key={`c${i}`} className="h-28" />)}
@@ -100,10 +100,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard title="Total Aktivitas" value={stats?.totalActivities || 0} icon={Activity} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" href="/aktivitas" />
         <StatCard title="Aktivitas Selesai" value={stats?.completedActivities || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalActivities || 0} total`} href="/aktivitas" />
         <StatCard title="Kasus Aktif" value={stats?.activeCases || 0} icon={FileWarning} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" subtitle={`${stats?.overdueCases || 0} overdue`} href="/kasus" />
+        <StatCard title="Menunggu Keputusan" value={stats?.waitingCases || 0} icon={Clock} color="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" subtitle={`${stats?.longWaitingCases || 0} menunggu >30 hari`} href="/kasus?stage=waiting" />
         <StatCard title="Kasus Selesai" value={stats?.closedCases || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalCases || 0} total`} href="/kasus" />
       </div>
 
