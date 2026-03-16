@@ -195,7 +195,7 @@ const messageBodySchema = z.object({
   receiverId: z.number().int(),
   subject: z.string().optional().nullable(),
   content: z.string().min(1, "Pesan wajib diisi"),
-  tag: z.string().optional().nullable(),
+  tag: z.enum(["perlu_arahan"]).optional().nullable(),
 });
 
 const profilePatchSchema = z.object({
