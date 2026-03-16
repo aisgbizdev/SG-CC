@@ -981,6 +981,41 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/notifications/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseId(req.params.id);
+      if (!id) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      const notification = await storage.getNotification(id);
+      if (!notification) return res.status(404).json({ message: "Notifikasi tidak ditemukan" });
+      if (notification.userId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
+      await storage.deleteNotification(id, user.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
+    }
+  });
+
+  app.delete("/api/notifications/batch/read", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const deleted = await storage.deleteReadNotifications(user.id);
+      res.json({ success: true, deleted });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
+    }
+  });
+
+  app.delete("/api/notifications/batch/all", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const deleted = await storage.deleteAllNotifications(user.id);
+      res.json({ success: true, deleted });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
+    }
+  });
+
   app.get("/api/push/vapid-key", (req, res) => {
     res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || "" });
   });

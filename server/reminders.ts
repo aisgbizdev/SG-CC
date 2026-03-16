@@ -169,8 +169,16 @@ async function sendDailySummary() {
   }
 }
 
+async function cleanupOldNotifications() {
+  const deleted = await storage.deleteOldReadNotifications(7);
+  if (deleted > 0) {
+    console.log(`Auto-cleanup: ${deleted} notifikasi lama (>7 hari, sudah dibaca) dihapus`);
+  }
+}
+
 async function runAllReminders() {
   try {
+    await cleanupOldNotifications();
     await checkOverdueTasks();
     await checkStaleCases();
     await checkStaleTasks();

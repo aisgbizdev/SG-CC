@@ -3,10 +3,12 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, CheckCheck, Clock, AlertTriangle, ListTodo, Megaphone, Mail, FileWarning, RefreshCw, MessageCircle, Calendar, CheckCircle, ShieldAlert, MailWarning, BarChart3, Activity } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Bell, CheckCheck, Clock, AlertTriangle, ListTodo, Megaphone, Mail, FileWarning, RefreshCw, MessageCircle, Calendar, CheckCircle, ShieldAlert, MailWarning, BarChart3, Activity, Trash2 } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -56,35 +58,71 @@ function getNotificationUrl(n: Notification): string | null {
 
 export default function NotifikasiPage() {
   usePageTitle("Notifikasi");
+  const { toast } = useToast();
   const [, navigate] = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmDialog, setConfirmDialog] = useState<{ type: "read" | "all" } | null>(null);
   const { data: notifications, isLoading, isError, refetch } = useQuery<Notification[]>({ queryKey: ["/api/notifications"] });
+
+  const invalidateNotifications = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+  };
 
   const readMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("PATCH", `/api/notifications/${id}/read`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
-    },
+    onSuccess: invalidateNotifications,
   });
 
   const readAllMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/notifications/read-all");
     },
+    onSuccess: invalidateNotifications,
+  });
+
+  const deleteOneMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/notifications/${id}`);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      invalidateNotifications();
+      toast({ title: "Berhasil", description: "Notifikasi dihapus" });
+    },
+  });
+
+  const deleteReadMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", "/api/notifications/batch/read");
+    },
+    onSuccess: () => {
+      invalidateNotifications();
+      setConfirmDialog(null);
+      toast({ title: "Berhasil", description: "Notifikasi yang sudah dibaca berhasil dihapus" });
+    },
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", "/api/notifications/batch/all");
+    },
+    onSuccess: () => {
+      invalidateNotifications();
+      setConfirmDialog(null);
+      setCurrentPage(1);
+      toast({ title: "Berhasil", description: "Semua notifikasi berhasil dihapus" });
     },
   });
 
   const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+  const readCount = notifications?.filter(n => n.isRead).length || 0;
 
   const allNotifications = notifications || [];
   const { totalPages, totalItems, getPageItems } = usePagination(allNotifications, 20);
   const pagedItems = getPageItems(currentPage);
+
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -92,11 +130,23 @@ export default function NotifikasiPage() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Notifikasi</h1>
           <p className="text-sm text-muted-foreground">{unreadCount} belum dibaca</p>
         </div>
-        {unreadCount > 0 && (
-          <Button variant="secondary" size="sm" onClick={() => readAllMutation.mutate()} data-testid="button-read-all">
-            <CheckCheck className="w-4 h-4 mr-1" /> Tandai Semua Dibaca
-          </Button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {unreadCount > 0 && (
+            <Button variant="secondary" size="sm" onClick={() => readAllMutation.mutate()} data-testid="button-read-all">
+              <CheckCheck className="w-4 h-4 mr-1" /> Tandai Semua Dibaca
+            </Button>
+          )}
+          {readCount > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setConfirmDialog({ type: "read" })} data-testid="button-delete-read" className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-900/20">
+              <Trash2 className="w-4 h-4 mr-1" /> Hapus Sudah Dibaca ({readCount})
+            </Button>
+          )}
+          {allNotifications.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setConfirmDialog({ type: "all" })} data-testid="button-delete-all" className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20">
+              <Trash2 className="w-4 h-4 mr-1" /> Hapus Semua
+            </Button>
+          )}
+        </div>
       </div>
 
       {isError ? (
@@ -117,7 +167,7 @@ export default function NotifikasiPage() {
             return (
               <Card
                 key={n.id}
-                className={`hover-elevate cursor-pointer ${!n.isRead ? priorityColors[n.priority] || "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
+                className={`group hover-elevate cursor-pointer ${!n.isRead ? priorityColors[n.priority] || "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
                 data-testid={`card-notification-${n.id}`}
                 onClick={() => {
                   if (!n.isRead) readMutation.mutate(n.id);
@@ -137,7 +187,21 @@ export default function NotifikasiPage() {
                       {new Date(n.createdAt).toLocaleString("id-ID")}
                     </p>
                   </div>
-                  {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary mt-2" />}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteOneMutation.mutate(n.id);
+                      }}
+                      data-testid={`button-delete-notification-${n.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -145,6 +209,37 @@ export default function NotifikasiPage() {
           <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
+
+      <Dialog open={confirmDialog !== null} onOpenChange={(open) => { if (!open) setConfirmDialog(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {confirmDialog?.type === "read"
+              ? `Hapus ${readCount} notifikasi yang sudah dibaca? Tindakan ini tidak bisa dibatalkan.`
+              : `Hapus semua ${allNotifications.length} notifikasi? Tindakan ini tidak bisa dibatalkan.`
+            }
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setConfirmDialog(null)} data-testid="button-cancel-delete">
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirmDialog?.type === "read") deleteReadMutation.mutate();
+                else deleteAllMutation.mutate();
+              }}
+              disabled={deleteReadMutation.isPending || deleteAllMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              {(deleteReadMutation.isPending || deleteAllMutation.isPending) ? "Menghapus..." : "Hapus"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

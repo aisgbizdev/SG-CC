@@ -77,6 +77,10 @@ export interface IStorage {
   createNotification(data: InsertNotification, tx?: TxOrDb): Promise<Notification>;
   markNotificationRead(id: number): Promise<void>;
   markAllNotificationsRead(userId: number): Promise<void>;
+  deleteNotification(id: number, userId: number): Promise<void>;
+  deleteReadNotifications(userId: number): Promise<number>;
+  deleteAllNotifications(userId: number): Promise<number>;
+  deleteOldReadNotifications(days: number): Promise<number>;
 
   getMessage(id: number): Promise<Message | undefined>;
   getMessages(userId: number): Promise<Message[]>;
@@ -342,6 +346,26 @@ export class DatabaseStorage implements IStorage {
 
   async markAllNotificationsRead(userId: number): Promise<void> {
     await db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId));
+  }
+
+  async deleteNotification(id: number, userId: number): Promise<void> {
+    await db.delete(notifications).where(and(eq(notifications.id, id), eq(notifications.userId, userId)));
+  }
+
+  async deleteReadNotifications(userId: number): Promise<number> {
+    const result = await db.delete(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, true))).returning({ id: notifications.id });
+    return result.length;
+  }
+
+  async deleteAllNotifications(userId: number): Promise<number> {
+    const result = await db.delete(notifications).where(eq(notifications.userId, userId)).returning({ id: notifications.id });
+    return result.length;
+  }
+
+  async deleteOldReadNotifications(days: number): Promise<number> {
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const result = await db.delete(notifications).where(and(eq(notifications.isRead, true), sql`${notifications.createdAt} < ${cutoff.toISOString()}::timestamp`)).returning({ id: notifications.id });
+    return result.length;
   }
 
   async getMessage(id: number): Promise<Message | undefined> {
