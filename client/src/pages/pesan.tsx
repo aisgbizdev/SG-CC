@@ -134,12 +134,12 @@ export default function PesanPage() {
 
   const allMessages = messages || [];
   const filteredMessages = allMessages.filter((msg) => {
-    if (tagFilter === "perlu_arahan") return (msg as any).tag === "perlu_arahan";
-    if (tagFilter === "umum") return !(msg as any).tag || (msg as any).tag !== "perlu_arahan";
+    if (tagFilter === "perlu_arahan") return msg.tag === "perlu_arahan";
+    if (tagFilter === "umum") return !msg.tag || msg.tag !== "perlu_arahan";
     return true;
   });
 
-  const perluArahanCount = allMessages.filter((msg) => (msg as any).tag === "perlu_arahan").length;
+  const perluArahanCount = allMessages.filter((msg) => msg.tag === "perlu_arahan").length;
 
   const { totalPages, totalItems, getPageItems } = usePagination(filteredMessages, 20);
   const pagedItems = getPageItems(currentPage);
@@ -261,7 +261,7 @@ export default function PesanPage() {
           {pagedItems.map(msg => {
             const isSender = msg.senderId === user?.id;
             const isUnread = !msg.isRead && !isSender;
-            const isPerluArahan = (msg as any).tag === "perlu_arahan";
+            const isPerluArahan = msg.tag === "perlu_arahan";
             return (
               <Card
                 key={msg.id}

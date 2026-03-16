@@ -56,14 +56,19 @@ async function notifyAdminsAndOwners(
   }
 }
 
-async function sendPushToUser(userId: number, payload: { title: string; body: string; url?: string }) {
+async function sendPushToUser(userId: number, payload: { title: string; body: string; url?: string }, options?: { urgency?: "very-low" | "low" | "normal" | "high" }) {
   try {
     const subs = await storage.getPushSubscriptions(userId);
+    const pushOptions: webpush.RequestOptions = {};
+    if (options?.urgency) {
+      pushOptions.urgency = options.urgency;
+    }
     const results = await Promise.allSettled(
       subs.map(sub =>
         webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify(payload),
+          pushOptions,
         ).catch(async (err: any) => {
           if (err.statusCode === 410 || err.statusCode === 404) {
             await storage.deletePushSubscription(sub.endpoint);
@@ -1031,7 +1036,7 @@ export async function registerRoutes(
         await storage.createNotification({ userId: m.receiverId, type: "new_message", title: notifTitle, message: `Anda mendapat ${isPerluArahan ? "pesan yang memerlukan arahan" : "pesan baru"} dari ${user.fullName}`, entityType: "message", entityId: m.id, priority: notifPriority }, tx);
         return m;
       });
-      sendPushToUser(msg.receiverId, { title: notifTitle, body: `${isPerluArahan ? "Pesan perlu arahan" : "Pesan baru"} dari ${user.fullName}`, url: "/pesan" });
+      sendPushToUser(msg.receiverId, { title: notifTitle, body: `${isPerluArahan ? "Pesan perlu arahan" : "Pesan baru"} dari ${user.fullName}`, url: "/pesan" }, isPerluArahan ? { urgency: "high" } : undefined);
       res.json(msg);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal mengirim pesan" });
