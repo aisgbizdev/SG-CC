@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation, Link } from "wouter";
+import { useLocation, useSearch, Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3 } from "lucide-react";
+import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -35,16 +35,19 @@ export default function KasusPage() {
   usePageTitle("Kasus Pengaduan");
   const { user } = useAuth();
   const { toast } = useToast();
-  const [location] = useLocation();
-  const urlParams = new URLSearchParams(location.split("?")[1] || "");
+  const [location, setLocation] = useLocation();
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
   const stageParam = urlParams.get("stage");
+  const viewParam = urlParams.get("view");
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [bucketFilter, setBucketFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState(stageParam === "waiting" ? "waiting" : "all");
+  const [viewFilter, setViewFilter] = useState<string | null>(viewParam === "active" ? "active" : viewParam === "closed" ? "closed" : null);
   const [sortBy, setSortBy] = useState("date-desc");
-  const [dialogOpen, setDialogOpen] = useState(location.includes("action=new"));
+  const [dialogOpen, setDialogOpen] = useState(searchString.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: cases, isLoading, isError, refetch } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
@@ -57,12 +60,23 @@ export default function KasusPage() {
   const [resolutionFilter, setResolutionFilter] = useState("all");
 
   useEffect(() => {
-    const params = new URLSearchParams(location.split("?")[1] || "");
+    const params = new URLSearchParams(searchString);
     const stage = params.get("stage");
+    const view = params.get("view");
     if (stage === "waiting") {
       setStageFilter("waiting");
+      setViewFilter(null);
+    } else if (view === "active") {
+      setViewFilter("active");
+      setStageFilter("all");
+    } else if (view === "closed") {
+      setViewFilter("closed");
+      setStageFilter("all");
+    } else if (!stage && !view) {
+      setViewFilter(null);
+      setStageFilter("all");
     }
-  }, [location]);
+  }, [searchString]);
   const isDuDk = ["du", "dk"].includes(user?.role || "");
   const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
 
@@ -129,6 +143,8 @@ export default function KasusPage() {
 
   const riskOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
 
+  const waitingStages = ["Proses Regulator", "Settlement / Deadlock"];
+
   const filtered = (cases?.filter(c => {
     const s = search.toLowerCase();
     const matchSearch = c.caseCode.toLowerCase().includes(s) ||
@@ -138,11 +154,16 @@ export default function KasusPage() {
     const matchRisk = riskFilter === "all" || c.riskLevel === riskFilter;
     const matchCompany = companyFilter === "all" || c.companyId?.toString() === companyFilter;
     const matchBucket = bucketFilter === "all" || c.bucket === bucketFilter;
-    const waitingStages = ["Proses Regulator", "Settlement / Deadlock"];
     const matchStage = stageFilter === "all" || (stageFilter === "waiting" ? waitingStages.includes(c.workflowStage) && c.status !== "Closed" : c.workflowStage === stageFilter);
     const matchBranch = branchFilter === "all" || c.branch === branchFilter;
     const matchResolution = resolutionFilter === "all" || c.resolutionPath === resolutionFilter;
-    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution;
+    let matchView = true;
+    if (viewFilter === "active") {
+      matchView = c.status !== "Closed" && !waitingStages.includes(c.workflowStage);
+    } else if (viewFilter === "closed") {
+      matchView = c.status === "Closed";
+    }
+    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution && matchView;
   }) || []).sort((a, b) => {
     switch (sortBy) {
       case "date-asc": return a.dateReceived.localeCompare(b.dateReceived);
@@ -261,7 +282,9 @@ export default function KasusPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Kasus Pengaduan</h1>
-          <p className="text-sm text-muted-foreground">Daftar kasus pengaduan yang tercatat</p>
+          <p className="text-sm text-muted-foreground">
+            {viewFilter === "active" ? "Menampilkan kasus aktif" : viewFilter === "closed" ? "Menampilkan kasus selesai" : "Daftar kasus pengaduan yang tercatat"}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <DownloadMenu
@@ -377,6 +400,22 @@ export default function KasusPage() {
         )}
         </div>
       </div>
+
+      {viewFilter && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1.5 text-sm" data-testid="badge-view-filter">
+            <Filter className="w-3 h-3" />
+            {viewFilter === "active" ? "Kasus Aktif" : "Kasus Selesai"}
+            <button
+              onClick={() => { setViewFilter(null); setLocation("/kasus"); }}
+              className="ml-1 hover:bg-muted rounded-full p-0.5"
+              data-testid="button-clear-view-filter"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </Badge>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-3">
