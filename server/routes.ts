@@ -981,6 +981,26 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/notifications/read", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const deleted = await storage.deleteReadNotifications(user.id);
+      res.json({ success: true, deleted });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
+    }
+  });
+
+  app.delete("/api/notifications/all", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const deleted = await storage.deleteAllNotifications(user.id);
+      res.json({ success: true, deleted });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
+    }
+  });
+
   app.delete("/api/notifications/:id", requireAuth, async (req, res) => {
     try {
       const id = parseId(req.params.id);
@@ -991,26 +1011,6 @@ export async function registerRoutes(
       if (notification.userId !== user.id) return res.status(403).json({ message: "Akses ditolak" });
       await storage.deleteNotification(id, user.id);
       res.json({ success: true });
-    } catch (err: any) {
-      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
-    }
-  });
-
-  app.delete("/api/notifications/batch/read", requireAuth, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const deleted = await storage.deleteReadNotifications(user.id);
-      res.json({ success: true, deleted });
-    } catch (err: any) {
-      res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
-    }
-  });
-
-  app.delete("/api/notifications/batch/all", requireAuth, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const deleted = await storage.deleteAllNotifications(user.id);
-      res.json({ success: true, deleted });
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal menghapus notifikasi" });
     }

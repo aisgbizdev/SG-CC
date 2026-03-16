@@ -95,7 +95,7 @@ export default function NotifikasiPage() {
 
   const deleteReadMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", "/api/notifications/batch/read");
+      await apiRequest("DELETE", "/api/notifications/read");
     },
     onSuccess: () => {
       invalidateNotifications();
@@ -106,7 +106,7 @@ export default function NotifikasiPage() {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", "/api/notifications/batch/all");
+      await apiRequest("DELETE", "/api/notifications/all");
     },
     onSuccess: () => {
       invalidateNotifications();
