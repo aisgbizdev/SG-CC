@@ -22,12 +22,26 @@ async function sendPushToUser(userId: number, payload: { title: string; body: st
   } catch {}
 }
 
-async function hasSimilarNotification(userId: number, type: string, entityId: number | null): Promise<boolean> {
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+async function hasSimilarNotification(userId: number, type: string, entityId: number | null, windowHours: number = 24): Promise<boolean> {
+  const cutoff = new Date(Date.now() - windowHours * 60 * 60 * 1000);
   const conditions = [
     eq(notifications.userId, userId),
     eq(notifications.type, type),
-    sql`${notifications.createdAt} > ${oneDayAgo.toISOString()}::timestamp`,
+    sql`${notifications.createdAt} > ${cutoff.toISOString()}::timestamp`,
+  ];
+  if (entityId) {
+    conditions.push(eq(notifications.entityId, entityId));
+  }
+  const [result] = await db.select({ count: count() }).from(notifications).where(and(...conditions));
+  return (result?.count || 0) > 0;
+}
+
+export async function hasRecentNotification(userId: number, type: string, entityId: number | null, windowMinutes: number = 60): Promise<boolean> {
+  const cutoff = new Date(Date.now() - windowMinutes * 60 * 1000);
+  const conditions = [
+    eq(notifications.userId, userId),
+    eq(notifications.type, type),
+    sql`${notifications.createdAt} > ${cutoff.toISOString()}::timestamp`,
   ];
   if (entityId) {
     conditions.push(eq(notifications.entityId, entityId));
@@ -43,8 +57,12 @@ async function getAdminsAndOwners(companyId: number | null): Promise<number[]> {
     .map(u => u.id);
 }
 
+const STALE_THROTTLE_HOURS = 72;
+const STALE_TYPES = ["case_stale", "task_stale"];
+
 async function createReminderNotification(userId: number, type: string, title: string, message: string, entityType: string, entityId: number, priority: string) {
-  const exists = await hasSimilarNotification(userId, type, entityId);
+  const windowHours = STALE_TYPES.includes(type) ? STALE_THROTTLE_HOURS : 24;
+  const exists = await hasSimilarNotification(userId, type, entityId, windowHours);
   if (exists) return;
   await storage.createNotification({ userId, type, title, message, entityType, entityId, priority });
   const detailRoutes: Record<string, string> = { case: "/kasus", activity: "/aktivitas" };
@@ -170,9 +188,9 @@ async function sendDailySummary() {
 }
 
 async function cleanupOldNotifications() {
-  const deleted = await storage.deleteOldReadNotifications(7);
+  const deleted = await storage.deleteOldNotifications(7);
   if (deleted > 0) {
-    console.log(`Auto-cleanup: ${deleted} notifikasi lama (>7 hari, sudah dibaca) dihapus`);
+    console.log(`Auto-cleanup: ${deleted} notifikasi lama (>7 hari) dihapus`);
   }
 }
 

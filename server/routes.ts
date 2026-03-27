@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireRole } from "./auth";
 import { seedData } from "./seed";
+import { hasRecentNotification } from "./reminders";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import webpush from "web-push";
@@ -32,6 +33,7 @@ async function notifyAdminsAndOwners(
   entityId: number | null,
   excludeUserId: number,
   priority: string = "medium",
+  throttleMinutes: number = 0,
 ) {
   try {
     const allUsers = await storage.getUsers();
@@ -42,6 +44,10 @@ async function notifyAdminsAndOwners(
       return false;
     });
     for (const target of targets) {
+      if (throttleMinutes > 0 && entityId) {
+        const exists = await hasRecentNotification(target.id, type, entityId, throttleMinutes);
+        if (exists) continue;
+      }
       await storage.createNotification({
         userId: target.id, type, title, message,
         entityType, entityId, priority,
@@ -557,7 +563,7 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "activity", entityId: existing.id, details: `Mengupdate aktivitas: ${existing.title}` }, tx);
         return act;
       });
-      notifyAdminsAndOwners(existing.companyId, "activity_updated", "Aktivitas Diperbarui", `${user.fullName} memperbarui aktivitas: ${existing.title}`, "activity", existing.id, user.id);
+      notifyAdminsAndOwners(existing.companyId, "activity_updated", "Aktivitas Diperbarui", `${user.fullName} memperbarui aktivitas: ${existing.title}`, "activity", existing.id, user.id, "medium", 60);
       res.json(activity);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal update aktivitas" });
@@ -642,7 +648,7 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "case", entityId: existing.id, details: `Mengupdate kasus: ${existing.caseCode}` }, tx);
         return updated;
       });
-      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", `${user.fullName} memperbarui kasus: ${existing.caseCode}`, "case", existing.id, user.id);
+      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", `${user.fullName} memperbarui kasus: ${existing.caseCode}`, "case", existing.id, user.id, "medium", 60);
       if (casePatchParsed.data.riskLevel === "High" && existing.riskLevel !== "High") {
         notifyAdminsAndOwners(existing.companyId, "case_high_risk", "Kasus Risiko Tinggi", `Kasus ${existing.caseCode} dinaikkan ke risiko TINGGI oleh ${user.fullName}`, "case", existing.id, user.id, "high");
       }
@@ -775,7 +781,7 @@ export async function registerRoutes(
         const duDkParsed = taskDuDkPatchSchema.safeParse(req.body);
         if (!duDkParsed.success) return res.status(400).json(formatZodError(duDkParsed.error));
         const task = await storage.updateTask(existing.id, duDkParsed.data);
-        notifyAdminsAndOwners(existing.companyId, "task_updated", "Tugas Diperbarui", `${user.fullName} memperbarui tugas: ${existing.title}`, "task", existing.id, user.id);
+        notifyAdminsAndOwners(existing.companyId, "task_updated", "Tugas Diperbarui", `${user.fullName} memperbarui tugas: ${existing.title}`, "task", existing.id, user.id, "medium", 60);
         if (duDkParsed.data.progress === 100 && existing.progress !== 100) {
           notifyAdminsAndOwners(existing.companyId, "task_completed", "Tugas Selesai", `${user.fullName} menyelesaikan tugas: ${existing.title}`, "task", existing.id, user.id);
         }
