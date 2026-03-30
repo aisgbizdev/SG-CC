@@ -14,7 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badges";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, MessageSquare, Send, Calendar, User, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, MessageSquare, Send, Calendar, User, Trash2, Hash, Clock } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Activity, Comment, User as UserType } from "@shared/schema";
@@ -32,6 +33,7 @@ export default function AktivitasDetailPage() {
   const { data: commentsData } = useQuery<Comment[]>({ queryKey: ["/api/comments", "activity", id] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
   const { data: companiesData } = useQuery<any[]>({ queryKey: ["/api/companies"] });
+  const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
 
   const [editForm, setEditForm] = useState<Partial<Activity>>({});
 
@@ -177,6 +179,26 @@ export default function AktivitasDetailPage() {
                   <p className="text-xs text-muted-foreground">Target Selesai</p>
                   <p className="text-sm">{activity.targetDate || "-"}</p>
                 </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Jumlah (Qty)</p>
+                  <Badge variant="outline" className="mt-0.5" data-testid="badge-detail-qty">
+                    <Hash className="w-3 h-3 mr-0.5" />{(activity as any).quantity || 1}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Shift</p>
+                  {(activity as any).shift ? (
+                    <Badge variant="secondary" className="mt-0.5" data-testid="badge-detail-shift">
+                      <Clock className="w-3 h-3 mr-0.5" />{(activity as any).shift}
+                    </Badge>
+                  ) : (
+                    <p className="text-sm">-</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Kategori</p>
+                  <p className="text-sm font-medium">{categories?.find((c: any) => c.id === activity.categoryId)?.name || "-"}</p>
+                </div>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Progress</p>
@@ -201,6 +223,29 @@ export default function AktivitasDetailPage() {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Tindak Lanjut</p>
                   <p className="text-sm">{activity.nextAction}</p>
+                </div>
+              )}
+              {((activity as any).handoverFrom || (activity as any).pendingTasks || (activity as any).operationalCondition) && (
+                <div className="border-t pt-3 space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Info Handover</p>
+                  {(activity as any).handoverFrom && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Diterima dari</p>
+                      <p className="text-sm font-medium">{getUserName((activity as any).handoverFrom)}</p>
+                    </div>
+                  )}
+                  {(activity as any).pendingTasks && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Task Belum Selesai</p>
+                      <p className="text-sm whitespace-pre-wrap">{(activity as any).pendingTasks}</p>
+                    </div>
+                  )}
+                  {(activity as any).operationalCondition && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Kondisi Operasional</p>
+                      <p className="text-sm whitespace-pre-wrap">{(activity as any).operationalCondition}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
