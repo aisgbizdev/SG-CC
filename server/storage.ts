@@ -568,9 +568,6 @@ export class DatabaseStorage implements IStorage {
       [taskOverdue],
       [caseOverdue],
       [actOverdue],
-      [actQtySum],
-      [actQtyCompleted],
-      [actDistinctDays],
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actBase),
       db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"))),
@@ -590,9 +587,6 @@ export class DatabaseStorage implements IStorage {
       db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
       db.select({ count: count() }).from(activities).where(and(actBase, sql`${activities.status} != 'Selesai'`, sql`${activities.targetDate}::date < ${today}::date`)),
-      db.select({ total: sql<number>`COALESCE(SUM(${activities.quantity}), 0)` }).from(activities).where(actBase),
-      db.select({ total: sql<number>`COALESCE(SUM(CASE WHEN ${activities.status} = 'Selesai' THEN ${activities.quantity} ELSE 0 END), 0)` }).from(activities).where(actBase),
-      db.select({ count: sql<number>`COUNT(DISTINCT ${activities.date})` }).from(activities).where(actBase),
     ]);
 
     const aTotal = actTotal?.count || 0;
@@ -604,42 +598,22 @@ export class DatabaseStorage implements IStorage {
 
     const totalItems = aTotal + cTotal + tTotal;
 
-    const aQtyTotal = Number(actQtySum?.total) || 0;
-    const aQtyCompleted = Number(actQtyCompleted?.total) || 0;
-    const distinctActivityDays = Number(actDistinctDays?.count) || 0;
-
-    const firstActivityResult = await db.select({ minDate: sql<string>`MIN(${activities.date})` }).from(activities).where(actBase);
-    const firstActivityDate = firstActivityResult[0]?.minDate;
-    let totalWorkDays = 0;
-    if (firstActivityDate) {
-      const start = new Date(firstActivityDate);
-      const end = new Date(today);
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const day = d.getDay();
-        if (day !== 0 && day !== 6) totalWorkDays++;
-      }
-    }
-    if (totalWorkDays < 1) totalWorkDays = 1;
-
     if (totalItems === 0) {
       const zeroScores = {
         penyelesaianTugas: 0, penyelesaianKasus: 0, penyelesaianAktivitas: 0,
         ketepatanWaktu: 0, progressRataRata: 0, responsivitas: 0, bebanKerja: 0, konsistensi: 0,
-        produktivitasHarian: 0,
       };
       return {
         userId, fullName: user.fullName, role: user.role, companyId: user.companyId,
         scores: zeroScores, totalScore: 0,
-        details: { activitiesTotal: 0, activitiesCompleted: 0, activitiesQtyTotal: 0, activitiesQtyCompleted: 0,
-          casesTotal: 0, casesCompleted: 0,
-          tasksTotal: 0, tasksCompleted: 0, avgProgress: 0, totalOverdue: 0, totalOnTime: 0, totalWithDeadline: 0, totalItems: 0,
-          distinctActivityDays: 0, totalWorkDays, produktivitasHarian: 0 },
+        details: { activitiesTotal: 0, activitiesCompleted: 0, casesTotal: 0, casesCompleted: 0,
+          tasksTotal: 0, tasksCompleted: 0, avgProgress: 0, totalOverdue: 0, totalOnTime: 0, totalWithDeadline: 0, totalItems: 0 },
       };
     }
 
     const penyelesaianTugas = tTotal > 0 ? Math.round((tCompleted / tTotal) * 100) : 0;
     const penyelesaianKasus = cTotal > 0 ? Math.round((cCompleted / cTotal) * 100) : 0;
-    const penyelesaianAktivitas = aQtyTotal > 0 ? Math.round((aQtyCompleted / aQtyTotal) * 100) : (aTotal > 0 ? Math.round((aCompleted / aTotal) * 100) : 0);
+    const penyelesaianAktivitas = aTotal > 0 ? Math.round((aCompleted / aTotal) * 100) : 0;
 
     const totalWithDeadline = (taskWithDeadline?.count || 0) + (actWithTarget?.count || 0) + (caseWithTarget?.count || 0);
     const totalOnTime = (taskOnTime?.count || 0) + (actOnTime?.count || 0) + (caseOnTime?.count || 0);
@@ -655,15 +629,11 @@ export class DatabaseStorage implements IStorage {
     const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
     const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
 
-    const QTY_CAPACITY = 50;
-    const qtyWeightedLoad = Math.max(aQtyTotal, aTotal) + cTotal + tTotal;
-    const bebanKerja = Math.min(100, Math.round((qtyWeightedLoad / QTY_CAPACITY) * 100));
+    const CAPACITY_THRESHOLD = 20;
+    const bebanKerja = Math.min(100, Math.round((totalItems / CAPACITY_THRESHOLD) * 100));
 
-    const konsistensi = Math.round(Math.min(100, (distinctActivityDays / totalWorkDays) * 100));
-
-    const produktivitasHarianRaw = distinctActivityDays > 0 ? aQtyTotal / distinctActivityDays : 0;
-    const DAILY_QTY_TARGET = 10;
-    const produktivitasHarian = Math.min(100, Math.round((produktivitasHarianRaw / DAILY_QTY_TARGET) * 100));
+    const completedTotal = aCompleted + cCompleted + tCompleted;
+    const konsistensi = Math.round(Math.min(100, (completedTotal / totalItems) * 100));
 
     const scores = {
       penyelesaianTugas,
@@ -674,19 +644,17 @@ export class DatabaseStorage implements IStorage {
       responsivitas,
       bebanKerja,
       konsistensi,
-      produktivitasHarian,
     };
 
     const totalScore = Math.round(
       (penyelesaianTugas * 0.15) +
       (penyelesaianKasus * 0.20) +
       (penyelesaianAktivitas * 0.15) +
-      (ketepatanWaktu * 0.10) +
+      (ketepatanWaktu * 0.15) +
       (avgProgress * 0.10) +
       (responsivitas * 0.10) +
       (bebanKerja * 0.05) +
-      (konsistensi * 0.10) +
-      (produktivitasHarian * 0.05)
+      (konsistensi * 0.10)
     );
 
     return {
@@ -699,8 +667,6 @@ export class DatabaseStorage implements IStorage {
       details: {
         activitiesTotal: aTotal,
         activitiesCompleted: aCompleted,
-        activitiesQtyTotal: aQtyTotal,
-        activitiesQtyCompleted: aQtyCompleted,
         casesTotal: cTotal,
         casesCompleted: cCompleted,
         tasksTotal: tTotal,
@@ -710,9 +676,6 @@ export class DatabaseStorage implements IStorage {
         totalOnTime,
         totalWithDeadline,
         totalItems,
-        distinctActivityDays,
-        totalWorkDays,
-        produktivitasHarian: Math.round(produktivitasHarianRaw * 10) / 10,
       },
     };
   }

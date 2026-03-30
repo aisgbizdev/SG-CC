@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { storage } from "./storage";
-import { tasks, cases, messages, notifications, activities, users } from "@shared/schema";
+import { tasks, cases, messages, notifications } from "@shared/schema";
 import { eq, and, ne, sql, count, lt } from "drizzle-orm";
 import webpush from "web-push";
 
@@ -187,59 +187,6 @@ async function sendDailySummary() {
   }
 }
 
-async function checkNoActivityToday() {
-  const now = new Date();
-  const wibHour = (now.getUTCHours() + 7) % 24;
-
-  const today = now.toISOString().split("T")[0];
-  const allUsers = await storage.getUsers();
-  const duDkUsers = allUsers.filter(u => ["du", "dk"].includes(u.role) && u.isActive);
-
-  const allActivities = await db.select().from(activities)
-    .where(and(eq(activities.isArchived, false), sql`${activities.date} = ${today}`));
-
-  const usersWithActivity = new Set(allActivities.map(a => a.createdBy));
-
-  if (wibHour < 12) return;
-
-  for (const u of duDkUsers) {
-    if (usersWithActivity.has(u.id)) continue;
-    const exists = await hasSimilarNotification(u.id, "no_activity", null, 24);
-    if (exists) continue;
-    await storage.createNotification({
-      userId: u.id,
-      type: "no_activity",
-      title: "Belum Ada Aktivitas Hari Ini",
-      message: `Anda belum mencatat aktivitas untuk tanggal ${today}. Segera catat aktivitas operasional Anda.`,
-      entityType: "activity",
-      entityId: null,
-      priority: "medium",
-    });
-    sendPushToUser(u.id, { title: "Belum Ada Aktivitas", body: "Anda belum mencatat aktivitas hari ini", url: "/aktivitas" });
-  }
-
-  const admins = await getAdminsAndOwners(null);
-  const noActivityUsers = duDkUsers.filter(u => !usersWithActivity.has(u.id));
-  if (noActivityUsers.length > 0) {
-    const names = noActivityUsers.map(u => u.fullName).slice(0, 5).join(", ");
-    const suffix = noActivityUsers.length > 5 ? ` dan ${noActivityUsers.length - 5} lainnya` : "";
-    for (const adminId of admins) {
-      const exists = await hasSimilarNotification(adminId, "no_activity_report", null, 24);
-      if (exists) continue;
-      await storage.createNotification({
-        userId: adminId,
-        type: "no_activity_report",
-        title: "Laporan Aktivitas Kosong",
-        message: `${noActivityUsers.length} personil belum mencatat aktivitas hari ini: ${names}${suffix}`,
-        entityType: "activity",
-        entityId: null,
-        priority: "medium",
-      });
-      sendPushToUser(adminId, { title: "Aktivitas Kosong", body: `${noActivityUsers.length} personil belum mencatat aktivitas hari ini`, url: "/aktivitas" });
-    }
-  }
-}
-
 async function cleanupOldNotifications() {
   const deleted = await storage.deleteOldNotifications(7);
   if (deleted > 0) {
@@ -254,7 +201,6 @@ async function runAllReminders() {
     await checkStaleCases();
     await checkStaleTasks();
     await checkUnreadMessages();
-    await checkNoActivityToday();
     await sendDailySummary();
   } catch (err) {
     console.error("Error running reminders:", err);

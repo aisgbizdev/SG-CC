@@ -22,7 +22,7 @@ import {
   BarChart3, Plus, User, Building2, Target,
   Activity, FileWarning, ListTodo, TrendingUp,
   Clock, Zap, Briefcase, BarChart2, ChevronDown, ChevronUp,
-  Award, ThumbsUp, AlertTriangle, BookOpen, Info, Trophy, Medal, CheckCircle2,
+  Award, ThumbsUp, AlertTriangle, BookOpen, Info, Trophy, Medal,
   Calendar, CalendarDays, CalendarRange, Download, FileText, FileSpreadsheet, FileType,
 } from "lucide-react";
 import { downloadPDF, downloadExcel, downloadWord } from "@/lib/download";
@@ -33,13 +33,12 @@ import type { KpiAssessment, User as UserType, Company } from "@shared/schema";
 const ASPECT_LABELS = [
   { key: "penyelesaianTugas", label: "Penyelesaian Tugas", icon: ListTodo, color: "text-purple-500", desc: "% tugas selesai dari total" },
   { key: "penyelesaianKasus", label: "Penyelesaian Kasus", icon: FileWarning, color: "text-amber-500", desc: "% kasus closed dari total" },
-  { key: "penyelesaianAktivitas", label: "Penyelesaian Aktivitas", icon: Activity, color: "text-blue-500", desc: "% qty aktivitas selesai dari total qty" },
+  { key: "penyelesaianAktivitas", label: "Penyelesaian Aktivitas", icon: Activity, color: "text-blue-500", desc: "% aktivitas selesai dari total" },
   { key: "ketepatanWaktu", label: "Ketepatan Waktu", icon: Clock, color: "text-green-500", desc: "% selesai sebelum deadline" },
   { key: "progressRataRata", label: "Progress Rata-rata", icon: TrendingUp, color: "text-cyan-500", desc: "Rata-rata progress semua item" },
   { key: "responsivitas", label: "Responsivitas", icon: Zap, color: "text-orange-500", desc: "Kecepatan menangani item (tanpa overdue)" },
   { key: "bebanKerja", label: "Beban Kerja", icon: Briefcase, color: "text-indigo-500", desc: "Kapasitas item yang ditangani" },
-  { key: "konsistensi", label: "Konsistensi", icon: BarChart2, color: "text-pink-500", desc: "Rasio hari input aktivitas vs hari kerja" },
-  { key: "produktivitasHarian", label: "Produktivitas Harian", icon: CalendarDays, color: "text-teal-500", desc: "Rata-rata qty per hari kerja aktif" },
+  { key: "konsistensi", label: "Konsistensi", icon: BarChart2, color: "text-pink-500", desc: "Rasio penyelesaian terhadap total" },
 ] as const;
 
 function getGrade(score: number) {
@@ -218,18 +217,17 @@ function DasarPenilaianSection() {
 
             <div>
               <h5 className="font-semibold text-sm mb-2 flex items-center gap-1">
-                <BarChart3 className="w-3.5 h-3.5 text-purple-500" /> 9 Aspek Penilaian & Bobot
+                <BarChart3 className="w-3.5 h-3.5 text-purple-500" /> 8 Aspek Penilaian & Bobot
               </h5>
               <div className="space-y-1.5 ml-1">
                 <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">20%</Badge><span><span className="font-medium text-foreground">Penyelesaian Kasus</span> — Kasus closed ÷ Total kasus × 100</span></div>
                 <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Tugas</span> — Tugas selesai ÷ Total tugas × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Aktivitas</span> — Qty aktivitas selesai ÷ Total qty aktivitas × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Ketepatan Waktu</span> — Item selesai sebelum deadline ÷ Total item berdeadline × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Aktivitas</span> — Aktivitas selesai ÷ Total aktivitas × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Ketepatan Waktu</span> — Item selesai sebelum deadline ÷ Total item berdeadline × 100</span></div>
                 <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Progress Rata-rata</span> — Rata-rata % progress dari semua item aktif</span></div>
                 <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Responsivitas</span> — 100% − (Item overdue ÷ Item aktif × 100)</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Konsistensi</span> — Hari input aktivitas ÷ Total hari kerja × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">5%</Badge><span><span className="font-medium text-foreground">Beban Kerja</span> — Total item ÷ kapasitas standar × 100, maks 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">5%</Badge><span><span className="font-medium text-foreground">Produktivitas Harian</span> — Rata-rata qty per hari kerja aktif ÷ target harian × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Konsistensi</span> — Item selesai ÷ Total item × 100</span></div>
+                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">5%</Badge><span><span className="font-medium text-foreground">Beban Kerja</span> — Total item ÷ 20 (kapasitas standar) × 100, maks 100</span></div>
               </div>
             </div>
 
@@ -265,8 +263,6 @@ type LiveKpi = {
   details: {
     activitiesTotal: number;
     activitiesCompleted: number;
-    activitiesQtyTotal: number;
-    activitiesQtyCompleted: number;
     casesTotal: number;
     casesCompleted: number;
     tasksTotal: number;
@@ -276,40 +272,16 @@ type LiveKpi = {
     totalOnTime: number;
     totalWithDeadline: number;
     totalItems: number;
-    distinctActivityDays: number;
-    totalWorkDays: number;
-    produktivitasHarian: number;
   };
-};
-
-type DailyMonitoringUser = {
-  userId: number;
-  fullName: string;
-  role: string;
-  companyId: number | null;
-  hasActivity: boolean;
-  activityCount: number;
-  totalQty: number;
-  shifts: string[];
-};
-
-type DailyMonitoringData = {
-  date: string;
-  totalUsers: number;
-  sudahInput: number;
-  belumInput: number;
-  users: DailyMonitoringUser[];
 };
 
 export default function KpiPage() {
   usePageTitle("Penilaian KPI");
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"live" | "monitoring" | "history">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "history">("live");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterCompany, setFilterCompany] = useState("all");
-  const [monitoringCompany, setMonitoringCompany] = useState("all");
-  const [monitoringShift, setMonitoringShift] = useState("all");
   const [filterPeriod, setFilterPeriod] = useState("all");
   const [filterPeriodType, setFilterPeriodType] = useState<"all" | PeriodType>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -339,22 +311,6 @@ export default function KpiPage() {
   const { data: usersData } = useQuery<UserType[]>({
     queryKey: ["/api/users"],
     enabled: isAdmin,
-  });
-
-  const monitoringQueryParams = new URLSearchParams();
-  if (monitoringCompany !== "all") monitoringQueryParams.set("companyId", monitoringCompany);
-  if (monitoringShift !== "all") monitoringQueryParams.set("shift", monitoringShift);
-  const monitoringQs = monitoringQueryParams.toString();
-
-  const { data: monitoringData, isLoading: monitoringLoading, isError: monitoringError, refetch: monitoringRefetch } = useQuery<DailyMonitoringData>({
-    queryKey: ["/api/monitoring/daily-activity", monitoringCompany, monitoringShift],
-    queryFn: async () => {
-      const res = await fetch(`/api/monitoring/daily-activity${monitoringQs ? `?${monitoringQs}` : ""}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-    enabled: isAdmin && activeTab === "monitoring",
-    refetchInterval: 60000,
   });
 
   const createMutation = useMutation({
@@ -422,9 +378,9 @@ export default function KpiPage() {
 
   const duDkUsers = usersData?.filter(u => ["du", "dk"].includes(u.role) && u.isActive) || [];
 
-  const isLoading = activeTab === "live" ? liveLoading : activeTab === "monitoring" ? monitoringLoading : histLoading;
-  const isError = activeTab === "live" ? liveError : activeTab === "monitoring" ? monitoringError : histError;
-  const refetch = activeTab === "live" ? liveRefetch : activeTab === "monitoring" ? monitoringRefetch : histRefetch;
+  const isLoading = activeTab === "live" ? liveLoading : histLoading;
+  const isError = activeTab === "live" ? liveError : histError;
+  const refetch = activeTab === "live" ? liveRefetch : histRefetch;
 
   if (isLoading) {
     return (
@@ -452,7 +408,6 @@ export default function KpiPage() {
     progressRataRata: kpi.problemSolvingScore,
     bebanKerja: kpi.teamworkScore,
     konsistensi: kpi.responsibilityScore,
-    produktivitasHarian: 0,
   });
 
   return (
@@ -635,16 +590,6 @@ export default function KpiPage() {
             <Zap className="w-3.5 h-3.5 inline mr-1" />
             KPI Live
           </button>
-          {isAdmin && (
-            <button
-              onClick={() => setActiveTab("monitoring")}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === "monitoring" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              data-testid="tab-kpi-monitoring"
-            >
-              <CalendarDays className="w-3.5 h-3.5 inline mr-1" />
-              Monitoring Hari Ini
-            </button>
-          )}
           <button
             onClick={() => setActiveTab("history")}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === "history" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
@@ -741,7 +686,7 @@ export default function KpiPage() {
                           <Badge className={gradeCls}>{grade} - {label}</Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas ({kpi.details.activitiesQtyTotal || 0} qty)</span>
+                          <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas</span>
                           <span className="flex items-center gap-1"><FileWarning className="w-3 h-3" /> {kpi.details.casesCompleted}/{kpi.details.casesTotal} kasus</span>
                           <span className="flex items-center gap-1"><ListTodo className="w-3 h-3" /> {kpi.details.tasksCompleted}/{kpi.details.tasksTotal} tugas</span>
                           {kpi.details.totalOverdue > 0 && (
@@ -766,7 +711,7 @@ export default function KpiPage() {
                           </div>
                           <div>
                             <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
-                              <BarChart3 className="w-4 h-4" /> Detail 9 Aspek
+                              <BarChart3 className="w-4 h-4" /> Detail 8 Aspek
                             </h4>
                             <div className="space-y-2">
                               {ASPECT_LABELS.map(a => {
@@ -847,128 +792,6 @@ export default function KpiPage() {
             );
           })()}
         </>
-      )}
-
-      {activeTab === "monitoring" && isAdmin && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={monitoringCompany} onValueChange={setMonitoringCompany}>
-              <SelectTrigger className="w-36" data-testid="select-monitoring-company">
-                <SelectValue placeholder="PT" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua PT</SelectItem>
-                {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={monitoringShift} onValueChange={setMonitoringShift}>
-              <SelectTrigger className="w-36" data-testid="select-monitoring-shift">
-                <SelectValue placeholder="Shift" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Shift</SelectItem>
-                <SelectItem value="Pagi">Pagi</SelectItem>
-                <SelectItem value="Siang">Siang</SelectItem>
-                <SelectItem value="Malam">Malam</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {monitoringLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16" />)}
-            </div>
-          ) : monitoringData ? (
-            <>
-              <div className="grid grid-cols-3 gap-3">
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold" data-testid="text-monitoring-total">{monitoringData.totalUsers}</p>
-                    <p className="text-xs text-muted-foreground">Total Personil</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-emerald-200 dark:border-emerald-800/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-emerald-600" data-testid="text-monitoring-sudah">{monitoringData.sudahInput}</p>
-                    <p className="text-xs text-muted-foreground">Sudah Input</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-red-200 dark:border-red-800/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-red-600" data-testid="text-monitoring-belum">{monitoringData.belumInput}</p>
-                    <p className="text-xs text-muted-foreground">Belum Input</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {monitoringData.users.filter(u => !u.hasActivity).length > 0 && (
-                <Card className="border-red-200 dark:border-red-800/30">
-                  <CardContent className="p-4">
-                    <h4 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-3 flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4" /> Belum Input Aktivitas Hari Ini
-                    </h4>
-                    <div className="space-y-2">
-                      {monitoringData.users.filter(u => !u.hasActivity).map(u => (
-                        <div key={u.userId} className="flex items-center justify-between p-2.5 rounded-md bg-red-50/50 dark:bg-red-900/10" data-testid={`monitoring-belum-${u.userId}`}>
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-red-400" />
-                            <span className="text-sm font-medium">{u.fullName}</span>
-                            <Badge variant="outline" className="text-[10px]">{u.role.toUpperCase()}</Badge>
-                            <Badge variant="outline" className="text-[10px]">
-                              <Building2 className="w-3 h-3 mr-0.5" />
-                              {getCompanyName(u.companyId)}
-                            </Badge>
-                          </div>
-                          <Badge variant="destructive" className="text-[10px]">Belum Input</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {monitoringData.users.filter(u => u.hasActivity).length > 0 && (
-                <Card className="border-emerald-200 dark:border-emerald-800/30">
-                  <CardContent className="p-4">
-                    <h4 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-3 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4" /> Sudah Input Aktivitas Hari Ini
-                    </h4>
-                    <div className="space-y-2">
-                      {monitoringData.users.filter(u => u.hasActivity).map(u => (
-                        <div key={u.userId} className="flex items-center justify-between p-2.5 rounded-md bg-emerald-50/50 dark:bg-emerald-900/10" data-testid={`monitoring-sudah-${u.userId}`}>
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-emerald-500" />
-                            <span className="text-sm font-medium">{u.fullName}</span>
-                            <Badge variant="outline" className="text-[10px]">{u.role.toUpperCase()}</Badge>
-                            <Badge variant="outline" className="text-[10px]">
-                              <Building2 className="w-3 h-3 mr-0.5" />
-                              {getCompanyName(u.companyId)}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {u.shifts.length > 0 && u.shifts.map(s => (
-                              <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>
-                            ))}
-                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]">
-                              {u.activityCount} aktivitas • {u.totalQty} qty
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <CalendarDays className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Tidak ada data monitoring</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
       )}
 
       {activeTab === "history" && (

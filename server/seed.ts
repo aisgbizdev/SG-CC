@@ -56,11 +56,6 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
     await db.execute(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS tag text`);
-    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS quantity integer NOT NULL DEFAULT 1`);
-    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS shift text`);
-    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS handover_from integer`);
-    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS pending_tasks text`);
-    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS operational_condition text`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);
@@ -104,28 +99,28 @@ export async function seedData() {
     const c4 = await storage.createCompany({ name: "PT Kontak Perkasa Futures", code: "KPF", isActive: true });
     const c5 = await storage.createCompany({ name: "PT Equityworld Futures", code: "EWF", isActive: true });
 
-    await storage.createUser({ username: "superadmin", password: pw, fullName: "System Admin", role: "superadmin", companyId: null, position: "System Administrator", secretQuestion: "Nama ibu kandung", secretAnswer: "admin", isActive: true });
+    await storage.createUser({ username: "superadmin", password: pw, fullName: "System Admin", role: "superadmin", companyId: null, secretQuestion: "Nama ibu kandung", secretAnswer: "admin", isActive: true });
 
-    await storage.createUser({ username: "nelson", password: pw, fullName: "Nelson Lee", role: "owner", companyId: null, position: "Direktur", secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
-    await storage.createUser({ username: "hambali", password: pw, fullName: "Hambali", role: "owner", companyId: null, position: "Direktur", secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
-    await storage.createUser({ username: "masir", password: pw, fullName: "Mas IR", role: "owner", companyId: null, position: "Direktur", secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
-    await storage.createUser({ username: "dr", password: pw, fullName: "DR", role: "owner", companyId: null, position: "Direktur", secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
-    await storage.createUser({ username: "bw", password: pw, fullName: "BW", role: "owner", companyId: null, position: "Direktur", secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
+    await storage.createUser({ username: "nelson", password: pw, fullName: "Nelson Lee", role: "owner", companyId: null, secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
+    await storage.createUser({ username: "hambali", password: pw, fullName: "Hambali", role: "owner", companyId: null, secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
+    await storage.createUser({ username: "masir", password: pw, fullName: "Mas IR", role: "owner", companyId: null, secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
+    await storage.createUser({ username: "dr", password: pw, fullName: "DR", role: "owner", companyId: null, secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
+    await storage.createUser({ username: "bw", password: pw, fullName: "BW", role: "owner", companyId: null, secretQuestion: "Nama ibu kandung", secretAnswer: "owner", isActive: true });
 
-    await storage.createUser({ username: "du_sgb", password: pw, fullName: "DU PT SGB", role: "du", companyId: c1.id, position: "Chief Dealing", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
-    await storage.createUser({ username: "dk_sgb", password: pw, fullName: "DK PT SGB", role: "dk", companyId: c1.id, position: "Admin Kepatuhan", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "du_sgb", password: pw, fullName: "DU PT SGB", role: "du", companyId: c1.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "dk_sgb", password: pw, fullName: "DK PT SGB", role: "dk", companyId: c1.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
 
-    await storage.createUser({ username: "du_rfb", password: pw, fullName: "DU PT RFB", role: "du", companyId: c2.id, position: "SPV Dealing", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
-    await storage.createUser({ username: "dk_rfb", password: pw, fullName: "DK PT RFB", role: "dk", companyId: c2.id, position: "Admin Kepatuhan", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "du_rfb", password: pw, fullName: "DU PT RFB", role: "du", companyId: c2.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "dk_rfb", password: pw, fullName: "DK PT RFB", role: "dk", companyId: c2.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
 
-    await storage.createUser({ username: "du_bpf", password: pw, fullName: "DU PT BPF", role: "du", companyId: c3.id, position: "Chief Dealing", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
-    await storage.createUser({ username: "dk_bpf", password: pw, fullName: "DK PT BPF", role: "dk", companyId: c3.id, position: "Admin Kepatuhan", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "du_bpf", password: pw, fullName: "DU PT BPF", role: "du", companyId: c3.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "dk_bpf", password: pw, fullName: "DK PT BPF", role: "dk", companyId: c3.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
 
-    await storage.createUser({ username: "du_kpf", password: pw, fullName: "DU PT KPF", role: "du", companyId: c4.id, position: "SPV Dealing", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
-    await storage.createUser({ username: "dk_kpf", password: pw, fullName: "DK PT KPF", role: "dk", companyId: c4.id, position: "Support", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "du_kpf", password: pw, fullName: "DU PT KPF", role: "du", companyId: c4.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "dk_kpf", password: pw, fullName: "DK PT KPF", role: "dk", companyId: c4.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
 
-    await storage.createUser({ username: "du_ewf", password: pw, fullName: "DU PT EWF", role: "du", companyId: c5.id, position: "Chief Dealing", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
-    await storage.createUser({ username: "dk_ewf", password: pw, fullName: "DK PT EWF", role: "dk", companyId: c5.id, position: "Admin Kepatuhan", secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "du_ewf", password: pw, fullName: "DU PT EWF", role: "du", companyId: c5.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
+    await storage.createUser({ username: "dk_ewf", password: pw, fullName: "DK PT EWF", role: "dk", companyId: c5.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
 
     const cats = [
       { name: "Audit Cabang", type: "activity" },
@@ -138,18 +133,6 @@ export async function seedData() {
       { name: "Tindakan Korektif", type: "activity" },
       { name: "Monitoring Kasus", type: "activity" },
       { name: "Pengawasan Cabang", type: "activity" },
-      { name: "Aktivasi Account", type: "activity" },
-      { name: "Cek Dana Masuk (Deposit)", type: "activity" },
-      { name: "Cek Dana New Account / Top Up", type: "activity" },
-      { name: "Cek Withdrawal", type: "activity" },
-      { name: "Rekap Kebutuhan Printing", type: "activity" },
-      { name: "Rekap Kebutuhan OR", type: "activity" },
-      { name: "Pengumpulan Data Audit", type: "activity" },
-      { name: "Pencarian Data Account", type: "activity" },
-      { name: "Bantuan Operasional Lain", type: "activity" },
-      { name: "Handover Shift", type: "activity" },
-      { name: "Laporan Harian", type: "activity" },
-      { name: "Monitoring Operasional", type: "activity" },
     ];
     for (const cat of cats) {
       await storage.createCategory({ name: cat.name, type: cat.type, isActive: true });
@@ -160,75 +143,9 @@ export async function seedData() {
     console.log("Seed data awal selesai!");
   }
 
-  await seedUserPositions();
-  await seedOperationalCategories();
   await seedCasesFromJson();
   await seedBranchesFromMaster();
   await verifyDataIntegrity();
-}
-
-async function seedUserPositions() {
-  const rolePositionDefaults: Record<string, string> = {
-    owner: "Direktur",
-  };
-  const usernamePositions: Record<string, string> = {
-    superadmin: "System Administrator",
-    du_sgb: "Chief Dealing",
-    dk_sgb: "Admin Kepatuhan",
-    du_rfb: "SPV Dealing",
-    dk_rfb: "Admin Kepatuhan",
-    du_bpf: "Chief Dealing",
-    dk_bpf: "Admin Kepatuhan",
-    du_kpf: "SPV Dealing",
-    dk_kpf: "Support",
-    du_ewf: "Chief Dealing",
-    dk_ewf: "Admin Kepatuhan",
-  };
-
-  const allUsers = await storage.getUsers();
-  let updated = 0;
-  for (const u of allUsers) {
-    if (u.position) continue;
-    const pos = usernamePositions[u.username] || rolePositionDefaults[u.role];
-    if (pos) {
-      await storage.updateUser(u.id, { position: pos });
-      updated++;
-    }
-  }
-  if (updated > 0) {
-    console.log(`Seed posisi user: ${updated} user diperbarui.`);
-  }
-}
-
-async function seedOperationalCategories() {
-  const operationalCats = [
-    "Aktivasi Account",
-    "Cek Dana Masuk (Deposit)",
-    "Cek Dana New Account / Top Up",
-    "Cek Withdrawal",
-    "Rekap Kebutuhan Printing",
-    "Rekap Kebutuhan OR",
-    "Pengumpulan Data Audit",
-    "Pencarian Data Account",
-    "Bantuan Operasional Lain",
-    "Handover Shift",
-    "Laporan Harian",
-    "Monitoring Operasional",
-  ];
-
-  const existing = await db.select({ name: masterCategories.name }).from(masterCategories).where(eq(masterCategories.type, "activity"));
-  const existingNames = new Set(existing.map(c => c.name));
-
-  let inserted = 0;
-  for (const name of operationalCats) {
-    if (!existingNames.has(name)) {
-      await storage.createCategory({ name, type: "activity", isActive: true });
-      inserted++;
-    }
-  }
-  if (inserted > 0) {
-    console.log(`Seed kategori operasional: ${inserted} kategori baru ditambahkan.`);
-  }
 }
 
 async function seedCasesFromJson() {

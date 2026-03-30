@@ -17,18 +17,11 @@ import { StatusBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil, ArrowUpDown, BarChart3, Users, User, Clock, Hash } from "lucide-react";
+import { Plus, Search, Filter, Calendar, ArrowRight, Trash2, Pencil, ArrowUpDown, BarChart3, Users, User } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Activity, Company, MasterCategory } from "@shared/schema";
-
-function autoDetectShift(): "Pagi" | "Siang" | "Malam" {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 14) return "Pagi";
-  if (hour >= 14 && hour < 22) return "Siang";
-  return "Malam";
-}
 
 export default function AktivitasPage() {
   usePageTitle("Aktivitas");
@@ -50,7 +43,7 @@ export default function AktivitasPage() {
   const { data: activities, isLoading, isError, refetch } = useQuery<Activity[]>({ queryKey: ["/api/activities"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
   const { data: categories } = useQuery<MasterCategory[]>({ queryKey: ["/api/categories"] });
-  const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
+  const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"], enabled: isAdmin });
 
   const companyOrder = ["SGB", "RFB", "BPF", "KPF", "EWF"];
   const getCompanyCode = (companyId: number) => companiesData?.find(c => c.id === companyId)?.code || "";
@@ -73,8 +66,6 @@ export default function AktivitasPage() {
     categoryId: "", status: "Direncanakan", priority: "Medium",
     progress: 0, targetDate: "", nextAction: "", result: "", notes: "",
     companyId: user?.companyId?.toString() || "",
-    quantity: 1, shift: autoDetectShift() as string,
-    handoverFrom: "", pendingTasks: "", operationalCondition: "",
   });
 
   const createMutation = useMutation({
@@ -99,8 +90,6 @@ export default function AktivitasPage() {
     categoryId: "", status: "Direncanakan", priority: "Medium",
     progress: 0, targetDate: "", nextAction: "", result: "", notes: "",
     companyId: user?.companyId?.toString() || "",
-    quantity: 1, shift: autoDetectShift(),
-    handoverFrom: "", pendingTasks: "", operationalCondition: "",
   });
 
   const handleSubmit = () => {
@@ -108,20 +97,11 @@ export default function AktivitasPage() {
       toast({ title: "Error", description: "Judul dan tanggal wajib diisi", variant: "destructive" });
       return;
     }
-    if (!form.categoryId) {
-      toast({ title: "Error", description: "Kategori wajib dipilih", variant: "destructive" });
-      return;
-    }
     createMutation.mutate({
       ...form,
       categoryId: form.categoryId ? parseInt(form.categoryId) : null,
       companyId: form.companyId ? parseInt(form.companyId) : user?.companyId,
       progress: Number(form.progress),
-      quantity: Number(form.quantity) || 1,
-      shift: form.shift || null,
-      handoverFrom: form.handoverFrom ? parseInt(form.handoverFrom) : null,
-      pendingTasks: form.pendingTasks || null,
-      operationalCondition: form.operationalCondition || null,
       targetDate: form.targetDate || null,
     });
   };
@@ -154,7 +134,6 @@ export default function AktivitasPage() {
   const canCreate = ["du", "dk"].includes(user?.role || "");
   const canDelete = (a: Activity) => ["superadmin", "owner"].includes(user?.role || "") || a.createdBy === user?.id;
   const activityCategories = categories?.filter(c => c.type === "activity") || [];
-  const isHandoverCategory = activityCategories.find(c => c.id.toString() === form.categoryId)?.name === "Handover Shift";
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => { await apiRequest("DELETE", `/api/activities/${id}`); },
@@ -200,11 +179,6 @@ export default function AktivitasPage() {
       result: a.result || "",
       notes: a.notes || "",
       companyId: a.companyId?.toString() || "",
-      quantity: (a as any).quantity || 1,
-      shift: (a as any).shift || autoDetectShift(),
-      handoverFrom: (a as any).handoverFrom?.toString() || "",
-      pendingTasks: (a as any).pendingTasks || "",
-      operationalCondition: (a as any).operationalCondition || "",
     });
     setEditDialogOpen(true);
   };
@@ -225,11 +199,6 @@ export default function AktivitasPage() {
         status: form.status,
         priority: form.priority,
         progress: Number(form.progress),
-        quantity: Number(form.quantity) || 1,
-        shift: form.shift || null,
-        handoverFrom: form.handoverFrom ? parseInt(form.handoverFrom) : null,
-        pendingTasks: form.pendingTasks || null,
-        operationalCondition: form.operationalCondition || null,
         targetDate: form.targetDate || null,
         nextAction: form.nextAction || null,
         result: form.result || null,
@@ -257,14 +226,12 @@ export default function AktivitasPage() {
               { header: "Tanggal", key: "date", width: 12 },
               { header: "Judul", key: "title", width: 30 },
               { header: "PT", key: "_company", width: 10 },
-              { header: "Jumlah", key: "_qty", width: 8 },
-              { header: "Shift", key: "_shift", width: 8 },
               { header: "Status", key: "status", width: 15 },
               { header: "Prioritas", key: "priority", width: 10 },
               { header: "Progress", key: "_progress", width: 10 },
               { header: "Deskripsi", key: "description", width: 30 },
             ]}
-            data={filtered.map(a => ({ ...a, _company: getCompanyName(a.companyId), _progress: `${a.progress}%`, _qty: (a as any).quantity || 1, _shift: (a as any).shift || "-" }))}
+            data={filtered.map(a => ({ ...a, _company: getCompanyName(a.companyId), _progress: `${a.progress}%` }))}
           />
           {canCreate && (
           <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
@@ -294,52 +261,12 @@ export default function AktivitasPage() {
                   <Input data-testid="input-activity-title" placeholder="Judul aktivitas" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Kategori *</Label>
+                  <Label>Kategori</Label>
                   <Select value={form.categoryId} onValueChange={v => setForm({...form, categoryId: v})}>
                     <SelectTrigger data-testid="select-activity-category"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                     <SelectContent>{activityCategories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Jumlah *</Label>
-                    <Input data-testid="input-activity-quantity" type="number" min={1} value={form.quantity} onChange={e => setForm({...form, quantity: parseInt(e.target.value) || 1})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Shift</Label>
-                    <Select value={form.shift} onValueChange={v => setForm({...form, shift: v})}>
-                      <SelectTrigger data-testid="select-activity-shift"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pagi">Pagi (06:00-14:00)</SelectItem>
-                        <SelectItem value="Siang">Siang (14:00-22:00)</SelectItem>
-                        <SelectItem value="Malam">Malam (22:00-06:00)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                {isHandoverCategory && (
-                  <>
-                    <div className="space-y-1.5">
-                      <Label>Diterima dari</Label>
-                      <Select value={form.handoverFrom} onValueChange={v => setForm({...form, handoverFrom: v})}>
-                        <SelectTrigger data-testid="select-handover-from"><SelectValue placeholder="Pilih user" /></SelectTrigger>
-                        <SelectContent>
-                          {(usersData || []).filter((u: any) => u.isActive && u.id !== user?.id).map((u: any) => (
-                            <SelectItem key={u.id} value={u.id.toString()}>{u.fullName}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Task Belum Selesai</Label>
-                      <Textarea data-testid="input-pending-tasks" placeholder="Daftar pekerjaan yang belum selesai..." value={form.pendingTasks} onChange={e => setForm({...form, pendingTasks: e.target.value})} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Kondisi Operasional</Label>
-                      <Textarea data-testid="input-operational-condition" placeholder="Kondisi operasional saat handover..." value={form.operationalCondition} onChange={e => setForm({...form, operationalCondition: e.target.value})} />
-                    </div>
-                  </>
-                )}
                 <div className="space-y-1.5">
                   <Label>Deskripsi</Label>
                   <Textarea data-testid="input-activity-description" placeholder="Deskripsi singkat" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
@@ -476,18 +403,14 @@ export default function AktivitasPage() {
         const userStats = duDkUsers.map((u: any) => {
           const userActivities = activities.filter(a => a.createdBy === u.id);
           const pStart = periodStart[periodFilter];
-          const periodActs = pStart ? userActivities.filter(a => a.date >= pStart) : userActivities;
-          const periodCount = periodActs.length;
-          const periodQty = periodActs.reduce((s, a) => s + ((a as any).quantity || 1), 0);
+          const periodCount = pStart ? userActivities.filter(a => a.date >= pStart).length : userActivities.length;
           const ppStart = prevPeriodStart[periodFilter];
           const prevCount = ppStart ? userActivities.filter(a => a.date >= ppStart).length : userActivities.length;
           const avgProgress = userActivities.length > 0 ? Math.round(userActivities.reduce((s, a) => s + a.progress, 0) / userActivities.length) : 0;
           const thresholdMap: Record<string, [number, number]> = { hari: [4, 2], minggu: [15, 8], bulan: [40, 20], kuartal: [100, 50], tahun: [300, 150], semua: [300, 150] };
           const [high, mid] = thresholdMap[periodFilter] || [4, 2];
           const beban = periodCount >= high ? "Padat" : periodCount >= mid ? "Normal" : "Ringan";
-          const todayActs = userActivities.filter(a => a.date === today);
-          const hasLoggedToday = todayActs.length > 0;
-          return { ...u, periodCount, periodQty, prevCount, avgProgress, beban, total: userActivities.length, hasLoggedToday };
+          return { ...u, periodCount, prevCount, avgProgress, beban, total: userActivities.length };
         });
 
         return (
@@ -523,14 +446,7 @@ export default function AktivitasPage() {
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-medium truncate">{u.fullName}</p>
-                          {u.hasLoggedToday ? (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" title="Sudah log hari ini" />
-                          ) : (
-                            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="Belum log hari ini" />
-                          )}
-                        </div>
+                        <p className="text-sm font-medium truncate">{u.fullName}</p>
                         <p className="text-xs text-muted-foreground">{u.role.toUpperCase()} {getCompanyCode(u.companyId) ? `- ${getCompanyCode(u.companyId)}` : ""}</p>
                       </div>
                       <Badge
@@ -541,14 +457,10 @@ export default function AktivitasPage() {
                         {u.beban}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-4 gap-1.5 text-xs">
+                    <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="text-center p-1.5 rounded bg-muted/50">
                         <p className="font-bold text-base">{u.periodCount}</p>
                         <p className="text-muted-foreground">{periodLabels[periodFilter]}</p>
-                      </div>
-                      <div className="text-center p-1.5 rounded bg-primary/10">
-                        <p className="font-bold text-base">{u.periodQty}</p>
-                        <p className="text-muted-foreground">Qty</p>
                       </div>
                       {periodFilter !== "semua" && (
                         <div className="text-center p-1.5 rounded bg-muted/50">
@@ -590,15 +502,13 @@ export default function AktivitasPage() {
           byPriority[a.priority] = (byPriority[a.priority] || 0) + 1;
         });
         const avgProgress = total > 0 ? Math.round(src.reduce((s, a) => s + a.progress, 0) / total) : 0;
-        const totalQty = src.reduce((s, a) => s + ((a as any).quantity || 1), 0);
         return (
           <Card data-testid="card-activity-summary">
             <CardContent className="p-4 space-y-3">
-              <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+              <div className="flex items-center gap-2 text-sm font-semibold">
                 <BarChart3 className="w-4 h-4 text-primary" />
                 <span>Ringkasan</span>
                 <Badge variant="secondary" className="ml-1" data-testid="text-total-activities">{total} aktivitas</Badge>
-                <Badge variant="outline" className="ml-1" data-testid="text-total-qty"><Hash className="w-3 h-3 mr-0.5" />{totalQty} qty</Badge>
                 <Badge variant="outline" className="ml-1">Rata-rata progress: {avgProgress}%</Badge>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -658,16 +568,6 @@ export default function AktivitasPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium text-sm">{a.title}</h3>
                       <StatusBadge status={a.status} />
-                      {(a as any).quantity > 1 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0" data-testid={`badge-qty-${a.id}`}>
-                          <Hash className="w-3 h-3 mr-0.5" />{(a as any).quantity}
-                        </Badge>
-                      )}
-                      {(a as any).shift && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0" data-testid={`badge-shift-${a.id}`}>
-                          <Clock className="w-3 h-3 mr-0.5" />{(a as any).shift}
-                        </Badge>
-                      )}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{a.date}</span>
@@ -738,52 +638,12 @@ export default function AktivitasPage() {
               <Input data-testid="input-edit-activity-title" placeholder="Judul aktivitas" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
             </div>
             <div className="space-y-1.5">
-              <Label>Kategori *</Label>
+              <Label>Kategori</Label>
               <Select value={form.categoryId} onValueChange={v => setForm({...form, categoryId: v})}>
                 <SelectTrigger data-testid="select-edit-activity-category"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                 <SelectContent>{activityCategories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Jumlah</Label>
-                <Input data-testid="input-edit-activity-quantity" type="number" min={1} value={form.quantity} onChange={e => setForm({...form, quantity: parseInt(e.target.value) || 1})} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Shift</Label>
-                <Select value={form.shift} onValueChange={v => setForm({...form, shift: v})}>
-                  <SelectTrigger data-testid="select-edit-activity-shift"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pagi">Pagi (06:00-14:00)</SelectItem>
-                    <SelectItem value="Siang">Siang (14:00-22:00)</SelectItem>
-                    <SelectItem value="Malam">Malam (22:00-06:00)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {isHandoverCategory && (
-              <>
-                <div className="space-y-1.5">
-                  <Label>Diterima dari</Label>
-                  <Select value={form.handoverFrom} onValueChange={v => setForm({...form, handoverFrom: v})}>
-                    <SelectTrigger data-testid="select-edit-handover-from"><SelectValue placeholder="Pilih user" /></SelectTrigger>
-                    <SelectContent>
-                      {(usersData || []).filter((u: any) => u.isActive && u.id !== user?.id).map((u: any) => (
-                        <SelectItem key={u.id} value={u.id.toString()}>{u.fullName}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Task Belum Selesai</Label>
-                  <Textarea data-testid="input-edit-pending-tasks" placeholder="Daftar pekerjaan yang belum selesai..." value={form.pendingTasks} onChange={e => setForm({...form, pendingTasks: e.target.value})} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Kondisi Operasional</Label>
-                  <Textarea data-testid="input-edit-operational-condition" placeholder="Kondisi operasional saat handover..." value={form.operationalCondition} onChange={e => setForm({...form, operationalCondition: e.target.value})} />
-                </div>
-              </>
-            )}
             <div className="space-y-1.5">
               <Label>Deskripsi</Label>
               <Textarea data-testid="input-edit-activity-description" placeholder="Deskripsi singkat" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
