@@ -61,7 +61,8 @@ client/src/
 8. Komentar - thread diskusi pada aktivitas/kasus/tugas
 9. Manajemen User - CRUD user (superadmin only)
 10. Manajemen PT - detail perusahaan, cabang (CRUD), rekap kasus/aktivitas/tugas/pengumuman, daftar pengurus
-11. Penilaian KPI - penilaian kinerja DU/DK per kuartal
+11. Penilaian KPI - penilaian kinerja DU/DK per kuartal (9 aspek termasuk Produktivitas Harian)
+12. Monitoring Aktivitas Harian - panel real-time siapa sudah/belum input aktivitas hari ini (filter PT & shift)
 
 ## Perusahaan
 1. PT Solid Gold Berjangka (SGB)

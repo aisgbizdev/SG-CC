@@ -190,7 +190,6 @@ async function sendDailySummary() {
 async function checkNoActivityToday() {
   const now = new Date();
   const wibHour = (now.getUTCHours() + 7) % 24;
-  if (wibHour < 14) return;
 
   const today = now.toISOString().split("T")[0];
   const allUsers = await storage.getUsers();
@@ -201,9 +200,11 @@ async function checkNoActivityToday() {
 
   const usersWithActivity = new Set(allActivities.map(a => a.createdBy));
 
+  if (wibHour < 12) return;
+
   for (const u of duDkUsers) {
     if (usersWithActivity.has(u.id)) continue;
-    const exists = await hasSimilarNotification(u.id, "no_activity", null, STALE_THROTTLE_HOURS);
+    const exists = await hasSimilarNotification(u.id, "no_activity", null, 24);
     if (exists) continue;
     await storage.createNotification({
       userId: u.id,
@@ -223,7 +224,7 @@ async function checkNoActivityToday() {
     const names = noActivityUsers.map(u => u.fullName).slice(0, 5).join(", ");
     const suffix = noActivityUsers.length > 5 ? ` dan ${noActivityUsers.length - 5} lainnya` : "";
     for (const adminId of admins) {
-      const exists = await hasSimilarNotification(adminId, "no_activity_report", null, STALE_THROTTLE_HOURS);
+      const exists = await hasSimilarNotification(adminId, "no_activity_report", null, 24);
       if (exists) continue;
       await storage.createNotification({
         userId: adminId,

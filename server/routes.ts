@@ -1228,6 +1228,70 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/monitoring/daily-activity", requireAuth, async (req, res) => {
+    try {
+      const currentUser = req.user as any;
+      if (!["superadmin", "owner"].includes(currentUser.role)) {
+        return res.status(403).json({ message: "Akses ditolak" });
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const companyIdFilter = req.query.companyId ? parseInt(req.query.companyId as string) : undefined;
+      const shiftFilter = req.query.shift as string | undefined;
+
+      const allUsers = await storage.getUsers();
+      const duDkUsers = allUsers.filter(u => {
+        if (!["du", "dk"].includes(u.role) || !u.isActive) return false;
+        if (companyIdFilter && u.companyId !== companyIdFilter) return false;
+        return true;
+      });
+
+      let actConditions: any = and(eq(activities.isArchived, false), dsql`${activities.date} = ${today}`);
+      if (shiftFilter) {
+        actConditions = and(actConditions, eq(activities.shift, shiftFilter));
+      }
+
+      const todayActivities = await db.select().from(activities).where(actConditions);
+
+      const userActivityMap: Record<number, { count: number; totalQty: number; shifts: Set<string> }> = {};
+      for (const act of todayActivities) {
+        if (!userActivityMap[act.createdBy]) {
+          userActivityMap[act.createdBy] = { count: 0, totalQty: 0, shifts: new Set() };
+        }
+        userActivityMap[act.createdBy].count++;
+        userActivityMap[act.createdBy].totalQty += act.quantity || 1;
+        if (act.shift) userActivityMap[act.createdBy].shifts.add(act.shift);
+      }
+
+      const result = duDkUsers.map(u => {
+        const actData = userActivityMap[u.id];
+        return {
+          userId: u.id,
+          fullName: u.fullName,
+          role: u.role,
+          companyId: u.companyId,
+          hasActivity: !!actData,
+          activityCount: actData?.count || 0,
+          totalQty: actData?.totalQty || 0,
+          shifts: actData ? Array.from(actData.shifts) : [],
+        };
+      });
+
+      const sudahInput = result.filter(r => r.hasActivity);
+      const belumInput = result.filter(r => !r.hasActivity);
+
+      res.json({
+        date: today,
+        totalUsers: duDkUsers.length,
+        sudahInput: sudahInput.length,
+        belumInput: belumInput.length,
+        users: result,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data monitoring harian" });
+    }
+  });
+
   app.get("/api/kpi/live", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
