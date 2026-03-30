@@ -263,6 +263,7 @@ type LiveKpi = {
   details: {
     activitiesTotal: number;
     activitiesCompleted: number;
+    activitiesQtyTotal: number;
     casesTotal: number;
     casesCompleted: number;
     tasksTotal: number;
@@ -686,7 +687,7 @@ export default function KpiPage() {
                           <Badge className={gradeCls}>{grade} - {label}</Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas</span>
+                          <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {kpi.details.activitiesCompleted}/{kpi.details.activitiesTotal} aktivitas ({kpi.details.activitiesQtyTotal || 0} qty)</span>
                           <span className="flex items-center gap-1"><FileWarning className="w-3 h-3" /> {kpi.details.casesCompleted}/{kpi.details.casesTotal} kasus</span>
                           <span className="flex items-center gap-1"><ListTodo className="w-3 h-3" /> {kpi.details.tasksCompleted}/{kpi.details.tasksTotal} tugas</span>
                           {kpi.details.totalOverdue > 0 && (

@@ -1,0 +1,204 @@
+Berikut tambahan detail **struktur posisi dan job desk operasional dealing** untuk memastikan OCC sesuai dengan kondisi real di lapangan.
+
+⚠️ Catatan:
+Ini bukan untuk menambah modul baru, tapi untuk:
+
+* Menyesuaikan Activity Log
+* Menyesuaikan KPI
+* Memastikan flow kerja sesuai real operasional
+
+---
+
+# 🧱 STRUKTUR POSISI
+
+## 1. Level Atas
+
+* Chief Dealing (contoh: Ibu Kiki)
+* Bertanggung jawab atas seluruh operasional dealing
+
+## 2. SPV Dealing (Pengawas Shift)
+
+Terdiri dari 3 orang:
+
+* Eko → fokus shift pagi
+* Adit → shift siang/malam (rolling)
+* Fahrul → shift siang/malam (rolling)
+
+### Tugas SPV:
+
+* Monitoring aktivitas tim per shift
+* Memastikan semua admin input aktivitas
+* Menangani dan memonitor komplain
+* Membuat report harian
+* Koordinasi antar shift (handover)
+
+---
+
+## 3. Admin per PT
+
+Setiap PT memiliki admin masing-masing:
+
+* SGB
+* RFB
+* KPF
+* BPF
+* EWF
+
+Ideal:
+
+* ±4 admin per PT
+* Pembagian shift:
+
+  * 2 orang pagi
+  * 1 orang siang
+  * 1 orang malam
+
+---
+
+## 4. Support / Non-PT
+
+* Contoh: Amel
+* Membantu SPV untuk kebutuhan lintas PT
+
+---
+
+# ⏰ STRUKTUR SHIFT (REAL OPERASIONAL)
+
+Contoh jam kerja:
+
+* 06.30 – 15.00
+* 08.00 – 17.00
+* 14.30 – 23.00
+* 22.30 – 07.00
+
+⚠️ Jam bisa berbeda, tapi sistem harus support:
+
+* multi shift
+* handover antar shift
+
+---
+
+# 📋 JOB DESK UTAMA (ADMIN)
+
+## Aktivitas Harian (WAJIB MASUK KE SYSTEM)
+
+* Aktivasi account
+* Cek dana masuk (deposit)
+* Cek dana masuk new account / top up
+* Cek withdrawal
+* Rekap kebutuhan barang printing
+* Rekap kebutuhan operasional cabang (OR)
+
+## Tugas Tambahan (Occasional)
+
+* Pengumpulan data untuk audit
+* Mencari data account tertentu
+* Membantu kebutuhan operasional lain (by request)
+
+---
+
+# 📊 JOB DESK SPV
+
+* Monitoring pekerjaan admin
+* Validasi aktivitas yang dilakukan
+* Membuat laporan harian
+* Mengirim laporan/email ke atasan
+* Monitoring kondisi operasional per shift
+
+---
+
+# 📈 REPORT BULANAN
+
+Dibuat untuk kepala cabang / manajemen:
+
+Isi report:
+
+* Margin
+* New account
+* Close account
+* Rekap seluruh PT (Solid Group)
+
+---
+
+# 🧠 MAPPING KE SISTEM OCC
+
+## 1. Activity Log
+
+Semua aktivitas di atas harus:
+
+* masuk sebagai tipe aktivitas (activity type)
+* bukan teks bebas saja
+* bisa diukur (qty)
+
+Contoh:
+
+* Aktivasi → qty = jumlah
+* Cek dana → qty = jumlah transaksi
+* Withdrawal → qty = jumlah
+
+---
+
+## 2. KPI
+
+* KPI harus berasal dari aktivitas real ini
+* Jika tidak ada aktivitas:
+  → dianggap tidak ada pekerjaan
+* Harus real-time
+
+---
+
+## 3. Handover Shift
+
+Harus mencatat:
+
+* pekerjaan diterima dari siapa
+* diteruskan ke siapa
+* task yang belum selesai
+* kondisi operasional
+
+---
+
+## 4. Monitoring
+
+Atasan harus bisa lihat:
+
+* siapa aktif hari ini
+* siapa tidak input aktivitas
+* cabang mana tidak ada aktivitas
+* beban kerja per PT
+
+---
+
+## 5. Notifikasi
+
+Sistem harus bisa memberi alert:
+
+* user belum input aktivitas
+* user tidak aktif beberapa jam
+* ada komplain baru
+
+---
+
+# 🎯 TUJUAN UTAMA
+
+Sistem ini dibuat agar:
+
+* semua aktivitas kerja tercatat
+* tidak perlu monitoring via WA
+* atasan bisa melihat kondisi real-time
+* KPI terbentuk otomatis dari aktivitas
+
+---
+
+# ⚠️ PENTING
+
+Gunakan informasi ini untuk:
+
+* memperbaiki struktur activity
+* memperbaiki KPI
+* memperbaiki flow shift
+
+JANGAN:
+
+* menambah modul baru
+* menambah kompleksitas sistem

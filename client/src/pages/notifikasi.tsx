@@ -36,6 +36,8 @@ const iconMap: Record<string, any> = {
   daily_summary: BarChart3,
   overdue: AlertTriangle,
   comment: FileWarning,
+  no_activity: AlertTriangle,
+  no_activity_report: BarChart3,
 };
 
 const priorityColors: Record<string, string> = {

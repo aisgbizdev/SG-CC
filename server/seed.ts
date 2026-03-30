@@ -56,6 +56,11 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
     await db.execute(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS tag text`);
+    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS quantity integer NOT NULL DEFAULT 1`);
+    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS shift text`);
+    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS handover_from integer`);
+    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS pending_tasks text`);
+    await db.execute(`ALTER TABLE activities ADD COLUMN IF NOT EXISTS operational_condition text`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);
@@ -133,6 +138,18 @@ export async function seedData() {
       { name: "Tindakan Korektif", type: "activity" },
       { name: "Monitoring Kasus", type: "activity" },
       { name: "Pengawasan Cabang", type: "activity" },
+      { name: "Aktivasi Account", type: "activity" },
+      { name: "Cek Dana Masuk (Deposit)", type: "activity" },
+      { name: "Cek Dana New Account / Top Up", type: "activity" },
+      { name: "Cek Withdrawal", type: "activity" },
+      { name: "Rekap Kebutuhan Printing", type: "activity" },
+      { name: "Rekap Kebutuhan OR", type: "activity" },
+      { name: "Pengumpulan Data Audit", type: "activity" },
+      { name: "Pencarian Data Account", type: "activity" },
+      { name: "Bantuan Operasional Lain", type: "activity" },
+      { name: "Handover Shift", type: "activity" },
+      { name: "Laporan Harian", type: "activity" },
+      { name: "Monitoring Operasional", type: "activity" },
     ];
     for (const cat of cats) {
       await storage.createCategory({ name: cat.name, type: cat.type, isActive: true });
@@ -143,9 +160,41 @@ export async function seedData() {
     console.log("Seed data awal selesai!");
   }
 
+  await seedOperationalCategories();
   await seedCasesFromJson();
   await seedBranchesFromMaster();
   await verifyDataIntegrity();
+}
+
+async function seedOperationalCategories() {
+  const operationalCats = [
+    "Aktivasi Account",
+    "Cek Dana Masuk (Deposit)",
+    "Cek Dana New Account / Top Up",
+    "Cek Withdrawal",
+    "Rekap Kebutuhan Printing",
+    "Rekap Kebutuhan OR",
+    "Pengumpulan Data Audit",
+    "Pencarian Data Account",
+    "Bantuan Operasional Lain",
+    "Handover Shift",
+    "Laporan Harian",
+    "Monitoring Operasional",
+  ];
+
+  const existing = await db.select({ name: masterCategories.name }).from(masterCategories).where(eq(masterCategories.type, "activity"));
+  const existingNames = new Set(existing.map(c => c.name));
+
+  let inserted = 0;
+  for (const name of operationalCats) {
+    if (!existingNames.has(name)) {
+      await storage.createCategory({ name, type: "activity", isActive: true });
+      inserted++;
+    }
+  }
+  if (inserted > 0) {
+    console.log(`Seed kategori operasional: ${inserted} kategori baru ditambahkan.`);
+  }
 }
 
 async function seedCasesFromJson() {

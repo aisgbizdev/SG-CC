@@ -117,6 +117,9 @@ client/src/
 - Superadmin can deactivate users (PATCH isActive=false) — badge "Nonaktif" shown
 - Reactivate with "Aktifkan Kembali" button
 - Cannot deactivate self or other superadmins
+- Edit user (superadmin only): fullName, position, role, companyId, phone, address, birthDate — username immutable
+- Create user form: expanded with position, phone, address fields
+- Position shown on user cards
 
 ## Download/Export
 - PDF (jspdf + jspdf-autotable), Excel (xlsx), Word (docx + file-saver)
@@ -222,13 +225,30 @@ client/src/
 - Filter Jalur Penyelesaian tersedia di halaman Kasus
 - Ringkasan statistik kasus menampilkan breakdown per Jalur Penyelesaian
 
+## Activity Log Operasional
+- Kolom baru di activities: quantity (int, default 1), shift (Pagi/Siang/Malam), handoverFrom (int), pendingTasks (text), operationalCondition (text)
+- 12 kategori operasional dealing: Aktivasi Account, Cek Dana Masuk (Deposit), Eksekusi Order, Follow Up Nasabah, Generate Report, Handover Shift, Input Data Transaksi, Monitoring Margin, Penarikan Dana (Withdrawal), Pengecekan Sistem, Rekonsiliasi Data, Update Status Nasabah
+- Auto-detect shift berdasarkan jam: 06-14→Pagi, 14-22→Siang, 22-06→Malam
+- Handover Shift: field tambahan (diterima dari, task belum selesai, kondisi operasional)
+- Download export menyertakan kolom Jumlah dan Shift
+
 ## Monitor Kesibukan DU/DK (Aktivitas)
 - Panel "Kesibukan DU/DK" di halaman Aktivitas (hanya superadmin/owner)
-- Menampilkan setiap DU/DK: jumlah aktivitas hari ini, minggu ini, total, rata-rata progress
+- Menampilkan setiap DU/DK: jumlah aktivitas, total qty, rata-rata progress per periode
+- Indikator status hari ini: titik hijau (sudah log) / merah (belum log) di samping nama
 - Indikator beban kerja: Ringan (0-1), Normal (2-3), Padat (4+) dengan badge warna
+- Kolom Qty menampilkan total kuantitas per periode
 - Klik nama DU/DK = filter aktivitas ke orang tersebut
 - Filter "Semua Personil" dropdown untuk filter per orang
 - Nama pembuat aktivitas tampil di card list untuk admin
+- Ringkasan menampilkan total qty badge
+
+## Monitoring Harian & Notifikasi Aktivitas
+- API: GET /api/monitoring/daily (superadmin/owner) — data siapa sudah/belum log hari ini
+- Notifikasi otomatis (setelah jam 14 WIB): DU/DK yang belum log aktivitas mendapat reminder
+- Admin/Owner mendapat laporan "Aktivitas Kosong" dengan daftar personil yang belum log
+- Tipe notifikasi baru: no_activity, no_activity_report (throttled 72 jam)
+- KPI Live menyertakan activitiesQtyTotal (total quantity seluruh aktivitas)
 
 ## Database
 - PostgreSQL via DATABASE_URL

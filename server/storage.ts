@@ -568,6 +568,7 @@ export class DatabaseStorage implements IStorage {
       [taskOverdue],
       [caseOverdue],
       [actOverdue],
+      [actQtySum],
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actBase),
       db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"))),
@@ -587,6 +588,7 @@ export class DatabaseStorage implements IStorage {
       db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
       db.select({ count: count() }).from(activities).where(and(actBase, sql`${activities.status} != 'Selesai'`, sql`${activities.targetDate}::date < ${today}::date`)),
+      db.select({ total: sql<number>`COALESCE(SUM(${activities.quantity}), 0)` }).from(activities).where(actBase),
     ]);
 
     const aTotal = actTotal?.count || 0;
@@ -598,6 +600,8 @@ export class DatabaseStorage implements IStorage {
 
     const totalItems = aTotal + cTotal + tTotal;
 
+    const aQtyTotal = Number(actQtySum?.total) || 0;
+
     if (totalItems === 0) {
       const zeroScores = {
         penyelesaianTugas: 0, penyelesaianKasus: 0, penyelesaianAktivitas: 0,
@@ -606,7 +610,7 @@ export class DatabaseStorage implements IStorage {
       return {
         userId, fullName: user.fullName, role: user.role, companyId: user.companyId,
         scores: zeroScores, totalScore: 0,
-        details: { activitiesTotal: 0, activitiesCompleted: 0, casesTotal: 0, casesCompleted: 0,
+        details: { activitiesTotal: 0, activitiesCompleted: 0, activitiesQtyTotal: 0, casesTotal: 0, casesCompleted: 0,
           tasksTotal: 0, tasksCompleted: 0, avgProgress: 0, totalOverdue: 0, totalOnTime: 0, totalWithDeadline: 0, totalItems: 0 },
       };
     }
@@ -629,8 +633,10 @@ export class DatabaseStorage implements IStorage {
     const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
     const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
 
-    const CAPACITY_THRESHOLD = 20;
-    const bebanKerja = Math.min(100, Math.round((totalItems / CAPACITY_THRESHOLD) * 100));
+    const QTY_CAPACITY = 50;
+    const ITEM_CAPACITY = 20;
+    const qtyWeightedLoad = Math.max(aQtyTotal, aTotal) + cTotal + tTotal;
+    const bebanKerja = Math.min(100, Math.round((qtyWeightedLoad / QTY_CAPACITY) * 100));
 
     const completedTotal = aCompleted + cCompleted + tCompleted;
     const konsistensi = Math.round(Math.min(100, (completedTotal / totalItems) * 100));
@@ -667,6 +673,7 @@ export class DatabaseStorage implements IStorage {
       details: {
         activitiesTotal: aTotal,
         activitiesCompleted: aCompleted,
+        activitiesQtyTotal: Number(actQtySum?.total) || 0,
         casesTotal: cTotal,
         casesCompleted: cCompleted,
         tasksTotal: tTotal,

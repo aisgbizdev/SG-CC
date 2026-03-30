@@ -115,6 +115,11 @@ const activityBodySchema = z.object({
   status: z.string().optional(),
   priority: z.string().optional(),
   progress: z.number().int().min(0).max(100).optional(),
+  quantity: z.number().int().min(1).optional().default(1),
+  shift: z.enum(["Pagi", "Siang", "Malam"]).optional().nullable(),
+  handoverFrom: z.number().int().optional().nullable(),
+  pendingTasks: z.string().optional().nullable(),
+  operationalCondition: z.string().optional().nullable(),
   targetDate: z.string().optional().nullable(),
   nextAction: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
@@ -1185,6 +1190,41 @@ export async function registerRoutes(
       res.json({ message: "Foto profil berhasil dihapus" });
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal menghapus foto" });
+    }
+  });
+
+  app.get("/api/monitoring/daily", requireRole("superadmin", "owner"), async (req, res) => {
+    try {
+      const allUsers = await storage.getUsers();
+      const duDkUsers = allUsers.filter(u => ["du", "dk"].includes(u.role) && u.isActive);
+      const today = new Date().toISOString().split("T")[0];
+      const allActivities = await storage.getActivities();
+      const todayActivities = allActivities.filter(a => a.date === today && !a.isArchived);
+
+      const userMonitoring = duDkUsers.map(u => {
+        const userActs = todayActivities.filter(a => a.createdBy === u.id);
+        const totalQty = userActs.reduce((sum, a) => sum + ((a as any).quantity || 1), 0);
+        const shifts = [...new Set(userActs.map(a => (a as any).shift).filter(Boolean))];
+        return {
+          userId: u.id,
+          fullName: u.fullName,
+          role: u.role,
+          companyId: u.companyId,
+          position: u.position,
+          hasLoggedToday: userActs.length > 0,
+          activityCount: userActs.length,
+          totalQuantity: totalQty,
+          shifts,
+          lastActivity: userActs.length > 0 ? userActs[0].title : null,
+        };
+      });
+
+      const logged = userMonitoring.filter(u => u.hasLoggedToday).length;
+      const notLogged = userMonitoring.filter(u => !u.hasLoggedToday).length;
+
+      res.json({ date: today, summary: { total: duDkUsers.length, logged, notLogged }, users: userMonitoring });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data monitoring" });
     }
   });
 
