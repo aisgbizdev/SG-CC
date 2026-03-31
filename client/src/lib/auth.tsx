@@ -1,6 +1,6 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode, useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, getQueryFn, setStoredAuthToken, clearStoredAuthToken } from "./queryClient";
+import { queryClient, apiRequest, getQueryFn, getStoredAuthToken, setStoredAuthToken, clearStoredAuthToken } from "./queryClient";
 import { useLocation } from "wouter";
 
 type AuthUser = {
@@ -26,9 +26,77 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
+const TRUSTED_PARENT_ORIGINS = [
+  "http://localhost:3000",
+  "https://core-sg.vercel.app",
+];
+
+function isEmbeddedIframe() {
+  if (typeof window === "undefined") return false;
+  return window.parent !== window;
+}
+
+function postAuthMessageToParent(message: Record<string, unknown>) {
+  if (typeof window === "undefined" || window.parent === window) return;
+
+  for (const origin of TRUSTED_PARENT_ORIGINS) {
+    window.parent.postMessage(message, origin);
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
+  const [bridgeReady, setBridgeReady] = useState(() => !isEmbeddedIframe() || !!getStoredAuthToken());
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (!TRUSTED_PARENT_ORIGINS.includes(event.origin)) {
+        return;
+      }
+
+      const data = event.data;
+      if (!data || typeof data !== "object" || data.type !== "SGCC_AUTH_TOKEN") {
+        return;
+      }
+
+      const token = typeof data.token === "string" ? data.token : "";
+      if (!token) {
+        console.warn("[SGCC] Parent sent SGCC_AUTH_TOKEN without token payload.");
+        setBridgeReady(true);
+        return;
+      }
+
+      console.info("[SGCC] Received auth token from parent bridge.");
+      setStoredAuthToken(token);
+      setBridgeReady(true);
+      queryClient.invalidateQueries();
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    if (isEmbeddedIframe() && !getStoredAuthToken()) {
+      console.info("[SGCC] No local auth token found, requesting token from parent.");
+      postAuthMessageToParent({ type: "SGCC_REQUEST_AUTH" });
+
+      const timer = window.setTimeout(() => {
+        console.warn("[SGCC] Parent auth token was not received before timeout.");
+        setBridgeReady(true);
+      }, 1500);
+
+      return () => {
+        window.removeEventListener("message", handleMessage);
+        window.clearTimeout(timer);
+      };
+    }
+
+    setBridgeReady(true);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   const { data: user, isLoading } = useQuery<AuthUser | null>({
     queryKey: ["/api/auth/me"],
@@ -49,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
+      postAuthMessageToParent({ type: "SGCC_LOGOUT" });
+      postAuthMessageToParent({ type: "SGCC_AUTH_TOKEN", token: null });
       clearStoredAuthToken();
       queryClient.clear();
       setLocation("/login");
@@ -58,6 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     const auth = await loginMutation.mutateAsync({ username, password });
     setStoredAuthToken(auth.token);
+    postAuthMessageToParent({ type: "SGCC_AUTH_TOKEN", token: auth.token });
+    setBridgeReady(true);
     queryClient.setQueryData(["/api/auth/me"], {
       id: auth.id,
       username: auth.username,
@@ -75,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user: user ?? null, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user: user ?? null, isLoading: isLoading || !bridgeReady, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
