@@ -25,13 +25,16 @@ declare global {
 export function setupAuth(app: Express) {
   const PgStore = connectPgSimple(session);
   const isProduction = process.env.NODE_ENV === "production";
-  // Allow forcing cookie.secure on/off via env. Default: true to satisfy SameSite=None requirements.
+  // Default: production -> Secure + None + domain; development -> Lax + not secure for localhost testing.
   const secureCookie =
     process.env.SESSION_SECURE === "true"
       ? true
       : process.env.SESSION_SECURE === "false"
         ? false
-        : true;
+        : isProduction;
+  const sameSite: "lax" | "none" =
+    (process.env.SESSION_SAMESITE as "lax" | "none" | undefined) ||
+    (isProduction ? "none" : "lax");
   const cookieDomain =
     process.env.SESSION_COOKIE_DOMAIN ||
     (isProduction ? ".newsmaker.id" : undefined);
@@ -53,7 +56,7 @@ export function setupAuth(app: Express) {
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
         secure: secureCookie,
-        sameSite: "none",
+        sameSite,
         domain: cookieDomain,
       },
     })
