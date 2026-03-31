@@ -12,6 +12,7 @@ const httpServer = createServer(app);
 const allowedOrigins = [
   "http://localhost:3000",
   "https://core-sg.vercel.app",
+  "https://sgcc.newsmaker.id",
 ];
 
 app.use((req, res, next) => {
