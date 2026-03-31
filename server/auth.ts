@@ -22,10 +22,8 @@ declare global {
   }
 }
 
-export function setupAuth(app: Express) {
-  const PgStore = connectPgSimple(session);
+function getCookieSettings() {
   const isProduction = process.env.NODE_ENV === "production";
-  // Default: production -> Secure + None + domain; development -> None + not secure for localhost testing.
   const secureCookie =
     process.env.SESSION_SECURE === "true"
       ? true
@@ -36,15 +34,22 @@ export function setupAuth(app: Express) {
     (process.env.SESSION_SAMESITE as "lax" | "none" | undefined) ||
     "none";
   const partitioned =
-    process.env.SESSION_PARTITIONED === "true";
-  const chipsMode = partitioned || isProduction;
-  // Partitioned cookies are recommended to be host-only; drop domain when CHIPS is on
-  const cookieDomain =
-    chipsMode ? undefined : (process.env.SESSION_COOKIE_DOMAIN || undefined);
-  const cookieName = chipsMode ? "__Host-sgcc-token" : "sgcc_token";
+    process.env.SESSION_PARTITIONED === "true" || isProduction;
+
+  // Partitioned cookies must be Secure and are recommended host-only; we keep no Domain.
+  const domain =
+    partitioned ? undefined : (process.env.SESSION_COOKIE_DOMAIN || undefined);
+  const name = partitioned ? "__Host-sgcc-token" : "sgcc_token";
+
+  return { secureCookie, sameSite, partitioned, domain, name };
+}
+
+export function setupAuth(app: Express) {
+  const PgStore = connectPgSimple(session);
+  const { secureCookie, sameSite, partitioned, domain, name } = getCookieSettings();
 
   if (!process.env.SESSION_SECRET) {
-    if (isProduction) {
+    if (process.env.NODE_ENV === "production") {
       throw new Error("SESSION_SECRET environment variable is required in production");
     }
     console.warn("WARNING: SESSION_SECRET not set, using default (not safe for production)");
@@ -52,7 +57,7 @@ export function setupAuth(app: Express) {
 
   app.use(
     session({
-      name: cookieName,
+      name,
       store: new PgStore({ pool, createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET || "sgcc-dev-only-secret",
       resave: false,
@@ -62,9 +67,9 @@ export function setupAuth(app: Express) {
         httpOnly: true,
         secure: secureCookie,
         sameSite,
-        domain: cookieDomain,
+        domain,
         // Needed for Chrome 3rd-party cookie phase-out when embedded in iframe
-        partitioned: partitioned || isProduction || undefined,
+        partitioned: partitioned || undefined,
       },
     })
   );

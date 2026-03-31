@@ -20,9 +20,6 @@ app.use((req, res, next) => {
   if (origin && allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
     res.header("Access-Control-Allow-Credentials", "true");
-  } else {
-    // do not reflect unauthorized origins
-    res.removeHeader("Access-Control-Allow-Origin");
   }
   res.header("Vary", "Origin");
 
