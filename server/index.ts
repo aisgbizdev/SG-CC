@@ -9,6 +9,29 @@ const app = express();
 app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://core-sg.vercel.app",
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin as string | undefined;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+  }
+  res.header("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    const requestedHeaders = req.headers["access-control-request-headers"] as string | undefined;
+    res.header("Access-Control-Allow-Headers", requestedHeaders || "Content-Type, Authorization, X-Requested-With");
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;

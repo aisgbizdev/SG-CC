@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, apiUrl } from "@/lib/queryClient";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -42,7 +42,7 @@ export function usePushNotifications() {
       setPermission(perm);
       if (perm !== "granted") return false;
 
-      const res = await fetch("/api/push/vapid-key");
+      const res = await fetch(apiUrl("/api/push/vapid-key"), { credentials: "include" });
       const { publicKey } = await res.json();
       if (!publicKey) return false;
 

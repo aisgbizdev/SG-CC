@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Building2, Pencil, Trash2, Plus, Users, FileText, ClipboardList, Megaphone, MapPin, Phone, Mail, User, Calendar, Shield, GitBranch } from "lucide-react";
 import type { Company, Branch } from "@shared/schema";
+import { apiUrl } from "@/lib/queryClient";
 
 interface CompanyDetail {
   company: Company;
@@ -51,7 +52,7 @@ export default function CompanyDetailPage() {
   const { data, isLoading } = useQuery<CompanyDetail>({
     queryKey: ["/api/companies", companyId],
     queryFn: async () => {
-      const res = await fetch(`/api/companies/${companyId}`, { credentials: "include" });
+      const res = await fetch(apiUrl(`/api/companies/${companyId}`), { credentials: "include" });
       if (!res.ok) throw new Error("Gagal memuat data");
       return res.json();
     },

@@ -22,6 +22,7 @@ import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, Company, Branch } from "@shared/schema";
+import { apiUrl } from "@/lib/queryClient";
 
 const BUCKETS = [
   "Pemeriksaan Pengaduan Baru", "Disetujui untuk Perdamaian", "Tidak Disetujui untuk Perdamaian",
@@ -88,7 +89,7 @@ export default function KasusPage() {
   const { data: companyBranches } = useQuery<Branch[]>({
     queryKey: ["/api/companies", companyFilter, "branches"],
     queryFn: async () => {
-      const res = await fetch(`/api/companies/${companyFilter}/branches`, { credentials: "include" });
+      const res = await fetch(apiUrl(`/api/companies/${companyFilter}/branches`), { credentials: "include" });
       if (!res.ok) return [];
       return res.json();
     },
