@@ -25,7 +25,7 @@ declare global {
 export function setupAuth(app: Express) {
   const PgStore = connectPgSimple(session);
   const isProduction = process.env.NODE_ENV === "production";
-  // Default: production -> Secure + None + domain; development -> Lax + not secure for localhost testing.
+  // Default: production -> Secure + None + domain; development -> None + not secure for localhost testing.
   const secureCookie =
     process.env.SESSION_SECURE === "true"
       ? true
@@ -34,7 +34,7 @@ export function setupAuth(app: Express) {
         : isProduction;
   const sameSite: "lax" | "none" =
     (process.env.SESSION_SAMESITE as "lax" | "none" | undefined) ||
-    (isProduction ? "none" : "lax");
+    "none";
   const cookieDomain =
     process.env.SESSION_COOKIE_DOMAIN ||
     (isProduction ? ".newsmaker.id" : undefined);
@@ -50,6 +50,7 @@ export function setupAuth(app: Express) {
 
   app.use(
     session({
+      name: "sgcc_token",
       store: new PgStore({ pool, createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET || "sgcc-dev-only-secret",
       resave: false,
@@ -61,7 +62,7 @@ export function setupAuth(app: Express) {
         sameSite,
         domain: cookieDomain,
         // Needed for Chrome 3rd-party cookie phase-out when embedded in iframe
-        partitioned: partitioned || undefined,
+        partitioned: partitioned || isProduction || undefined,
       },
     })
   );
