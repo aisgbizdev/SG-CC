@@ -35,11 +35,13 @@ export function setupAuth(app: Express) {
   const sameSite: "lax" | "none" =
     (process.env.SESSION_SAMESITE as "lax" | "none" | undefined) ||
     "none";
-  const cookieDomain =
-    process.env.SESSION_COOKIE_DOMAIN ||
-    (isProduction ? ".newsmaker.id" : undefined);
   const partitioned =
     process.env.SESSION_PARTITIONED === "true";
+  const chipsMode = partitioned || isProduction;
+  // Partitioned cookies are recommended to be host-only; drop domain when CHIPS is on
+  const cookieDomain =
+    chipsMode ? undefined : (process.env.SESSION_COOKIE_DOMAIN || undefined);
+  const cookieName = chipsMode ? "__Host-sgcc-token" : "sgcc_token";
 
   if (!process.env.SESSION_SECRET) {
     if (isProduction) {
@@ -50,7 +52,7 @@ export function setupAuth(app: Express) {
 
   app.use(
     session({
-      name: "sgcc_token",
+      name: cookieName,
       store: new PgStore({ pool, createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET || "sgcc-dev-only-secret",
       resave: false,
