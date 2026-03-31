@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, getQueryFn } from "./queryClient";
+import { queryClient, apiRequest, getQueryFn, setStoredAuthToken, clearStoredAuthToken } from "./queryClient";
 import { useLocation } from "wouter";
 
 type AuthUser = {
@@ -12,6 +12,10 @@ type AuthUser = {
   isActive: boolean;
   profileCompleted: boolean;
   avatarUrl: string | null;
+};
+
+type LoginResponse = AuthUser & {
+  token: string;
 };
 
 type AuthContextType = {
@@ -36,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async ({ username, password }: { username: string; password: string }) => {
       const res = await apiRequest("POST", "/api/auth/login", { username, password });
-      return res.json();
+      return res.json() as Promise<LoginResponse>;
     },
   });
 
@@ -45,13 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
+      clearStoredAuthToken();
       queryClient.clear();
       setLocation("/login");
     },
   });
 
   const login = async (username: string, password: string) => {
-    await loginMutation.mutateAsync({ username, password });
+    const auth = await loginMutation.mutateAsync({ username, password });
+    setStoredAuthToken(auth.token);
     const authenticatedUser = await queryClient.fetchQuery<AuthUser | null>({
       queryKey: ["/api/auth/me"],
       queryFn: getQueryFn({ on401: "throw" }),

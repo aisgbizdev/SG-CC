@@ -134,10 +134,13 @@ export function setupAuth(app: Express) {
   app.use(async (req, _res, next) => {
     if (req.user) return next();
 
+    const bearerHeader = req.headers.authorization;
+    const bearerToken = bearerHeader?.startsWith("Bearer ")
+      ? bearerHeader.slice("Bearer ".length)
+      : null;
     const rawCookie = req.headers.cookie;
-    if (!rawCookie) return next();
-
-    const token = cookie.parse(rawCookie)[name];
+    const cookieToken = rawCookie ? cookie.parse(rawCookie)[name] : null;
+    const token = bearerToken || cookieToken;
     if (!token) return next();
 
     try {
@@ -224,8 +227,9 @@ export function setupAuth(app: Express) {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info?.message || "Login gagal" });
 
-      res.append("Set-Cookie", buildAuthCookie(signAuthToken(user), 24 * 60 * 60 * 1000));
-      return res.json(user);
+      const token = signAuthToken(user);
+      res.append("Set-Cookie", buildAuthCookie(token, 24 * 60 * 60 * 1000));
+      return res.json({ ...user, token });
     })(req, res, next);
   });
 
