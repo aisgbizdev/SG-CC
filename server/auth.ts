@@ -38,6 +38,8 @@ export function setupAuth(app: Express) {
   const cookieDomain =
     process.env.SESSION_COOKIE_DOMAIN ||
     (isProduction ? ".newsmaker.id" : undefined);
+  const partitioned =
+    process.env.SESSION_PARTITIONED === "true";
 
   if (!process.env.SESSION_SECRET) {
     if (isProduction) {
@@ -58,6 +60,8 @@ export function setupAuth(app: Express) {
         secure: secureCookie,
         sameSite,
         domain: cookieDomain,
+        // Needed for Chrome 3rd-party cookie phase-out when embedded in iframe
+        partitioned: partitioned || undefined,
       },
     })
   );
