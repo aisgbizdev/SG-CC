@@ -45,7 +45,10 @@ function buildHeaders(headers?: HeadersInit) {
   const token = getStoredAuthToken();
   return {
     ...(headers || {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? {
+      Authorization: `Bearer ${token}`,
+      "X-SGCC-Token": token,
+    } : {}),
   };
 }
 

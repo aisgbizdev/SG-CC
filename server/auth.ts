@@ -138,9 +138,15 @@ export function setupAuth(app: Express) {
     const bearerToken = bearerHeader?.startsWith("Bearer ")
       ? bearerHeader.slice("Bearer ".length)
       : null;
+    const customHeader = req.headers["x-sgcc-token"];
+    const customToken = typeof customHeader === "string"
+      ? customHeader
+      : Array.isArray(customHeader)
+        ? customHeader[0]
+        : null;
     const rawCookie = req.headers.cookie;
     const cookieToken = rawCookie ? cookie.parse(rawCookie)[name] : null;
-    const token = bearerToken || cookieToken;
+    const token = bearerToken || customToken || cookieToken;
     if (!token) return next();
 
     try {
