@@ -51,9 +51,6 @@ function buildHeaders(headers?: HeadersInit) {
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    if (res.status === 401) {
-      clearStoredAuthToken();
-    }
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
@@ -87,7 +84,6 @@ export const getQueryFn: <T>(options: {
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      clearStoredAuthToken();
       return null;
     }
 
