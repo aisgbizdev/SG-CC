@@ -58,12 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     const auth = await loginMutation.mutateAsync({ username, password });
     setStoredAuthToken(auth.token);
-    const authenticatedUser = await queryClient.fetchQuery<AuthUser | null>({
-      queryKey: ["/api/auth/me"],
-      queryFn: getQueryFn({ on401: "throw" }),
-      staleTime: 0,
-    });
-    queryClient.setQueryData(["/api/auth/me"], authenticatedUser);
+    queryClient.setQueryData(["/api/auth/me"], {
+      id: auth.id,
+      username: auth.username,
+      fullName: auth.fullName,
+      role: auth.role,
+      companyId: auth.companyId,
+      isActive: auth.isActive,
+      profileCompleted: auth.profileCompleted,
+      avatarUrl: auth.avatarUrl,
+    } satisfies AuthUser);
   };
 
   const logout = async () => {

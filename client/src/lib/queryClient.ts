@@ -2,6 +2,7 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const AUTH_TOKEN_KEY = "sgcc_token";
+let inMemoryAuthToken: string | null = null;
 
 export const apiUrl = (path: string) => {
   if (/^https?:\/\//.test(path)) return path;
@@ -10,18 +11,34 @@ export const apiUrl = (path: string) => {
 };
 
 export function getStoredAuthToken() {
+  if (inMemoryAuthToken) return inMemoryAuthToken;
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  try {
+    inMemoryAuthToken = window.localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch {
+    inMemoryAuthToken = null;
+  }
+  return inMemoryAuthToken;
 }
 
 export function setStoredAuthToken(token: string) {
+  inMemoryAuthToken = token;
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  try {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } catch {
+    // Ignore storage failures inside embedded contexts and rely on memory fallback.
+  }
 }
 
 export function clearStoredAuthToken() {
+  inMemoryAuthToken = null;
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  try {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  } catch {
+    // Ignore storage failures inside embedded contexts.
+  }
 }
 
 function buildHeaders(headers?: HeadersInit) {
