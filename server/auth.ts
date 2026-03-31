@@ -3,6 +3,8 @@ import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
 import bcrypt from "bcrypt";
 import type { Express } from "express";
+import * as cookie from "cookie";
+import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 import { pool } from "./db";
 import connectPgSimple from "connect-pg-simple";
@@ -22,6 +24,12 @@ declare global {
   }
 }
 
+type AuthTokenPayload = {
+  sub: number;
+  username: string;
+  role: string;
+};
+
 function getCookieSettings() {
   const isProduction = process.env.NODE_ENV === "production";
   const secureCookie =
@@ -36,12 +44,57 @@ function getCookieSettings() {
   const partitioned =
     process.env.SESSION_PARTITIONED === "true" || isProduction;
 
-  // Partitioned cookies must be Secure and are recommended host-only; we keep no Domain.
+  // Partitioned cookies are safest as host-only cookies.
   const domain =
     partitioned ? undefined : (process.env.SESSION_COOKIE_DOMAIN || undefined);
-  const name = partitioned ? "__Host-sgcc-token" : "sgcc_token";
+  const name = "sgcc_token";
 
   return { secureCookie, sameSite, partitioned, domain, name };
+}
+
+function getJwtSecret() {
+  return process.env.JWT_SECRET || process.env.SESSION_SECRET || "sgcc-dev-only-secret";
+}
+
+function signAuthToken(user: Express.User) {
+  return jwt.sign(
+    { sub: user.id, username: user.username, role: user.role } satisfies AuthTokenPayload,
+    getJwtSecret(),
+    { expiresIn: "1d" },
+  );
+}
+
+function verifyAuthToken(token: string) {
+  return jwt.verify(token, getJwtSecret()) as AuthTokenPayload;
+}
+
+function buildAuthCookie(token: string, maxAge: number) {
+  const { secureCookie, sameSite, partitioned, domain, name } = getCookieSettings();
+
+  return cookie.serialize(name, token, {
+    path: "/",
+    httpOnly: true,
+    secure: secureCookie,
+    sameSite,
+    partitioned: partitioned || undefined,
+    domain,
+    maxAge: Math.floor(maxAge / 1000),
+  });
+}
+
+function buildClearedAuthCookie() {
+  const { secureCookie, sameSite, partitioned, domain, name } = getCookieSettings();
+
+  return cookie.serialize(name, "", {
+    path: "/",
+    httpOnly: true,
+    secure: secureCookie,
+    sameSite,
+    partitioned: partitioned || undefined,
+    domain,
+    expires: new Date(0),
+    maxAge: 0,
+  });
 }
 
 export function setupAuth(app: Express) {
@@ -57,7 +110,8 @@ export function setupAuth(app: Express) {
 
   app.use(
     session({
-      name,
+      name: "sgcc_session",
+      proxy: true,
       store: new PgStore({ pool, createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET || "sgcc-dev-only-secret",
       resave: false,
@@ -65,7 +119,7 @@ export function setupAuth(app: Express) {
       cookie: {
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: secureCookie,
+        secure: secureCookie ? "auto" : false,
         sameSite,
         domain,
         // Needed for Chrome 3rd-party cookie phase-out when embedded in iframe
@@ -76,6 +130,36 @@ export function setupAuth(app: Express) {
 
   app.use(passport.initialize());
   app.use(passport.session());
+
+  app.use(async (req, _res, next) => {
+    if (req.user) return next();
+
+    const rawCookie = req.headers.cookie;
+    if (!rawCookie) return next();
+
+    const token = cookie.parse(rawCookie)[name];
+    if (!token) return next();
+
+    try {
+      const payload = verifyAuthToken(token);
+      const user = await storage.getUser(payload.sub);
+      if (!user || !user.isActive) return next();
+
+      req.user = {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        role: user.role,
+        companyId: user.companyId,
+        isActive: user.isActive,
+        profileCompleted: user.profileCompleted,
+      };
+    } catch {
+      // Ignore invalid or expired auth cookies.
+    }
+
+    return next();
+  });
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -139,22 +223,24 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info?.message || "Login gagal" });
-      req.logIn(user, (err) => {
-        if (err) return next(err);
-        return res.json(user);
-      });
+
+      res.append("Set-Cookie", buildAuthCookie(signAuthToken(user), 24 * 60 * 60 * 1000));
+      return res.json(user);
     })(req, res, next);
   });
 
   app.post("/api/auth/logout", (req, res) => {
     req.logout((err) => {
       if (err) return res.status(500).json({ message: "Logout gagal" });
-      res.json({ message: "Berhasil logout" });
+      req.session.destroy(() => {
+        res.append("Set-Cookie", buildClearedAuthCookie());
+        res.json({ message: "Berhasil logout" });
+      });
     });
   });
 
   app.get("/api/auth/me", (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Belum login" });
+    if (!req.user) return res.status(401).json({ message: "Belum login" });
     res.json(req.user);
   });
 
@@ -191,7 +277,7 @@ export function setupAuth(app: Express) {
 }
 
 export function requireAuth(req: any, res: any, next: any) {
-  if (!req.isAuthenticated()) return res.status(401).json({ message: "Belum login" });
+  if (!req.user) return res.status(401).json({ message: "Belum login" });
   if (req.user && req.user.isActive === false) {
     req.logout(() => {});
     return res.status(401).json({ message: "Akun Anda telah dinonaktifkan" });
@@ -201,7 +287,7 @@ export function requireAuth(req: any, res: any, next: any) {
 
 export function requireRole(...roles: string[]) {
   return (req: any, res: any, next: any) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Belum login" });
+    if (!req.user) return res.status(401).json({ message: "Belum login" });
     if (req.user && req.user.isActive === false) {
       req.logout(() => {});
       return res.status(401).json({ message: "Akun Anda telah dinonaktifkan" });

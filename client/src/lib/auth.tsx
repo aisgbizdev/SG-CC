@@ -38,9 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/auth/login", { username, password });
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["/api/auth/me"], data);
-    },
   });
 
   const logoutMutation = useMutation({
@@ -55,6 +52,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     await loginMutation.mutateAsync({ username, password });
+    const authenticatedUser = await queryClient.fetchQuery<AuthUser | null>({
+      queryKey: ["/api/auth/me"],
+      queryFn: getQueryFn({ on401: "throw" }),
+      staleTime: 0,
+    });
+    queryClient.setQueryData(["/api/auth/me"], authenticatedUser);
   };
 
   const logout = async () => {
