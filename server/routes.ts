@@ -1377,6 +1377,7 @@ export async function registerRoutes(
         problemSolvingScore: liveData.scores.progressRataRata,
         teamworkScore: liveData.scores.bebanKerja,
         responsibilityScore: liveData.scores.konsistensi,
+        activeContributionScore: liveData.scores.kontribusiAktif || 0,
         totalScore: liveData.totalScore,
         notes: parsed.data.notes || null,
         strengths: parsed.data.strengths || null,

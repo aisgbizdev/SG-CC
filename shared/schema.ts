@@ -337,6 +337,7 @@ export const kpiAssessments = pgTable("kpi_assessments", {
   problemSolvingScore: integer("problem_solving_score").notNull().default(0),
   teamworkScore: integer("teamwork_score").notNull().default(0),
   responsibilityScore: integer("responsibility_score").notNull().default(0),
+  activeContributionScore: integer("active_contribution_score").notNull().default(0),
   totalScore: integer("total_score").notNull().default(0),
   notes: text("notes"),
   strengths: text("strengths"),

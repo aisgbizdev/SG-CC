@@ -56,6 +56,7 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
     await db.execute(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS tag text`);
+    await db.execute(`ALTER TABLE kpi_assessments ADD COLUMN IF NOT EXISTS active_contribution_score integer NOT NULL DEFAULT 0`);
     await db.execute(`UPDATE master_categories SET name = 'Audit' WHERE name = 'Audit Cabang' AND type = 'activity'`);
     await db.execute(`UPDATE master_categories SET name = 'Monitoring Pengaduan' WHERE name = 'Monitoring Kasus' AND type = 'activity'`);
     await db.execute(`UPDATE master_categories SET name = 'Penyusunan Laporan & Kuisioner' WHERE name = 'Penyusunan Laporan' AND type = 'activity'`);
