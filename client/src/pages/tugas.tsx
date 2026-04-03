@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth, getRoleLabel } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -36,6 +36,12 @@ export default function TugasPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    if (selectedTask) {
+      apiRequest("POST", "/api/read-receipts", { entityType: "task", entityId: selectedTask.id }).catch(() => {});
+    }
+  }, [selectedTask?.id]);
   const [editForm, setEditForm] = useState({ title: "", description: "", assignedTo: "", companyId: "", priority: "Medium", deadline: "", notes: "" });
   const [currentPage, setCurrentPage] = useState(1);
 

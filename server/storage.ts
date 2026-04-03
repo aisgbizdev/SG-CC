@@ -4,7 +4,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates, caseMeetings,
   tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments, branches,
-  pushSubscriptions,
+  pushSubscriptions, readReceipts,
   type InsertCompany, type Company, type InsertUser, type User,
   type InsertMasterCategory, type MasterCategory,
   type InsertActivity, type Activity, type InsertCase, type Case,
@@ -16,6 +16,7 @@ import {
   type InsertBranch, type Branch,
   type InsertCaseMeeting, type CaseMeeting,
   type PushSubscription,
+  type InsertReadReceipt, type ReadReceipt,
 } from "@shared/schema";
 import * as schema from "@shared/schema";
 
@@ -101,6 +102,12 @@ export interface IStorage {
   getMeetingsByCase(caseId: number): Promise<CaseMeeting[]>;
   createMeeting(data: InsertCaseMeeting): Promise<CaseMeeting>;
   deleteMeeting(id: number): Promise<void>;
+
+  createReadReceipt(data: InsertReadReceipt): Promise<ReadReceipt>;
+  getReadReceipts(entityType: string, entityId: number): Promise<ReadReceipt[]>;
+  hasUserRead(entityType: string, entityId: number, userId: number): Promise<boolean>;
+  getUncommentedCaseIds(userId: number): Promise<number[]>;
+  getActionItems(userId: number): Promise<Array<{ entityType: string; entityId: number; title: string }>>;
 
   getPushSubscriptions(userId: number): Promise<PushSubscription[]>;
   savePushSubscription(userId: number, endpoint: string, p256dh: string, auth: string): Promise<PushSubscription>;
@@ -865,6 +872,91 @@ export class DatabaseStorage implements IStorage {
 
   async deletePushSubscriptionByUser(userId: number, endpoint: string): Promise<void> {
     await db.delete(pushSubscriptions).where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, endpoint)));
+  }
+
+  async createReadReceipt(data: InsertReadReceipt): Promise<ReadReceipt> {
+    const existing = await db.select().from(readReceipts).where(
+      and(
+        eq(readReceipts.entityType, data.entityType),
+        eq(readReceipts.entityId, data.entityId),
+        eq(readReceipts.userId, data.userId),
+      )
+    );
+    if (existing.length > 0) return existing[0];
+    const [receipt] = await db.insert(readReceipts).values(data).returning();
+    return receipt;
+  }
+
+  async getReadReceipts(entityType: string, entityId: number): Promise<ReadReceipt[]> {
+    return db.select().from(readReceipts).where(
+      and(eq(readReceipts.entityType, entityType), eq(readReceipts.entityId, entityId))
+    ).orderBy(desc(readReceipts.readAt));
+  }
+
+  async hasUserRead(entityType: string, entityId: number, userId: number): Promise<boolean> {
+    const [result] = await db.select({ count: count() }).from(readReceipts).where(
+      and(
+        eq(readReceipts.entityType, entityType),
+        eq(readReceipts.entityId, entityId),
+        eq(readReceipts.userId, userId),
+      )
+    );
+    return (result?.count || 0) > 0;
+  }
+
+  async getUncommentedCaseIds(userId: number): Promise<number[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    let allCases;
+    if (user.role === "superadmin" || user.role === "owner") {
+      allCases = await db.select({ id: cases.id }).from(cases).where(eq(cases.isArchived, false));
+    } else if (user.companyId) {
+      allCases = await db.select({ id: cases.id }).from(cases).where(
+        and(eq(cases.isArchived, false), eq(cases.companyId, user.companyId))
+      );
+    } else {
+      return [];
+    }
+    if (allCases.length === 0) return [];
+    const commentedCases = await db.selectDistinct({ entityId: comments.entityId })
+      .from(comments)
+      .where(and(eq(comments.entityType, "case"), eq(comments.createdBy, userId)));
+    const commentedIds = new Set(commentedCases.map(c => c.entityId));
+    return allCases.filter(c => !commentedIds.has(c.id)).map(c => c.id);
+  }
+
+  async getActionItems(userId: number): Promise<Array<{ entityType: string; entityId: number; title: string }>> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    const items: Array<{ entityType: string; entityId: number; title: string }> = [];
+
+    const unreadMsgs = await db.select().from(messages).where(
+      and(eq(messages.receiverId, userId), eq(messages.isRead, false))
+    );
+    for (const m of unreadMsgs) {
+      items.push({ entityType: "message", entityId: m.id, title: m.subject || "Pesan baru" });
+    }
+
+    const userTasks = await db.select().from(tasks).where(
+      and(eq(tasks.assignedTo, userId), eq(tasks.isArchived, false))
+    );
+    for (const t of userTasks) {
+      const hasRead = await this.hasUserRead("task", t.id, userId);
+      if (!hasRead) items.push({ entityType: "task", entityId: t.id, title: t.title });
+    }
+
+    const allAnnouncements = await db.select().from(announcements).where(eq(announcements.isArchived, false));
+    const existingAnnouncementReads = await db.select({ announcementId: announcementReads.announcementId })
+      .from(announcementReads).where(eq(announcementReads.userId, userId));
+    const announcementReadIds = new Set(existingAnnouncementReads.map(r => r.announcementId));
+    for (const a of allAnnouncements) {
+      if (announcementReadIds.has(a.id)) continue;
+      const hasRead = await this.hasUserRead("announcement", a.id, userId);
+      if (!hasRead) items.push({ entityType: "announcement", entityId: a.id, title: a.title });
+    }
+
+    return items;
   }
 
   async transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T> {

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, companies, masterCategories, activities, cases, tasks, announcements, notifications, comments, caseUpdates, announcementReads, messages, auditLogs, branches } from "@shared/schema";
+import { users, companies, masterCategories, activities, cases, tasks, announcements, notifications, comments, caseUpdates, announcementReads, messages, auditLogs, branches, readReceipts } from "@shared/schema";
 import { count, eq, sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
@@ -57,6 +57,17 @@ async function runMigrations() {
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
     await db.execute(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS tag text`);
     await db.execute(`ALTER TABLE kpi_assessments ADD COLUMN IF NOT EXISTS active_contribution_score integer NOT NULL DEFAULT 0`);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS read_receipts (
+        id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        entity_type text NOT NULL,
+        entity_id integer NOT NULL,
+        user_id integer NOT NULL,
+        read_at timestamp NOT NULL DEFAULT now()
+      )
+    `);
+    await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_read_receipts_entity_user ON read_receipts(entity_type, entity_id, user_id)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_read_receipts_user ON read_receipts(user_id)`);
     await db.execute(`UPDATE master_categories SET name = 'Audit' WHERE name = 'Audit Cabang' AND type = 'activity'`);
     await db.execute(`UPDATE master_categories SET name = 'Monitoring Pengaduan' WHERE name = 'Monitoring Kasus' AND type = 'activity'`);
     await db.execute(`UPDATE master_categories SET name = 'Penyusunan Laporan & Kuisioner' WHERE name = 'Penyusunan Laporan' AND type = 'activity'`);

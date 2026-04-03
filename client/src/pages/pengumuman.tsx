@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -137,8 +137,22 @@ export default function PengumumanPage() {
   const readMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiRequest("POST", `/api/announcements/${id}/read`);
+      await apiRequest("POST", "/api/read-receipts", { entityType: "announcement", entityId: id });
       return res.json();
     },
+  });
+
+  const [expandedAnnId, setExpandedAnnId] = useState<number | null>(null);
+  const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
+
+  const { data: readReceiptsData } = useQuery<any[]>({
+    queryKey: ["/api/read-receipts", "announcement", expandedAnnId],
+    queryFn: async () => {
+      const res = await fetch(`/api/read-receipts/announcement/${expandedAnnId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAdmin && expandedAnnId !== null,
   });
 
   const handleSubmit = () => {

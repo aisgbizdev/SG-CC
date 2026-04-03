@@ -17,7 +17,7 @@ import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X } from "lucide-react";
+import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X, MessageCircle } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -47,10 +47,12 @@ export default function KasusPage() {
   const [stageFilter, setStageFilter] = useState(stageParam === "waiting" ? "waiting" : "all");
   const [viewFilter, setViewFilter] = useState<string | null>(viewParam === "active" ? "active" : viewParam === "closed" ? "closed" : null);
   const [sortBy, setSortBy] = useState("date-desc");
+  const [uncommentedFilter, setUncommentedFilter] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(searchString.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: cases, isLoading, isError, refetch } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
+  const { data: uncommentedIds } = useQuery<number[]>({ queryKey: ["/api/uncommented-cases"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
 
   const [editingCase, setEditingCase] = useState<Case | null>(null);
@@ -157,13 +159,14 @@ export default function KasusPage() {
     const matchStage = stageFilter === "all" || (stageFilter === "waiting" ? waitingStages.includes(c.workflowStage) && c.status !== "Closed" : c.workflowStage === stageFilter);
     const matchBranch = branchFilter === "all" || c.branch === branchFilter;
     const matchResolution = resolutionFilter === "all" || c.resolutionPath === resolutionFilter;
+    const matchUncommented = !uncommentedFilter || (uncommentedIds || []).includes(c.id);
     let matchView = true;
     if (viewFilter === "active") {
       matchView = c.status !== "Closed" && !waitingStages.includes(c.workflowStage);
     } else if (viewFilter === "closed") {
       matchView = c.status === "Closed";
     }
-    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution && matchView;
+    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution && matchView && matchUncommented;
   }) || []).sort((a, b) => {
     switch (sortBy) {
       case "date-asc": return a.dateReceived.localeCompare(b.dateReceived);
@@ -507,6 +510,19 @@ export default function KasusPage() {
               {RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button
+            variant={uncommentedFilter ? "default" : "outline"}
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={() => { setUncommentedFilter(!uncommentedFilter); setCurrentPage(1); }}
+            data-testid="button-filter-uncommented"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Belum Saya Komentari
+            {uncommentedIds && uncommentedIds.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs" data-testid="badge-uncommented-count">{uncommentedIds.length}</Badge>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -596,6 +612,12 @@ export default function KasusPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <Link href={`/kasus/${c.id}`} className="flex-1 min-w-0 space-y-1.5 cursor-pointer">
                     <div className="flex items-center gap-2 flex-wrap">
+                      {(uncommentedIds || []).includes(c.id) && (
+                        <span className="relative flex h-2.5 w-2.5 flex-shrink-0" data-testid={`dot-uncommented-${c.id}`}>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                        </span>
+                      )}
                       <span className="font-semibold text-sm text-primary" data-testid={`text-account-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
                       <span className="text-xs text-muted-foreground">{c.caseCode}</span>
                       <RiskBadge level={c.riskLevel} />
