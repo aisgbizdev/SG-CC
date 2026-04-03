@@ -56,6 +56,12 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)`);
     await db.execute(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS tag text`);
+    await db.execute(`UPDATE master_categories SET name = 'Audit' WHERE name = 'Audit Cabang' AND type = 'activity'`);
+    await db.execute(`UPDATE master_categories SET name = 'Monitoring Pengaduan' WHERE name = 'Monitoring Kasus' AND type = 'activity'`);
+    await db.execute(`UPDATE master_categories SET name = 'Penyusunan Laporan & Kuisioner' WHERE name = 'Penyusunan Laporan' AND type = 'activity'`);
+    await db.execute(`INSERT INTO master_categories (name, type, is_active) SELECT 'Koordinasi Eksternal', 'activity', true WHERE NOT EXISTS (SELECT 1 FROM master_categories WHERE name = 'Koordinasi Eksternal' AND type = 'activity')`);
+    await db.execute(`INSERT INTO master_categories (name, type, is_active) SELECT 'Tanggapan Surat Regulator', 'activity', true WHERE NOT EXISTS (SELECT 1 FROM master_categories WHERE name = 'Tanggapan Surat Regulator' AND type = 'activity')`);
+    await db.execute(`INSERT INTO master_categories (name, type, is_active) SELECT 'Penanganan Pengaduan', 'activity', true WHERE NOT EXISTS (SELECT 1 FROM master_categories WHERE name = 'Penanganan Pengaduan' AND type = 'activity')`);
     console.log("Migrasi schema selesai.");
   } catch (err: any) {
     console.error("Migrasi gagal:", err.message);
@@ -123,16 +129,19 @@ export async function seedData() {
     await storage.createUser({ username: "dk_ewf", password: pw, fullName: "DK PT EWF", role: "dk", companyId: c5.id, secretQuestion: "Kota lahir", secretAnswer: "jakarta", isActive: true });
 
     const cats = [
-      { name: "Audit Cabang", type: "activity" },
+      { name: "Audit", type: "activity" },
       { name: "Review Pengaduan", type: "activity" },
       { name: "Mediasi", type: "activity" },
       { name: "Meeting Regulator", type: "activity" },
       { name: "Koordinasi Internal", type: "activity" },
-      { name: "Penyusunan Laporan", type: "activity" },
+      { name: "Penyusunan Laporan & Kuisioner", type: "activity" },
       { name: "Evaluasi Kepatuhan", type: "activity" },
       { name: "Tindakan Korektif", type: "activity" },
-      { name: "Monitoring Kasus", type: "activity" },
+      { name: "Monitoring Pengaduan", type: "activity" },
       { name: "Pengawasan Cabang", type: "activity" },
+      { name: "Koordinasi Eksternal", type: "activity" },
+      { name: "Tanggapan Surat Regulator", type: "activity" },
+      { name: "Penanganan Pengaduan", type: "activity" },
     ];
     for (const cat of cats) {
       await storage.createCategory({ name: cat.name, type: cat.type, isActive: true });
