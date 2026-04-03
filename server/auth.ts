@@ -47,7 +47,7 @@ export function setupAuth(app: Express) {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 8 * 60 * 60 * 1000,
         httpOnly: true,
         secure: secureCookie,
         sameSite: "lax",
@@ -122,6 +122,12 @@ export function setupAuth(app: Express) {
       if (!user) return res.status(401).json({ message: info?.message || "Login gagal" });
       req.logIn(user, (err) => {
         if (err) return next(err);
+        const rememberMe = req.body.rememberMe === true;
+        if (req.session && req.session.cookie) {
+          req.session.cookie.maxAge = rememberMe
+            ? 30 * 24 * 60 * 60 * 1000
+            : 8 * 60 * 60 * 1000;
+        }
         return res.json(user);
       });
     })(req, res, next);
