@@ -376,7 +376,7 @@
 | title | text | Judul pengumuman |
 | content | text | Isi pengumuman |
 | priority | text | Prioritas: Normal, Penting, Urgent |
-| target_type | text | Target: all, role, company, user |
+| target_type | text | Target: all, role, company, users |
 | target_value | text (nullable) | Nilai target (role/company_id/user_id) |
 | start_date | date | Tanggal mulai |
 | end_date | date (nullable) | Tanggal berakhir |

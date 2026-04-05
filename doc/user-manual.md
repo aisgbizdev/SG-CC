@@ -398,7 +398,7 @@ Halaman ini digunakan untuk menyampaikan pengumuman resmi dari manajemen.
    - **Judul** (wajib)
    - **Isi Pengumuman** (wajib)
    - **Prioritas** — Normal, Penting, Urgent
-   - **Target** — Semua, Role tertentu, Perusahaan tertentu, User tertentu
+   - **Target** — Semua, Role tertentu, Perusahaan tertentu, User tertentu (multi-select)
    - **Tanggal Mulai** (wajib)
    - **Tanggal Berakhir** (opsional)
    - **Sematkan** — centang untuk pin di atas
@@ -664,7 +664,7 @@ Halaman detail menampilkan beberapa bagian:
 - Lihat semua cabang perusahaan
 - **Tambah Cabang:** Nama, alamat, kepala cabang, jumlah WPB
 - **Edit Cabang:** Ubah data cabang
-- **Hapus Cabang:** Hapus cabang (hati-hati, ini permanen)
+- **Hapus Cabang:** Menonaktifkan cabang (soft-delete, data tetap tersimpan)
 
 #### Rekap Statistik
 
