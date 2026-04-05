@@ -573,8 +573,9 @@ Penilaian yang sudah disimpan menjadi **snapshot** yang tidak berubah, meskipun 
 
 ### Pertanyaan Rahasia
 
-- Atur pertanyaan dan jawaban rahasia untuk fitur "Lupa Password"
-- Tersedia di halaman **Update Profil**
+- Pertanyaan dan jawaban rahasia digunakan untuk fitur "Lupa Password"
+- Pertanyaan rahasia diatur saat pembuatan akun oleh Superadmin
+- Jika belum diatur, hubungi Superadmin untuk mengatur pertanyaan rahasia Anda
 
 ### Update Profil
 
@@ -585,7 +586,6 @@ Penilaian yang sudah disimpan menjadi **snapshot** yang tidak berubah, meskipun 
    - Tanggal lahir
    - Jabatan
    - Foto profil (upload/hapus)
-   - Pertanyaan rahasia
 3. Klik **Simpan**
 
 ---
