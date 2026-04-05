@@ -2,6 +2,7 @@
 
 **Versi:** 1.0
 **Tanggal:** April 2026
+**Sinkron dengan aplikasi per:** 5 April 2026
 
 ---
 
