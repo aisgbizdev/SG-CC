@@ -424,7 +424,9 @@
 | priority | text | Prioritas: low, medium, high |
 | created_at | timestamp | Waktu dibuat |
 
-**Tipe Notifikasi:** new_activity, activity_updated, new_case, case_updated, case_high_risk, case_completed, task_updated, task_completed, task_assigned, new_comment, new_announcement, new_meeting, task_overdue, task_stale, case_stale, message_unread, daily_summary
+**Tipe Notifikasi:** new_activity, activity_updated*, new_case, case_updated*, case_high_risk, case_completed, task_updated*, task_completed, task_assigned, new_comment, new_announcement, new_meeting, new_message, task_overdue, task_stale, case_stale, message_unread, daily_summary
+
+*Tipe bertanda * saat ini dinonaktifkan (disuppress) — lihat bagian Routine Update Suppression.
 
 ### 5.14 Tabel `messages` — Pesan
 
@@ -563,10 +565,10 @@
 | Modul | Superadmin | Owner | DU | DK |
 |-------|-----------|-------|-----|-----|
 | Dashboard | Semua PT | Semua PT | PT sendiri | PT sendiri |
-| Aktivitas (buat) | Ya | Tidak | Ya | Ya |
+| Aktivitas (buat) | Ya (API), Tidak (UI) | Tidak | Ya | Ya |
 | Aktivitas (edit) | Ya (semua) | Tidak | Milik sendiri | Milik sendiri |
 | Aktivitas (hapus) | Ya | Ya | Milik sendiri | Milik sendiri |
-| Kasus (buat) | Ya | Tidak | Ya | Ya |
+| Kasus (buat) | Ya (API), Tidak (UI) | Tidak | Ya | Ya |
 | Kasus (edit) | Ya (semua) | Tidak | Milik sendiri | Milik sendiri |
 | Kasus (hapus) | Ya | Ya | Milik sendiri | Milik sendiri |
 | Tugas (buat) | Ya | Ya | Tidak | Tidak |
@@ -755,6 +757,7 @@
 | new_comment | Komentar baru | Peserta terkait |
 | new_announcement | Pengumuman baru | Target pengguna |
 | new_meeting | Pertemuan kasus baru | Admins + Owners |
+| new_message | Pesan baru diterima | Penerima pesan |
 
 ### Routine Update Suppression
 

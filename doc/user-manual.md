@@ -115,7 +115,7 @@ Setelah login, Anda akan melihat sidebar di sisi kiri yang berisi menu navigasi:
 - Mengelola data perusahaan dan cabang
 - Membuat tugas dan pengumuman
 - Melihat dan membuat penilaian KPI semua DU/DK
-- Membuat aktivitas dan kasus pengaduan
+- Membuat aktivitas dan kasus pengaduan (didukung oleh API, namun tombol buat hanya tampil di antarmuka untuk DU/DK)
 
 ### Owner
 
@@ -193,7 +193,7 @@ Halaman ini digunakan untuk mencatat dan memantau aktivitas penting yang dilakuk
 
 ### Membuat Aktivitas Baru
 
-> Tersedia untuk: Superadmin, DU, DK
+> Tersedia untuk: DU, DK (tombol hanya tampil untuk DU/DK di antarmuka)
 
 1. Klik tombol **Tambah Aktivitas**
 2. Isi form:
@@ -265,7 +265,7 @@ Halaman ini digunakan untuk mengelola kasus pengaduan nasabah, termasuk pelacaka
 
 ### Membuat Kasus Baru
 
-> Tersedia untuk: Superadmin, DU, DK
+> Tersedia untuk: DU, DK (tombol hanya tampil untuk DU/DK di antarmuka)
 
 1. Klik tombol **Tambah Kasus**
 2. Isi form (field yang wajib ditandai *):
@@ -452,14 +452,17 @@ Sistem notifikasi memberitahu Anda tentang aktivitas penting yang terkait dengan
 
 | Kategori | Contoh |
 |----------|--------|
-| Aktivitas | Aktivitas baru dibuat, aktivitas diperbarui |
+| Aktivitas | Aktivitas baru dibuat |
 | Kasus | Kasus baru, kasus risiko tinggi, kasus selesai |
-| Tugas | Tugas baru diberikan, tugas overdue, tugas selesai |
+| Tugas | Tugas baru diberikan, tugas selesai |
 | Komentar | Ada komentar baru pada entitas terkait |
+| Pesan | Pesan baru diterima |
 | Pengumuman | Pengumuman baru dipublikasikan |
 | Pertemuan | Pertemuan kasus baru dijadwalkan |
-| Pengingat | Tugas overdue, kasus belum difollow-up, pesan belum dibaca |
+| Pengingat | Tugas overdue, kasus/tugas belum difollow-up, pesan belum dibaca |
 | Ringkasan | Ringkasan harian (jam 8 WIB) |
+
+> **Catatan:** Notifikasi untuk update rutin (edit aktivitas/kasus/tugas) saat ini dinonaktifkan untuk mengurangi noise. Hanya event penting yang memicu notifikasi.
 
 ### Mengelola Notifikasi
 
@@ -728,14 +731,17 @@ Push notification memungkinkan Anda menerima pemberitahuan langsung di perangkat
 
 ### Notifikasi Push yang Dikirim
 
-Semua jenis notifikasi in-app juga dikirim sebagai push notification, termasuk:
-- Aktivitas baru/update
-- Kasus baru/update/risiko tinggi/selesai
-- Tugas baru/update/selesai/overdue
+Notifikasi in-app juga dikirim sebagai push notification, termasuk:
+- Aktivitas baru dibuat
+- Kasus baru, kasus risiko tinggi, kasus selesai
+- Tugas baru diberikan, tugas selesai, tugas overdue
 - Komentar baru
+- Pesan baru diterima
 - Pengumuman baru
-- Pertemuan baru
-- Semua pengingat otomatis
+- Pertemuan kasus baru
+- Semua pengingat otomatis (stale, overdue, ringkasan harian)
+
+> **Catatan:** Notifikasi untuk update rutin aktivitas/kasus/tugas saat ini dinonaktifkan untuk mengurangi noise. Hanya event penting (baru dibuat, selesai, risiko tinggi, overdue) yang memicu notifikasi.
 
 ### Klik Notifikasi
 
@@ -803,7 +809,7 @@ J: Jika role Anda DU atau DK, Anda hanya bisa melihat data perusahaan sendiri. I
 J: Fitur pembuatan tugas dan pengumuman hanya tersedia untuk Superadmin dan Owner.
 
 **T: Kenapa tombol "Tambah Kasus" tidak muncul?**
-J: Tombol ini tersedia untuk Superadmin, DU, dan DK. Jika tidak muncul, pastikan Anda sudah login dengan role yang benar. Owner tidak dapat membuat kasus baru.
+J: Tombol ini hanya tampil di antarmuka untuk DU dan DK. Superadmin dan Owner tidak melihat tombol ini di halaman Kasus.
 
 **T: Bagaimana cara melihat siapa yang sudah membaca pengumuman?**
 J: Semua pengguna yang sudah login dapat melihat daftar pembaca di halaman detail pengumuman.
