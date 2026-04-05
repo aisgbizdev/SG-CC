@@ -219,7 +219,7 @@ export default function KasusDetailPage() {
       {editing ? (
         <Card>
           <CardContent className="p-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Nama Nasabah</Label>
                 <Input data-testid="input-edit-customer-name" value={editForm.customerName || ""} onChange={e => setEditForm({...editForm, customerName: e.target.value})} />
@@ -229,7 +229,7 @@ export default function KasusDetailPage() {
                 <Input data-testid="input-edit-account-number" value={editForm.accountNumber || ""} onChange={e => setEditForm({...editForm, accountNumber: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
                 <Input data-testid="input-edit-branch" value={editForm.branch || ""} onChange={e => setEditForm({...editForm, branch: e.target.value})} />
@@ -239,7 +239,7 @@ export default function KasusDetailPage() {
                 <Input data-testid="input-edit-pic-main" value={editForm.picMain || ""} onChange={e => setEditForm({...editForm, picMain: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>WPB</Label>
                 <Input data-testid="input-edit-wpb" value={editForm.wpbName || ""} onChange={e => setEditForm({...editForm, wpbName: e.target.value})} />
@@ -260,7 +260,7 @@ export default function KasusDetailPage() {
               <Label>Inti Pengaduan / Summary</Label>
               <Textarea data-testid="input-edit-summary" value={editForm.summary || ""} onChange={e => setEditForm({...editForm, summary: e.target.value})} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Status</Label>
                 <Select value={editForm.status || ""} onValueChange={v => setEditForm({...editForm, status: v})}>
@@ -289,7 +289,7 @@ export default function KasusDetailPage() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Workflow Stage</Label>
                 <Select value={editForm.workflowStage || ""} onValueChange={v => setEditForm({...editForm, workflowStage: v})}>
@@ -306,7 +306,7 @@ export default function KasusDetailPage() {
                 <Input data-testid="input-edit-target-date" type="date" value={editForm.targetDate || ""} onChange={e => setEditForm({...editForm, targetDate: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Permintaan Nasabah</Label>
                 <Textarea data-testid="input-edit-customer-request" value={editForm.customerRequest || ""} onChange={e => setEditForm({...editForm, customerRequest: e.target.value})} />
@@ -324,7 +324,7 @@ export default function KasusDetailPage() {
               <Label>Root Cause</Label>
               <Textarea data-testid="input-edit-root-cause" value={editForm.rootCause || ""} onChange={e => setEditForm({...editForm, rootCause: e.target.value})} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Tindakan Terakhir</Label>
                 <Textarea data-testid="input-edit-latest-action" value={editForm.latestAction || ""} onChange={e => setEditForm({...editForm, latestAction: e.target.value})} />

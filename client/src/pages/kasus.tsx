@@ -314,7 +314,7 @@ export default function KasusPage() {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Tambah Kasus Baru</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Kode Kasus *</Label>
                     <Input data-testid="input-case-code" placeholder="SGF-2024-003" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} />
@@ -333,7 +333,7 @@ export default function KasusPage() {
                     </Select>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Nama Nasabah *</Label>
                     <Input data-testid="input-case-customer" placeholder="Nama nasabah" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
@@ -343,7 +343,7 @@ export default function KasusPage() {
                     <Input data-testid="input-case-account" placeholder="Nomor akun" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Cabang</Label>
                     <Input data-testid="input-case-branch" placeholder="Cabang" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
@@ -353,7 +353,7 @@ export default function KasusPage() {
                     <Input data-testid="input-case-pic" placeholder="PIC" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>WPB</Label>
                     <Input data-testid="input-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
@@ -374,7 +374,7 @@ export default function KasusPage() {
                   <Label>Inti Pengaduan *</Label>
                   <Textarea data-testid="input-case-summary" placeholder="Ringkasan pengaduan" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Risk Level</Label>
                     <Select value={form.riskLevel} onValueChange={v => setForm({...form, riskLevel: v})}>
@@ -427,7 +427,7 @@ export default function KasusPage() {
             <Input data-testid="input-search-case" placeholder="Cari kode kasus, no. akun, nasabah, atau ringkasan..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
           </div>
           <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-sort-case" className="w-48">
+            <SelectTrigger data-testid="select-sort-case" className="w-full sm:w-48">
               <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -440,10 +440,10 @@ export default function KasusPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <Select value={riskFilter} onValueChange={v => { setRiskFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-risk" className="w-40">
-              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Risk" />
+            <SelectTrigger data-testid="select-filter-risk" className="w-full sm:w-40">
+              <Filter className="w-4 h-4 mr-1 shrink-0" /><SelectValue placeholder="Semua Risk" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Risk</SelectItem>
@@ -452,7 +452,7 @@ export default function KasusPage() {
           </Select>
           {isAdmin && (
             <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setBranchFilter("all"); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-company-case" className="w-40">
+              <SelectTrigger data-testid="select-filter-company-case" className="w-full sm:w-40">
                 <SelectValue placeholder="Semua PT" />
               </SelectTrigger>
               <SelectContent>
@@ -463,7 +463,7 @@ export default function KasusPage() {
           )}
           {availableBranches && availableBranches.length > 0 && (
             <Select value={branchFilter} onValueChange={v => { setBranchFilter(v); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-branch-case" className="w-44">
+              <SelectTrigger data-testid="select-filter-branch-case" className="w-full sm:w-44">
                 <SelectValue placeholder="Semua Cabang" />
               </SelectTrigger>
               <SelectContent>
@@ -473,7 +473,7 @@ export default function KasusPage() {
             </Select>
           )}
           <Select value={bucketFilter} onValueChange={v => { setBucketFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-bucket" className="w-52">
+            <SelectTrigger data-testid="select-filter-bucket" className="w-full sm:w-52">
               <SelectValue placeholder="Semua Bucket" />
             </SelectTrigger>
             <SelectContent>
@@ -492,7 +492,7 @@ export default function KasusPage() {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger data-testid="select-filter-stage" className="w-44">
+            <SelectTrigger data-testid="select-filter-stage" className="w-full sm:w-44">
               <SelectValue placeholder="Semua Stage" />
             </SelectTrigger>
             <SelectContent>
@@ -502,7 +502,7 @@ export default function KasusPage() {
             </SelectContent>
           </Select>
           <Select value={resolutionFilter} onValueChange={v => { setResolutionFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-resolution" className="w-48">
+            <SelectTrigger data-testid="select-filter-resolution" className="w-full sm:w-48">
               <SelectValue placeholder="Semua Jalur" />
             </SelectTrigger>
             <SelectContent>
@@ -513,7 +513,7 @@ export default function KasusPage() {
           <Button
             variant={uncommentedFilter ? "default" : "outline"}
             size="sm"
-            className="h-9 gap-1.5"
+            className="h-9 gap-1.5 col-span-2 sm:col-span-1 sm:w-auto"
             onClick={() => { setUncommentedFilter(!uncommentedFilter); setCurrentPage(1); }}
             data-testid="button-filter-uncommented"
           >
@@ -677,7 +677,7 @@ export default function KasusPage() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Kasus</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Kode Kasus *</Label>
                 <Input data-testid="input-edit-case-code" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} />
@@ -687,7 +687,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-date" type="date" value={form.dateReceived} onChange={e => setForm({...form, dateReceived: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Nama Nasabah *</Label>
                 <Input data-testid="input-edit-case-customer" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
@@ -697,7 +697,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-account" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
                 <Input data-testid="input-edit-case-branch" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
@@ -707,7 +707,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-pic" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>WPB</Label>
                 <Input data-testid="input-edit-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
@@ -728,7 +728,7 @@ export default function KasusPage() {
               <Label>Inti Pengaduan *</Label>
               <Textarea data-testid="input-edit-case-summary" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Risk Level</Label>
                 <Select value={form.riskLevel} onValueChange={v => setForm({...form, riskLevel: v})}>
@@ -751,7 +751,7 @@ export default function KasusPage() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Bucket</Label>
                 <Select value={form.bucket} onValueChange={v => setForm({...form, bucket: v})}>

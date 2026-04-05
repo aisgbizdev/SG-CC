@@ -654,7 +654,7 @@ export default function KpiPage() {
 
         {isAdmin && (
           <Select value={filterCompany} onValueChange={setFilterCompany}>
-            <SelectTrigger className="w-36" data-testid="select-filter-company">
+            <SelectTrigger className="w-full sm:w-36" data-testid="select-filter-company">
               <SelectValue placeholder="PT" />
             </SelectTrigger>
             <SelectContent>
@@ -667,7 +667,7 @@ export default function KpiPage() {
         {activeTab === "history" && (
           <>
             <Select value={filterPeriodType} onValueChange={(v) => { setFilterPeriodType(v as "all" | PeriodType); setFilterPeriod("all"); }}>
-              <SelectTrigger className="w-36" data-testid="select-filter-period-type">
+              <SelectTrigger className="w-full sm:w-36" data-testid="select-filter-period-type">
                 <SelectValue placeholder="Tipe" />
               </SelectTrigger>
               <SelectContent>
@@ -678,7 +678,7 @@ export default function KpiPage() {
               </SelectContent>
             </Select>
             <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-              <SelectTrigger className="w-40" data-testid="select-filter-period">
+              <SelectTrigger className="w-full sm:w-40" data-testid="select-filter-period">
                 <SelectValue placeholder="Periode" />
               </SelectTrigger>
               <SelectContent>

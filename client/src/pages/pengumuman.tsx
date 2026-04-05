@@ -287,7 +287,7 @@ export default function PengumumanPage() {
                     })}
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Prioritas</Label>
                     <Select value={form.priority} onValueChange={v => setForm({...form, priority: v})}>
@@ -422,7 +422,7 @@ export default function PengumumanPage() {
                 })}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Prioritas</Label>
                 <Select value={editForm.priority} onValueChange={v => setEditForm({...editForm, priority: v})}>

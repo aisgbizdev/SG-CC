@@ -241,7 +241,7 @@ export default function AktivitasPage() {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Tambah Aktivitas Baru</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Tanggal *</Label>
                     <Input data-testid="input-activity-date" type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
@@ -271,7 +271,7 @@ export default function AktivitasPage() {
                   <Label>Deskripsi</Label>
                   <Textarea data-testid="input-activity-description" placeholder="Deskripsi singkat" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Status</Label>
                     <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
@@ -291,7 +291,7 @@ export default function AktivitasPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Progress (%)</Label>
                     <Input data-testid="input-activity-progress" type="number" min={0} max={100} value={form.progress} onChange={e => setForm({...form, progress: parseInt(e.target.value) || 0})} />
@@ -322,7 +322,7 @@ export default function AktivitasPage() {
             <Input data-testid="input-search-activity" placeholder="Cari aktivitas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
           </div>
           <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-sort-activity" className="w-48">
+            <SelectTrigger data-testid="select-sort-activity" className="w-full sm:w-48">
               <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -335,10 +335,10 @@ export default function AktivitasPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-status" className="w-44">
-              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" />
+            <SelectTrigger data-testid="select-filter-status" className="w-full sm:w-44">
+              <Filter className="w-4 h-4 mr-1 shrink-0" /><SelectValue placeholder="Semua Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Status</SelectItem>
@@ -347,7 +347,7 @@ export default function AktivitasPage() {
           </Select>
           {isAdmin && (
           <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-company" className="w-40">
+            <SelectTrigger data-testid="select-filter-company" className="w-full sm:w-40">
               <SelectValue placeholder="Semua PT" />
             </SelectTrigger>
             <SelectContent>
@@ -357,7 +357,7 @@ export default function AktivitasPage() {
           </Select>
           )}
           <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-priority" className="w-40">
+            <SelectTrigger data-testid="select-filter-priority" className="w-full sm:w-40">
               <SelectValue placeholder="Semua Prioritas" />
             </SelectTrigger>
             <SelectContent>
@@ -369,8 +369,8 @@ export default function AktivitasPage() {
           </Select>
           {isAdmin && duDkUsers.length > 0 && (
             <Select value={personFilter} onValueChange={v => { setPersonFilter(v); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-person" className="w-48">
-                <User className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Personil" />
+              <SelectTrigger data-testid="select-filter-person" className="w-full sm:w-48">
+                <User className="w-4 h-4 mr-1 shrink-0" /><SelectValue placeholder="Semua Personil" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Personil</SelectItem>
@@ -620,7 +620,7 @@ export default function AktivitasPage() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Aktivitas</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Tanggal *</Label>
                 <Input data-testid="input-edit-activity-date" type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
@@ -648,7 +648,7 @@ export default function AktivitasPage() {
               <Label>Deskripsi</Label>
               <Textarea data-testid="input-edit-activity-description" placeholder="Deskripsi singkat" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Prioritas</Label>
                 <Select value={form.priority} onValueChange={v => setForm({...form, priority: v})}>
