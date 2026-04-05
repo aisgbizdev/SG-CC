@@ -29,6 +29,7 @@ import CompanyDetailPage from "@/pages/company-detail";
 import KpiPage from "@/pages/kpi";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 function HeaderBar() {
   const { user, logout } = useAuth();
@@ -118,7 +119,7 @@ function AuthenticatedApp() {
         <AppSidebar />
         <div className="flex flex-col flex-1 min-w-0">
           <HeaderBar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pb-16 md:pb-0">
             <ErrorBoundary>
               <Switch>
                 <Route path="/" component={DashboardPage} />
@@ -144,6 +145,7 @@ function AuthenticatedApp() {
               </Switch>
             </ErrorBoundary>
           </main>
+          <MobileBottomNav />
         </div>
       </div>
     </SidebarProvider>
