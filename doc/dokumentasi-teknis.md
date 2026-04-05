@@ -1002,26 +1002,22 @@ Trust proxy: `app.set("trust proxy", 1)` untuk IP detection yang benar di belaka
 
 ---
 
-## Appendix A: Demo Login Credentials
+## Appendix A: Akun & Keamanan
 
-| Username | Role | Perusahaan | Password |
-|----------|------|------------|----------|
-| superadmin | Superadmin | Semua | admin123 |
-| nelson | Owner | Semua | admin123 |
-| hambali | Owner | Semua | admin123 |
-| masir | Owner | Semua | admin123 |
-| dr | Owner | Semua | admin123 |
-| bw | Owner | Semua | admin123 |
-| du_sgb | DU | SGB | admin123 |
-| dk_sgb | DK | SGB | admin123 |
-| du_rfb | DU | RFB | admin123 |
-| dk_rfb | DK | RFB | admin123 |
-| du_bpf | DU | BPF | admin123 |
-| dk_bpf | DK | BPF | admin123 |
-| du_kpf | DU | KPF | admin123 |
-| dk_kpf | DK | KPF | admin123 |
-| du_ewf | DU | EWF | admin123 |
-| dk_ewf | DK | EWF | admin123 |
+### Akun Awal
+
+Akun awal sistem dibuat oleh Superadmin melalui fitur Manajemen User. Setiap user baru disarankan untuk segera mengganti password melalui halaman Pengaturan setelah login pertama.
+
+### Konvensi Username
+
+| Role | Format Username | Contoh |
+|------|----------------|--------|
+| Superadmin | Bebas | superadmin |
+| Owner | Nama | nelson |
+| DU | du_{kode_pt} | du_sgb |
+| DK | dk_{kode_pt} | dk_sgb |
+
+> **Penting:** Password default harus segera diganti setelah login pertama. Jangan pernah membagikan password dalam bentuk dokumen atau pesan yang tidak terenkripsi.
 
 ---
 
