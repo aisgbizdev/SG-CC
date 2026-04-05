@@ -566,7 +566,7 @@
 | Aktivitas (buat) | Ya | Tidak | Ya | Ya |
 | Aktivitas (edit) | Ya (semua) | Tidak | Milik sendiri | Milik sendiri |
 | Aktivitas (hapus) | Ya | Ya | Milik sendiri | Milik sendiri |
-| Kasus (buat) | Tidak | Tidak | Ya | Ya |
+| Kasus (buat) | Ya | Tidak | Ya | Ya |
 | Kasus (edit) | Ya (semua) | Tidak | Milik sendiri | Milik sendiri |
 | Kasus (hapus) | Ya | Ya | Milik sendiri | Milik sendiri |
 | Tugas (buat) | Ya | Ya | Tidak | Tidak |
@@ -680,7 +680,7 @@
 | POST | `/api/announcements` | SA/Owner | Buat pengumuman |
 | PATCH | `/api/announcements/:id` | SA/Owner | Update pengumuman |
 | DELETE | `/api/announcements/:id` | SA/Owner | Arsipkan pengumuman |
-| GET | `/api/announcements/:id/reads` | Auth | Daftar pembaca pengumuman |
+| GET | `/api/announcements/:id/reads` | Auth | Daftar pembaca pengumuman (semua user login) |
 | POST | `/api/announcements/:id/read` | Auth | Tandai sudah dibaca |
 
 ### 8.9 KPI
@@ -744,22 +744,26 @@
 | Tipe | Trigger | Penerima |
 |------|---------|----------|
 | new_activity | Aktivitas baru dibuat | Admins + Owners |
-| activity_updated | Aktivitas diperbarui | Admins + Owners |
+| activity_updated | *(Dinonaktifkan — routine update disuppress)* | — |
 | new_case | Kasus baru dibuat | Admins + Owners |
-| case_updated | Kasus diperbarui | Admins + Owners |
+| case_updated | *(Dinonaktifkan — routine update disuppress)* | — |
 | case_high_risk | Kasus diubah ke risiko High | Admins + Owners |
 | case_completed | Kasus selesai (progress 100%) | Admins + Owners |
 | task_assigned | Tugas baru diberikan | Penerima tugas |
-| task_updated | Tugas diperbarui | Admins + Owners |
+| task_updated | *(Dinonaktifkan — routine update disuppress)* | — |
 | task_completed | Tugas selesai | Admins + Owners |
 | new_comment | Komentar baru | Peserta terkait |
 | new_announcement | Pengumuman baru | Target pengguna |
 | new_meeting | Pertemuan kasus baru | Admins + Owners |
 
+### Routine Update Suppression
+
+Notifikasi untuk tipe `activity_updated`, `case_updated`, dan `task_updated` saat ini **dinonaktifkan** (disuppress) di fungsi `notifyAdminsAndOwners()`. Tipe-tipe ini masuk ke dalam `ROUTINE_UPDATE_TYPES` yang langsung di-return tanpa mengirim notifikasi, untuk mengurangi noise notifikasi rutin. Notifikasi khusus seperti `case_high_risk`, `case_completed`, dan `task_completed` tetap terkirim karena tidak termasuk dalam daftar suppress.
+
 ### Throttling
 
-- **Update events:** Throttle 60 menit — tidak kirim notifikasi update yang sama jika sudah ada dalam 60 menit terakhir
 - **Stale reminders:** Throttle 72 jam — reminder kasus/tugas stale hanya dikirim setiap 72 jam
+- **Reminder umum:** Deduplication 24 jam — reminder tidak dikirim jika sudah ada notifikasi serupa dalam 24 jam terakhir
 - **Auto-delete:** Semua notifikasi >7 hari otomatis dihapus
 
 ---

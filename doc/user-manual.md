@@ -115,7 +115,7 @@ Setelah login, Anda akan melihat sidebar di sisi kiri yang berisi menu navigasi:
 - Mengelola data perusahaan dan cabang
 - Membuat tugas dan pengumuman
 - Melihat dan membuat penilaian KPI semua DU/DK
-- Membuat aktivitas
+- Membuat aktivitas dan kasus pengaduan
 
 ### Owner
 
@@ -265,7 +265,7 @@ Halaman ini digunakan untuk mengelola kasus pengaduan nasabah, termasuk pelacaka
 
 ### Membuat Kasus Baru
 
-> Tersedia untuk: DU, DK (bukan Superadmin)
+> Tersedia untuk: Superadmin, DU, DK
 
 1. Klik tombol **Tambah Kasus**
 2. Isi form (field yang wajib ditandai *):
@@ -409,7 +409,7 @@ Penerima target akan mendapat notifikasi otomatis.
 ### Status Baca
 
 - Sistem mencatat siapa yang sudah membaca setiap pengumuman
-- Superadmin/Owner dapat melihat daftar pembaca pengumuman
+- Semua pengguna yang login dapat melihat daftar pembaca pengumuman
 
 ### Mengedit & Menghapus
 
@@ -803,10 +803,10 @@ J: Jika role Anda DU atau DK, Anda hanya bisa melihat data perusahaan sendiri. I
 J: Fitur pembuatan tugas dan pengumuman hanya tersedia untuk Superadmin dan Owner.
 
 **T: Kenapa tombol "Tambah Kasus" tidak muncul?**
-J: Tombol ini hanya tersedia untuk DU dan DK. Superadmin tidak dapat membuat kasus baru.
+J: Tombol ini tersedia untuk Superadmin, DU, dan DK. Jika tidak muncul, pastikan Anda sudah login dengan role yang benar. Owner tidak dapat membuat kasus baru.
 
 **T: Bagaimana cara melihat siapa yang sudah membaca pengumuman?**
-J: Superadmin/Owner dapat melihat daftar pembaca di halaman detail pengumuman.
+J: Semua pengguna yang sudah login dapat melihat daftar pembaca di halaman detail pengumuman.
 
 **T: Data yang di-export tidak sesuai, kenapa?**
 J: Data yang di-export adalah data yang sedang ditampilkan sesuai filter yang aktif. Pastikan filter sudah diatur dengan benar sebelum export.
