@@ -119,7 +119,7 @@ function AuthenticatedApp() {
         <AppSidebar />
         <div className="flex flex-col flex-1 min-w-0">
           <HeaderBar />
-          <main className="flex-1 overflow-auto pb-16 md:pb-0">
+          <main className="flex-1 overflow-auto mobile-nav-padding">
             <ErrorBoundary>
               <Switch>
                 <Route path="/" component={DashboardPage} />
