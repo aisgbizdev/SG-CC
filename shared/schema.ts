@@ -337,6 +337,7 @@ export const kpiAssessments = pgTable("kpi_assessments", {
   problemSolvingScore: integer("problem_solving_score").notNull().default(0),
   teamworkScore: integer("teamwork_score").notNull().default(0),
   responsibilityScore: integer("responsibility_score").notNull().default(0),
+  activeContributionScore: integer("active_contribution_score").notNull().default(0),
   totalScore: integer("total_score").notNull().default(0),
   notes: text("notes"),
   strengths: text("strengths"),
@@ -350,6 +351,21 @@ export const kpiAssessments = pgTable("kpi_assessments", {
 export const insertKpiAssessmentSchema = createInsertSchema(kpiAssessments).omit({ id: true, createdAt: true });
 export type InsertKpiAssessment = z.infer<typeof insertKpiAssessmentSchema>;
 export type KpiAssessment = typeof kpiAssessments.$inferSelect;
+
+export const readReceipts = pgTable("read_receipts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  entityType: text("entity_type").notNull(),
+  entityId: integer("entity_id").notNull(),
+  userId: integer("user_id").notNull(),
+  readAt: timestamp("read_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("idx_read_receipts_entity_user").on(table.entityType, table.entityId, table.userId),
+  index("idx_read_receipts_user").on(table.userId),
+]);
+
+export const insertReadReceiptSchema = createInsertSchema(readReceipts).omit({ id: true, readAt: true });
+export type InsertReadReceipt = z.infer<typeof insertReadReceiptSchema>;
+export type ReadReceipt = typeof readReceipts.$inferSelect;
 
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

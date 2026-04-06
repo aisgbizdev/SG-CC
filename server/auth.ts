@@ -117,7 +117,7 @@ export function setupAuth(app: Express) {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 8 * 60 * 60 * 1000,
         httpOnly: true,
         secure: secureCookie ? "auto" : false,
         sameSite,
@@ -232,10 +232,16 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info?.message || "Login gagal" });
-
-      const token = signAuthToken(user);
-      res.append("Set-Cookie", buildAuthCookie(token, 24 * 60 * 60 * 1000));
-      return res.json({ ...user, token });
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        const rememberMe = req.body.rememberMe === true;
+        if (req.session && req.session.cookie) {
+          req.session.cookie.maxAge = rememberMe
+            ? 30 * 24 * 60 * 60 * 1000
+            : 8 * 60 * 60 * 1000;
+        }
+        return res.json(user);
+      });
     })(req, res, next);
   });
 

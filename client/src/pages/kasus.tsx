@@ -17,7 +17,7 @@ import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X } from "lucide-react";
+import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X, MessageCircle } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -48,10 +48,12 @@ export default function KasusPage() {
   const [stageFilter, setStageFilter] = useState(stageParam === "waiting" ? "waiting" : "all");
   const [viewFilter, setViewFilter] = useState<string | null>(viewParam === "active" ? "active" : viewParam === "closed" ? "closed" : null);
   const [sortBy, setSortBy] = useState("date-desc");
+  const [uncommentedFilter, setUncommentedFilter] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(searchString.includes("action=new"));
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: cases, isLoading, isError, refetch } = useQuery<Case[]>({ queryKey: ["/api/cases"] });
+  const { data: uncommentedIds } = useQuery<number[]>({ queryKey: ["/api/uncommented-cases"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
 
   const [editingCase, setEditingCase] = useState<Case | null>(null);
@@ -158,13 +160,14 @@ export default function KasusPage() {
     const matchStage = stageFilter === "all" || (stageFilter === "waiting" ? waitingStages.includes(c.workflowStage) && c.status !== "Closed" : c.workflowStage === stageFilter);
     const matchBranch = branchFilter === "all" || c.branch === branchFilter;
     const matchResolution = resolutionFilter === "all" || c.resolutionPath === resolutionFilter;
+    const matchUncommented = !uncommentedFilter || (uncommentedIds || []).includes(c.id);
     let matchView = true;
     if (viewFilter === "active") {
       matchView = c.status !== "Closed" && !waitingStages.includes(c.workflowStage);
     } else if (viewFilter === "closed") {
       matchView = c.status === "Closed";
     }
-    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution && matchView;
+    return matchSearch && matchRisk && matchCompany && matchBucket && matchStage && matchBranch && matchResolution && matchView && matchUncommented;
   }) || []).sort((a, b) => {
     switch (sortBy) {
       case "date-asc": return a.dateReceived.localeCompare(b.dateReceived);
@@ -312,7 +315,7 @@ export default function KasusPage() {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Tambah Kasus Baru</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Kode Kasus *</Label>
                     <Input data-testid="input-case-code" placeholder="SGF-2024-003" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} />
@@ -331,7 +334,7 @@ export default function KasusPage() {
                     </Select>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Nama Nasabah *</Label>
                     <Input data-testid="input-case-customer" placeholder="Nama nasabah" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
@@ -341,7 +344,7 @@ export default function KasusPage() {
                     <Input data-testid="input-case-account" placeholder="Nomor akun" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Cabang</Label>
                     <Input data-testid="input-case-branch" placeholder="Cabang" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
@@ -351,7 +354,7 @@ export default function KasusPage() {
                     <Input data-testid="input-case-pic" placeholder="PIC" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>WPB</Label>
                     <Input data-testid="input-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
@@ -372,7 +375,7 @@ export default function KasusPage() {
                   <Label>Inti Pengaduan *</Label>
                   <Textarea data-testid="input-case-summary" placeholder="Ringkasan pengaduan" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Risk Level</Label>
                     <Select value={form.riskLevel} onValueChange={v => setForm({...form, riskLevel: v})}>
@@ -425,7 +428,7 @@ export default function KasusPage() {
             <Input data-testid="input-search-case" placeholder="Cari kode kasus, no. akun, nasabah, atau ringkasan..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
           </div>
           <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-sort-case" className="w-48">
+            <SelectTrigger data-testid="select-sort-case" className="w-full sm:w-48">
               <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -438,10 +441,10 @@ export default function KasusPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <Select value={riskFilter} onValueChange={v => { setRiskFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-risk" className="w-40">
-              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Risk" />
+            <SelectTrigger data-testid="select-filter-risk" className="w-full sm:w-40">
+              <Filter className="w-4 h-4 mr-1 shrink-0" /><SelectValue placeholder="Semua Risk" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Risk</SelectItem>
@@ -450,7 +453,7 @@ export default function KasusPage() {
           </Select>
           {isAdmin && (
             <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setBranchFilter("all"); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-company-case" className="w-40">
+              <SelectTrigger data-testid="select-filter-company-case" className="w-full sm:w-40">
                 <SelectValue placeholder="Semua PT" />
               </SelectTrigger>
               <SelectContent>
@@ -461,7 +464,7 @@ export default function KasusPage() {
           )}
           {availableBranches && availableBranches.length > 0 && (
             <Select value={branchFilter} onValueChange={v => { setBranchFilter(v); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-branch-case" className="w-44">
+              <SelectTrigger data-testid="select-filter-branch-case" className="w-full sm:w-44">
                 <SelectValue placeholder="Semua Cabang" />
               </SelectTrigger>
               <SelectContent>
@@ -471,7 +474,7 @@ export default function KasusPage() {
             </Select>
           )}
           <Select value={bucketFilter} onValueChange={v => { setBucketFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-bucket" className="w-52">
+            <SelectTrigger data-testid="select-filter-bucket" className="w-full sm:w-52">
               <SelectValue placeholder="Semua Bucket" />
             </SelectTrigger>
             <SelectContent>
@@ -490,7 +493,7 @@ export default function KasusPage() {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger data-testid="select-filter-stage" className="w-44">
+            <SelectTrigger data-testid="select-filter-stage" className="w-full sm:w-44">
               <SelectValue placeholder="Semua Stage" />
             </SelectTrigger>
             <SelectContent>
@@ -500,7 +503,7 @@ export default function KasusPage() {
             </SelectContent>
           </Select>
           <Select value={resolutionFilter} onValueChange={v => { setResolutionFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-resolution" className="w-48">
+            <SelectTrigger data-testid="select-filter-resolution" className="w-full sm:w-48">
               <SelectValue placeholder="Semua Jalur" />
             </SelectTrigger>
             <SelectContent>
@@ -508,6 +511,19 @@ export default function KasusPage() {
               {RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button
+            variant={uncommentedFilter ? "default" : "outline"}
+            size="sm"
+            className="h-9 gap-1.5 col-span-2 sm:col-span-1 sm:w-auto"
+            onClick={() => { setUncommentedFilter(!uncommentedFilter); setCurrentPage(1); }}
+            data-testid="button-filter-uncommented"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Belum Saya Komentari
+            {uncommentedIds && uncommentedIds.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs" data-testid="badge-uncommented-count">{uncommentedIds.length}</Badge>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -597,6 +613,12 @@ export default function KasusPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <Link href={`/kasus/${c.id}`} className="flex-1 min-w-0 space-y-1.5 cursor-pointer">
                     <div className="flex items-center gap-2 flex-wrap">
+                      {(uncommentedIds || []).includes(c.id) && (
+                        <span className="relative flex h-2.5 w-2.5 flex-shrink-0" data-testid={`dot-uncommented-${c.id}`}>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                        </span>
+                      )}
                       <span className="font-semibold text-sm text-primary" data-testid={`text-account-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
                       <span className="text-xs text-muted-foreground">{c.caseCode}</span>
                       <RiskBadge level={c.riskLevel} />
@@ -656,7 +678,7 @@ export default function KasusPage() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Kasus</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Kode Kasus *</Label>
                 <Input data-testid="input-edit-case-code" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} />
@@ -666,7 +688,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-date" type="date" value={form.dateReceived} onChange={e => setForm({...form, dateReceived: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Nama Nasabah *</Label>
                 <Input data-testid="input-edit-case-customer" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
@@ -676,7 +698,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-account" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
                 <Input data-testid="input-edit-case-branch" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
@@ -686,7 +708,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-pic" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>WPB</Label>
                 <Input data-testid="input-edit-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
@@ -707,7 +729,7 @@ export default function KasusPage() {
               <Label>Inti Pengaduan *</Label>
               <Textarea data-testid="input-edit-case-summary" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Risk Level</Label>
                 <Select value={form.riskLevel} onValueChange={v => setForm({...form, riskLevel: v})}>
@@ -730,7 +752,7 @@ export default function KasusPage() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Bucket</Label>
                 <Select value={form.bucket} onValueChange={v => setForm({...form, bucket: v})}>

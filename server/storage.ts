@@ -4,7 +4,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates, caseMeetings,
   tasks, announcements, announcementReads, comments, notifications, messages, auditLogs, kpiAssessments, branches,
-  pushSubscriptions,
+  pushSubscriptions, readReceipts,
   type InsertCompany, type Company, type InsertUser, type User,
   type InsertMasterCategory, type MasterCategory,
   type InsertActivity, type Activity, type InsertCase, type Case,
@@ -16,6 +16,7 @@ import {
   type InsertBranch, type Branch,
   type InsertCaseMeeting, type CaseMeeting,
   type PushSubscription,
+  type InsertReadReceipt, type ReadReceipt,
 } from "@shared/schema";
 import * as schema from "@shared/schema";
 
@@ -101,6 +102,12 @@ export interface IStorage {
   getMeetingsByCase(caseId: number): Promise<CaseMeeting[]>;
   createMeeting(data: InsertCaseMeeting): Promise<CaseMeeting>;
   deleteMeeting(id: number): Promise<void>;
+
+  createReadReceipt(data: InsertReadReceipt): Promise<ReadReceipt>;
+  getReadReceipts(entityType: string, entityId: number): Promise<ReadReceipt[]>;
+  hasUserRead(entityType: string, entityId: number, userId: number): Promise<boolean>;
+  getUncommentedCaseIds(userId: number): Promise<number[]>;
+  getActionItems(userId: number): Promise<Array<{ entityType: string; entityId: number; title: string }>>;
 
   getPushSubscriptions(userId: number): Promise<PushSubscription[]>;
   savePushSubscription(userId: number, endpoint: string, p256dh: string, auth: string): Promise<PushSubscription>;
@@ -516,12 +523,20 @@ export class DatabaseStorage implements IStorage {
       : and(eq(cases.isArchived, false), eq(cases.createdBy, userId));
 
     const taskConditions = and(eq(tasks.isArchived, false), eq(tasks.assignedTo, userId));
+    const today = new Date().toISOString().split("T")[0];
 
     const [
       [actTotal], [actCompleted],
       [caseTotal], [caseCompleted],
       [taskTotal], [taskCompleted],
       [actAvgProgress], [caseAvgProgress], [taskAvgProgress],
+      [taskOnTime], [taskWithDeadline],
+      [actOnTime], [actWithTarget],
+      [caseOnTime], [caseWithTarget],
+      [taskOverdue], [caseOverdue], [actOverdue],
+      [userComments], [userCaseUpdates],
+      [highRiskComments], [highRiskUpdates],
+      peerItemRows, peerContribRows,
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actConditions),
       db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"))),
@@ -532,18 +547,104 @@ export class DatabaseStorage implements IStorage {
       db.select({ avg: sql<number>`COALESCE(AVG(${activities.progress}), 0)` }).from(activities).where(actConditions),
       db.select({ avg: sql<number>`COALESCE(AVG(${cases.progress}), 0)` }).from(cases).where(caseConditions),
       db.select({ avg: sql<number>`COALESCE(AVG(${tasks.progress}), 0)` }).from(tasks).where(taskConditions),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"), sql`${tasks.updatedAt}::date <= ${tasks.deadline}::date`)),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.deadline} IS NOT NULL`)),
+      db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"), sql`${activities.updatedAt}::date <= COALESCE(${activities.targetDate}::date, ${activities.updatedAt}::date)`)),
+      db.select({ count: count() }).from(activities).where(and(actConditions, sql`${activities.targetDate} IS NOT NULL`)),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"), sql`${cases.updatedAt}::date <= COALESCE(${cases.targetDate}::date, ${cases.updatedAt}::date)`)),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.targetDate} IS NOT NULL`)),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
+      db.select({ count: count() }).from(activities).where(and(actConditions, sql`${activities.status} != 'Selesai'`, sql`${activities.targetDate}::date < ${today}::date`)),
+      db.select({ count: count() }).from(comments).where(eq(comments.createdBy, userId)),
+      db.select({ count: count() }).from(caseUpdates).where(eq(caseUpdates.createdBy, userId)),
+      db.select({ count: count() }).from(comments).where(and(
+        eq(comments.createdBy, userId), eq(comments.entityType, "case"),
+        sql`${comments.entityId} IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)`
+      )),
+      db.select({ count: count() }).from(caseUpdates).where(and(
+        eq(caseUpdates.createdBy, userId),
+        sql`${caseUpdates.caseId} IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)`
+      )),
+      db.select({
+        uid: users.id,
+        total: sql<number>`(
+          (SELECT COUNT(*) FROM activities WHERE is_archived = false AND created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM cases WHERE is_archived = false AND created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM tasks WHERE is_archived = false AND assigned_to = ${users.id})
+        )`
+      }).from(users).where(and(sql`${users.role} IN ('du', 'dk')`, eq(users.isActive, true))),
+      db.select({
+        uid: users.id,
+        contrib: sql<number>`(
+          (SELECT COUNT(*) FROM comments WHERE created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM case_updates WHERE created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM comments WHERE created_by = ${users.id} AND entity_type = 'case' AND entity_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)) +
+          (SELECT COUNT(*) FROM case_updates WHERE created_by = ${users.id} AND case_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false))
+        )`
+      }).from(users).where(and(sql`${users.role} IN ('du', 'dk')`, eq(users.isActive, true))),
     ]);
 
-    const avgP = Math.round(((Number(actAvgProgress?.avg) || 0) + (Number(caseAvgProgress?.avg) || 0) + (Number(taskAvgProgress?.avg) || 0)) / 3);
+    const aTotal = actTotal?.count || 0;
+    const aCompleted = actCompleted?.count || 0;
+    const cTotal = caseTotal?.count || 0;
+    const cCompleted = caseCompleted?.count || 0;
+    const tTotal = taskTotal?.count || 0;
+    const tCompleted = taskCompleted?.count || 0;
+    const totalItems = aTotal + cTotal + tTotal;
+
+    const progressParts: number[] = [];
+    if (aTotal > 0) progressParts.push(Number(actAvgProgress?.avg) || 0);
+    if (cTotal > 0) progressParts.push(Number(caseAvgProgress?.avg) || 0);
+    if (tTotal > 0) progressParts.push(Number(taskAvgProgress?.avg) || 0);
+    const avgProgress = progressParts.length > 0 ? Math.round(progressParts.reduce((a, b) => a + b, 0) / progressParts.length) : 0;
+
+    const penyelesaianTugas = tTotal > 0 ? Math.round((tCompleted / tTotal) * 100) : 0;
+    const penyelesaianKasus = cTotal > 0 ? Math.round((cCompleted / cTotal) * 100) : 0;
+    const penyelesaianAktivitas = aTotal > 0 ? Math.round((aCompleted / aTotal) * 100) : 0;
+
+    const totalWithDeadline = (taskWithDeadline?.count || 0) + (actWithTarget?.count || 0) + (caseWithTarget?.count || 0);
+    const totalOnTime = (taskOnTime?.count || 0) + (actOnTime?.count || 0) + (caseOnTime?.count || 0);
+    const ketepatanWaktu = totalWithDeadline > 0 ? Math.round((totalOnTime / totalWithDeadline) * 100) : 0;
+
+    const totalOverdue = (taskOverdue?.count || 0) + (caseOverdue?.count || 0) + (actOverdue?.count || 0);
+    const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
+    const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
+
+    const peerTotals = peerItemRows.map(r => Number(r.total) || 0).filter(t => t > 0);
+    const peerAvgItems = peerTotals.length > 0 ? peerTotals.reduce((a, b) => a + b, 0) / peerTotals.length : Math.max(totalItems, 1);
+    const bebanKerja = Math.min(100, Math.round((totalItems / Math.max(1, peerAvgItems)) * 70));
+
+    const completedTotal = aCompleted + cCompleted + tCompleted;
+    const konsistensi = totalItems > 0 ? Math.round(Math.min(100, (completedTotal / totalItems) * 100)) : 0;
+
+    const userContribRaw = (userComments?.count || 0) + (userCaseUpdates?.count || 0) + (highRiskComments?.count || 0) + (highRiskUpdates?.count || 0);
+    const peerContribs = peerContribRows.map(r => Number(r.contrib) || 0).sort((a, b) => a - b);
+    const peerMedianContrib = peerContribs.length > 0 ? peerContribs[Math.floor(peerContribs.length / 2)] : 1;
+    const kontribusiAktif = Math.min(100, Math.round((userContribRaw / Math.max(1, peerMedianContrib)) * 70));
+
+    const scores = {
+      penyelesaianTugas, penyelesaianKasus, penyelesaianAktivitas,
+      ketepatanWaktu, progressRataRata: avgProgress, responsivitas,
+      bebanKerja, konsistensi, kontribusiAktif,
+    };
+
+    const totalScore = Math.round(
+      (penyelesaianTugas * 0.10) + (penyelesaianKasus * 0.15) + (penyelesaianAktivitas * 0.10) +
+      (ketepatanWaktu * 0.15) + (avgProgress * 0.10) + (responsivitas * 0.10) +
+      (bebanKerja * 0.15) + (konsistensi * 0.05) + (kontribusiAktif * 0.10)
+    );
 
     return {
-      activitiesTotal: actTotal?.count || 0,
-      activitiesCompleted: actCompleted?.count || 0,
-      casesTotal: caseTotal?.count || 0,
-      casesCompleted: caseCompleted?.count || 0,
-      tasksTotal: taskTotal?.count || 0,
-      tasksCompleted: taskCompleted?.count || 0,
-      avgProgress: avgP,
+      activitiesTotal: aTotal,
+      activitiesCompleted: aCompleted,
+      casesTotal: cTotal,
+      casesCompleted: cCompleted,
+      tasksTotal: tTotal,
+      tasksCompleted: tCompleted,
+      avgProgress,
+      scores,
+      totalScore,
     };
   }
 
@@ -568,6 +669,13 @@ export class DatabaseStorage implements IStorage {
       [taskOverdue],
       [caseOverdue],
       [actOverdue],
+      [userComments],
+      [userCaseUpdates],
+      [highRiskComments],
+      [highRiskUpdates],
+      peerItemRows,
+      peerContribRows,
+      [prevAssessment],
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actBase),
       db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"))),
@@ -587,6 +695,48 @@ export class DatabaseStorage implements IStorage {
       db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
       db.select({ count: count() }).from(activities).where(and(actBase, sql`${activities.status} != 'Selesai'`, sql`${activities.targetDate}::date < ${today}::date`)),
+      db.select({ count: count() }).from(comments).where(eq(comments.createdBy, userId)),
+      db.select({ count: count() }).from(caseUpdates).where(eq(caseUpdates.createdBy, userId)),
+      db.select({ count: count() }).from(comments).where(and(
+        eq(comments.createdBy, userId),
+        eq(comments.entityType, "case"),
+        sql`${comments.entityId} IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)`
+      )),
+      db.select({ count: count() }).from(caseUpdates).where(and(
+        eq(caseUpdates.createdBy, userId),
+        sql`${caseUpdates.caseId} IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)`
+      )),
+      db.select({
+        uid: users.id,
+        total: sql<number>`(
+          (SELECT COUNT(*) FROM activities WHERE is_archived = false AND created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM cases WHERE is_archived = false AND created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM tasks WHERE is_archived = false AND assigned_to = ${users.id})
+        )`
+      }).from(users).where(and(
+        sql`${users.role} IN ('du', 'dk')`,
+        eq(users.isActive, true)
+      )),
+      db.select({
+        uid: users.id,
+        contrib: sql<number>`(
+          (SELECT COUNT(*) FROM comments WHERE created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM case_updates WHERE created_by = ${users.id}) +
+          (SELECT COUNT(*) FROM comments WHERE created_by = ${users.id} AND entity_type = 'case' AND entity_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)) +
+          (SELECT COUNT(*) FROM case_updates WHERE created_by = ${users.id} AND case_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false))
+        )`
+      }).from(users).where(and(
+        sql`${users.role} IN ('du', 'dk')`,
+        eq(users.isActive, true)
+      )),
+      db.select({ totalScore: kpiAssessments.totalScore, period: kpiAssessments.period })
+        .from(kpiAssessments)
+        .where(and(
+          eq(kpiAssessments.userId, userId),
+          sql`${kpiAssessments.period} < (SELECT COALESCE(MAX(${kpiAssessments.period}), '') FROM ${kpiAssessments} WHERE ${kpiAssessments.userId} = ${userId})`
+        ))
+        .orderBy(desc(kpiAssessments.period), desc(kpiAssessments.createdAt))
+        .limit(1),
     ]);
 
     const aTotal = actTotal?.count || 0;
@@ -602,10 +752,12 @@ export class DatabaseStorage implements IStorage {
       const zeroScores = {
         penyelesaianTugas: 0, penyelesaianKasus: 0, penyelesaianAktivitas: 0,
         ketepatanWaktu: 0, progressRataRata: 0, responsivitas: 0, bebanKerja: 0, konsistensi: 0,
+        kontribusiAktif: 0,
       };
       return {
         userId, fullName: user.fullName, role: user.role, companyId: user.companyId,
         scores: zeroScores, totalScore: 0,
+        previousScore: prevAssessment?.totalScore ?? null,
         details: { activitiesTotal: 0, activitiesCompleted: 0, casesTotal: 0, casesCompleted: 0,
           tasksTotal: 0, tasksCompleted: 0, avgProgress: 0, totalOverdue: 0, totalOnTime: 0, totalWithDeadline: 0, totalItems: 0 },
       };
@@ -629,11 +781,19 @@ export class DatabaseStorage implements IStorage {
     const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
     const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
 
-    const CAPACITY_THRESHOLD = 20;
-    const bebanKerja = Math.min(100, Math.round((totalItems / CAPACITY_THRESHOLD) * 100));
+    const peerTotals = peerItemRows.map(r => Number(r.total) || 0).filter(t => t > 0);
+    const peerAvgItems = peerTotals.length > 0 ? peerTotals.reduce((a, b) => a + b, 0) / peerTotals.length : totalItems;
+    const bebanKerja = Math.min(100, Math.round((totalItems / Math.max(1, peerAvgItems)) * 70));
 
     const completedTotal = aCompleted + cCompleted + tCompleted;
     const konsistensi = Math.round(Math.min(100, (completedTotal / totalItems) * 100));
+
+    const userContribRaw = (userComments?.count || 0) + (userCaseUpdates?.count || 0) + (highRiskComments?.count || 0) + (highRiskUpdates?.count || 0);
+    const peerContribs = peerContribRows.map(r => Number(r.contrib) || 0).sort((a, b) => a - b);
+    const peerMedianContrib = peerContribs.length > 0
+      ? peerContribs[Math.floor(peerContribs.length / 2)]
+      : 1;
+    const kontribusiAktif = Math.min(100, Math.round((userContribRaw / Math.max(1, peerMedianContrib)) * 70));
 
     const scores = {
       penyelesaianTugas,
@@ -644,17 +804,19 @@ export class DatabaseStorage implements IStorage {
       responsivitas,
       bebanKerja,
       konsistensi,
+      kontribusiAktif,
     };
 
     const totalScore = Math.round(
-      (penyelesaianTugas * 0.15) +
-      (penyelesaianKasus * 0.20) +
-      (penyelesaianAktivitas * 0.15) +
+      (penyelesaianTugas * 0.10) +
+      (penyelesaianKasus * 0.15) +
+      (penyelesaianAktivitas * 0.10) +
       (ketepatanWaktu * 0.15) +
       (avgProgress * 0.10) +
       (responsivitas * 0.10) +
-      (bebanKerja * 0.05) +
-      (konsistensi * 0.10)
+      (bebanKerja * 0.15) +
+      (konsistensi * 0.05) +
+      (kontribusiAktif * 0.10)
     );
 
     return {
@@ -664,6 +826,7 @@ export class DatabaseStorage implements IStorage {
       companyId: user.companyId,
       scores,
       totalScore,
+      previousScore: prevAssessment?.totalScore ?? null,
       details: {
         activitiesTotal: aTotal,
         activitiesCompleted: aCompleted,
@@ -709,6 +872,91 @@ export class DatabaseStorage implements IStorage {
 
   async deletePushSubscriptionByUser(userId: number, endpoint: string): Promise<void> {
     await db.delete(pushSubscriptions).where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, endpoint)));
+  }
+
+  async createReadReceipt(data: InsertReadReceipt): Promise<ReadReceipt> {
+    const existing = await db.select().from(readReceipts).where(
+      and(
+        eq(readReceipts.entityType, data.entityType),
+        eq(readReceipts.entityId, data.entityId),
+        eq(readReceipts.userId, data.userId),
+      )
+    );
+    if (existing.length > 0) return existing[0];
+    const [receipt] = await db.insert(readReceipts).values(data).returning();
+    return receipt;
+  }
+
+  async getReadReceipts(entityType: string, entityId: number): Promise<ReadReceipt[]> {
+    return db.select().from(readReceipts).where(
+      and(eq(readReceipts.entityType, entityType), eq(readReceipts.entityId, entityId))
+    ).orderBy(desc(readReceipts.readAt));
+  }
+
+  async hasUserRead(entityType: string, entityId: number, userId: number): Promise<boolean> {
+    const [result] = await db.select({ count: count() }).from(readReceipts).where(
+      and(
+        eq(readReceipts.entityType, entityType),
+        eq(readReceipts.entityId, entityId),
+        eq(readReceipts.userId, userId),
+      )
+    );
+    return (result?.count || 0) > 0;
+  }
+
+  async getUncommentedCaseIds(userId: number): Promise<number[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    let allCases;
+    if (user.role === "superadmin" || user.role === "owner") {
+      allCases = await db.select({ id: cases.id }).from(cases).where(eq(cases.isArchived, false));
+    } else if (user.companyId) {
+      allCases = await db.select({ id: cases.id }).from(cases).where(
+        and(eq(cases.isArchived, false), eq(cases.companyId, user.companyId))
+      );
+    } else {
+      return [];
+    }
+    if (allCases.length === 0) return [];
+    const commentedCases = await db.selectDistinct({ entityId: comments.entityId })
+      .from(comments)
+      .where(and(eq(comments.entityType, "case"), eq(comments.createdBy, userId)));
+    const commentedIds = new Set(commentedCases.map(c => c.entityId));
+    return allCases.filter(c => !commentedIds.has(c.id)).map(c => c.id);
+  }
+
+  async getActionItems(userId: number): Promise<Array<{ entityType: string; entityId: number; title: string }>> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    const items: Array<{ entityType: string; entityId: number; title: string }> = [];
+
+    const unreadMsgs = await db.select().from(messages).where(
+      and(eq(messages.receiverId, userId), eq(messages.isRead, false))
+    );
+    for (const m of unreadMsgs) {
+      items.push({ entityType: "message", entityId: m.id, title: m.subject || "Pesan baru" });
+    }
+
+    const userTasks = await db.select().from(tasks).where(
+      and(eq(tasks.assignedTo, userId), eq(tasks.isArchived, false))
+    );
+    for (const t of userTasks) {
+      const hasRead = await this.hasUserRead("task", t.id, userId);
+      if (!hasRead) items.push({ entityType: "task", entityId: t.id, title: t.title });
+    }
+
+    const allAnnouncements = await db.select().from(announcements).where(eq(announcements.isArchived, false));
+    const existingAnnouncementReads = await db.select({ announcementId: announcementReads.announcementId })
+      .from(announcementReads).where(eq(announcementReads.userId, userId));
+    const announcementReadIds = new Set(existingAnnouncementReads.map(r => r.announcementId));
+    for (const a of allAnnouncements) {
+      if (announcementReadIds.has(a.id)) continue;
+      const hasRead = await this.hasUserRead("announcement", a.id, userId);
+      if (!hasRead) items.push({ entityType: "announcement", entityId: a.id, title: a.title });
+    }
+
+    return items;
   }
 
   async transaction<T>(fn: (tx: TxOrDb) => Promise<T>): Promise<T> {

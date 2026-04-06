@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth, getRoleLabel } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Mail, MailOpen, Send, Clock, Check, AlertTriangle, Reply, Filter } from "lucide-react";
+import { Plus, Mail, MailOpen, Send, Clock, Check, AlertTriangle, Reply, Filter, Eye } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -42,6 +42,7 @@ export default function PesanPage() {
   const readMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("PATCH", `/api/messages/${id}/read`);
+      await apiRequest("POST", "/api/read-receipts", { entityType: "message", entityId: id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });

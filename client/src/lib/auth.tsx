@@ -21,7 +21,7 @@ type LoginResponse = AuthUser & {
 type AuthContextType = {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -106,9 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async ({ username, password }: { username: string; password: string }) => {
-      const res = await apiRequest("POST", "/api/auth/login", { username, password });
-      return res.json() as Promise<LoginResponse>;
+    mutationFn: async ({ username, password, rememberMe }: { username: string; password: string; rememberMe?: boolean }) => {
+      const res = await apiRequest("POST", "/api/auth/login", { username, password, rememberMe });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/me"], data);
     },
   });
 
@@ -125,21 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const login = async (username: string, password: string) => {
-    const auth = await loginMutation.mutateAsync({ username, password });
-    setStoredAuthToken(auth.token);
-    postAuthMessageToParent({ type: "SGCC_AUTH_TOKEN", token: auth.token });
-    setBridgeReady(true);
-    queryClient.setQueryData(["/api/auth/me"], {
-      id: auth.id,
-      username: auth.username,
-      fullName: auth.fullName,
-      role: auth.role,
-      companyId: auth.companyId,
-      isActive: auth.isActive,
-      profileCompleted: auth.profileCompleted,
-      avatarUrl: auth.avatarUrl,
-    } satisfies AuthUser);
+  const login = async (username: string, password: string, rememberMe?: boolean) => {
+    await loginMutation.mutateAsync({ username, password, rememberMe });
   };
 
   const logout = async () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth, getRoleLabel } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -36,6 +36,12 @@ export default function TugasPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    if (selectedTask) {
+      apiRequest("POST", "/api/read-receipts", { entityType: "task", entityId: selectedTask.id }).catch(() => {});
+    }
+  }, [selectedTask?.id]);
   const [editForm, setEditForm] = useState({ title: "", description: "", assignedTo: "", companyId: "", priority: "Medium", deadline: "", notes: "" });
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -278,7 +284,7 @@ export default function TugasPage() {
                     })}
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>PT Terkait</Label>
                     <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v})}>
@@ -319,7 +325,7 @@ export default function TugasPage() {
             <Input data-testid="input-search-task" placeholder="Cari tugas..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
           </div>
           <Select value={sortBy} onValueChange={v => { setSortBy(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-sort-task" className="w-48">
+            <SelectTrigger data-testid="select-sort-task" className="w-full sm:w-48">
               <ArrowUpDown className="w-4 h-4 mr-1" /><SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -332,10 +338,10 @@ export default function TugasPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-status-task" className="w-44">
-              <Filter className="w-4 h-4 mr-1" /><SelectValue placeholder="Semua Status" />
+            <SelectTrigger data-testid="select-filter-status-task" className="w-full sm:w-44">
+              <Filter className="w-4 h-4 mr-1 shrink-0" /><SelectValue placeholder="Semua Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Status</SelectItem>
@@ -343,7 +349,7 @@ export default function TugasPage() {
             </SelectContent>
           </Select>
           <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-priority-task" className="w-40">
+            <SelectTrigger data-testid="select-filter-priority-task" className="w-full sm:w-40">
               <SelectValue placeholder="Semua Prioritas" />
             </SelectTrigger>
             <SelectContent>
@@ -354,7 +360,7 @@ export default function TugasPage() {
             </SelectContent>
           </Select>
           <Select value={assigneeFilter} onValueChange={v => { setAssigneeFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-assignee" className="w-48">
+            <SelectTrigger data-testid="select-filter-assignee" className="w-full sm:w-48">
               <SelectValue placeholder="Semua Penerima" />
             </SelectTrigger>
             <SelectContent>

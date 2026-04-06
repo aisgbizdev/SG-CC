@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   Activity, FileWarning, ListTodo, Megaphone, AlertTriangle,
-  TrendingUp, Clock, Plus, ArrowRight, ShieldAlert, CheckCircle2, Bot, ExternalLink,
+  TrendingUp, Clock, Plus, ArrowRight, ShieldAlert, CheckCircle2, Bot, ExternalLink, Bell,
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { data: stats, isLoading, isError, refetch } = useQuery<any>({ queryKey: ["/api/dashboard"] });
   const { data: companiesData } = useQuery<any[]>({ queryKey: ["/api/companies"] });
+  const { data: actionItems } = useQuery<any[]>({ queryKey: ["/api/action-items"] });
 
   if (isLoading) {
     return (
@@ -151,6 +152,42 @@ export default function DashboardPage() {
             <Link href="/kasus">
               <Button variant="secondary" size="sm" data-testid="button-view-overdue">Lihat</Button>
             </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {actionItems && actionItems.length > 0 && (
+        <Card className="border-amber-200 dark:border-amber-900/50" data-testid="card-action-items">
+          <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-amber-500" />
+              <h3 className="font-semibold text-sm">Perlu Ditindak</h3>
+              <Badge variant="secondary" className="h-5 px-1.5 text-xs" data-testid="badge-action-items-count">{actionItems.length}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="space-y-2">
+              {actionItems.slice(0, 8).map((item: any, idx: number) => {
+                const href = item.entityType === "task" ? "/tugas" : item.entityType === "announcement" ? "/pengumuman" : "/pesan";
+                const icons: Record<string, any> = { task: ListTodo, announcement: Megaphone, message: Megaphone };
+                const ItemIcon = icons[item.entityType] || Bell;
+                const labels: Record<string, string> = { task: "Tugas", announcement: "Pengumuman", message: "Pesan" };
+                return (
+                  <Link key={`${item.entityType}-${item.entityId}-${idx}`} href={href}>
+                    <div className="flex items-center gap-3 p-2.5 rounded-md bg-amber-50/50 dark:bg-amber-900/10 hover-elevate cursor-pointer" data-testid={`action-item-${item.entityType}-${item.entityId}`}>
+                      <div className="w-8 h-8 rounded-md bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                        <ItemIcon className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{labels[item.entityType] || item.entityType} — belum dibaca</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}

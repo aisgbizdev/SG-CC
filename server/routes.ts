@@ -24,6 +24,10 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
+const ROUTINE_UPDATE_TYPES = new Set([
+  "activity_updated", "case_updated", "task_updated",
+]);
+
 async function notifyAdminsAndOwners(
   companyId: number | null,
   type: string,
@@ -36,13 +40,36 @@ async function notifyAdminsAndOwners(
   throttleMinutes: number = 0,
 ) {
   try {
+    if (ROUTINE_UPDATE_TYPES.has(type)) {
+      return;
+    }
+
     const allUsers = await storage.getUsers();
+    const triggerUser = allUsers.find(u => u.id === excludeUserId);
+    const triggerRole = triggerUser?.role || "";
+
     const targets = allUsers.filter(u => {
       if (!u.isActive || u.id === excludeUserId) return false;
       if (u.role === "superadmin") return true;
       if (u.role === "owner") return true;
+      if ((u.role === "du" || u.role === "dk") && entityType === "task") {
+        return false;
+      }
       return false;
     });
+
+    if (type === "case_high_risk") {
+      for (const target of targets) {
+        await storage.createNotification({
+          userId: target.id, type, title, message,
+          entityType, entityId, priority,
+        });
+        const pushUrl = entityId ? `/kasus/${entityId}` : "/kasus";
+        sendPushToUser(target.id, { title, body: message, url: pushUrl });
+      }
+      return;
+    }
+
     for (const target of targets) {
       if (throttleMinutes > 0 && entityId) {
         const exists = await hasRecentNotification(target.id, type, entityId, throttleMinutes);
@@ -59,6 +86,62 @@ async function notifyAdminsAndOwners(
     }
   } catch (err) {
     console.error("Error notifying admins:", err);
+  }
+}
+
+async function notifyCommentParticipants(
+  entityType: string,
+  entityId: number,
+  commenterId: number,
+  commenterName: string,
+  entityTitle: string,
+  companyId: number | null,
+) {
+  try {
+    const entityLabel = entityType === "case" ? "kasus" : entityType === "activity" ? "aktivitas" : "tugas";
+    const message = `${commenterName} mengomentari ${entityLabel}: ${entityTitle}`;
+    const pushUrl = entityType === "case" ? `/kasus/${entityId}` : entityType === "activity" ? `/aktivitas/${entityId}` : "/tugas";
+
+    const targetUserIds = new Set<number>();
+
+    if (entityType === "case") {
+      const caseData = await storage.getCase(entityId);
+      if (caseData && caseData.createdBy !== commenterId) {
+        targetUserIds.add(caseData.createdBy);
+      }
+    } else if (entityType === "activity") {
+      const actData = await storage.getActivity(entityId);
+      if (actData && actData.createdBy !== commenterId) {
+        targetUserIds.add(actData.createdBy);
+      }
+    } else if (entityType === "task") {
+      const taskData = await storage.getTask(entityId);
+      if (taskData && taskData.assignedTo !== commenterId) {
+        targetUserIds.add(taskData.assignedTo);
+      }
+      if (taskData && taskData.createdBy !== commenterId) {
+        targetUserIds.add(taskData.createdBy);
+      }
+    }
+
+    const existingComments = await storage.getComments(entityType, entityId);
+    for (const c of existingComments) {
+      if (c.createdBy !== commenterId) {
+        targetUserIds.add(c.createdBy);
+      }
+    }
+
+    for (const userId of targetUserIds) {
+      const exists = await hasRecentNotification(userId, "new_comment", entityId, 10);
+      if (exists) continue;
+      await storage.createNotification({
+        userId, type: "new_comment", title: "Komentar Baru", message,
+        entityType, entityId, priority: "medium",
+      });
+      sendPushToUser(userId, { title: "Komentar Baru", body: message, url: pushUrl });
+    }
+  } catch (err) {
+    console.error("Error notifying comment participants:", err);
   }
 }
 
@@ -934,7 +1017,7 @@ export async function registerRoutes(
         const entity = await storage.getTask(entityId);
         if (entity) { companyId = entity.companyId; entityTitle = entity.title; }
       }
-      notifyAdminsAndOwners(companyId, "new_comment", "Komentar Baru", `${user.fullName} mengomentari ${entityType === "case" ? "kasus" : entityType === "activity" ? "aktivitas" : "tugas"}: ${entityTitle}`, entityType, entityId, user.id);
+      notifyCommentParticipants(entityType, entityId, user.id, user.fullName, entityTitle, companyId);
       res.json(comment);
     } catch (err: any) {
       res.status(400).json({ message: err.message || "Gagal menambah komentar" });
@@ -1343,6 +1426,72 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/read-receipts", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const schema = z.object({
+        entityType: z.string().min(1),
+        entityId: z.number().int(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
+      const receipt = await storage.createReadReceipt({
+        entityType: parsed.data.entityType,
+        entityId: parsed.data.entityId,
+        userId: user.id,
+      });
+      res.json(receipt);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "Gagal merekam read receipt" });
+    }
+  });
+
+  app.get("/api/read-receipts/:entityType/:entityId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const entityId = parseId(req.params.entityId);
+      if (!entityId) return res.status(400).json({ message: "ID tidak valid" });
+      const entityType = req.params.entityType;
+      if (!["superadmin", "owner"].includes(user.role)) {
+        return res.status(403).json({ message: "Tidak memiliki akses" });
+      }
+      if (entityType === "case") {
+        const c = await storage.getCase(entityId);
+        if (!c) return res.status(404).json({ message: "Entitas tidak ditemukan" });
+      } else if (entityType === "task") {
+        const t = await storage.getTask(entityId);
+        if (!t) return res.status(404).json({ message: "Entitas tidak ditemukan" });
+      } else if (entityType === "announcement") {
+        const a = await storage.getAnnouncements();
+        if (!a.find(ann => ann.id === entityId)) return res.status(404).json({ message: "Entitas tidak ditemukan" });
+      }
+      const receipts = await storage.getReadReceipts(entityType, entityId);
+      res.json(receipts);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data read receipts" });
+    }
+  });
+
+  app.get("/api/uncommented-cases", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const ids = await storage.getUncommentedCaseIds(user.id);
+      res.json(ids);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data" });
+    }
+  });
+
+  app.get("/api/action-items", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const items = await storage.getActionItems(user.id);
+      res.json(items);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengambil data action items" });
+    }
+  });
+
   app.post("/api/kpi", requireRole("superadmin", "owner"), async (req, res) => {
     try {
       const kpiBodySchema = z.object({
@@ -1377,6 +1526,7 @@ export async function registerRoutes(
         problemSolvingScore: liveData.scores.progressRataRata,
         teamworkScore: liveData.scores.bebanKerja,
         responsibilityScore: liveData.scores.konsistensi,
+        activeContributionScore: liveData.scores.kontribusiAktif || 0,
         totalScore: liveData.totalScore,
         notes: parsed.data.notes || null,
         strengths: parsed.data.strengths || null,

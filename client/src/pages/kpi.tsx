@@ -20,10 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   BarChart3, Plus, User, Building2, Target,
-  Activity, FileWarning, ListTodo, TrendingUp,
+  Activity, FileWarning, ListTodo, TrendingUp, TrendingDown,
   Clock, Zap, Briefcase, BarChart2, ChevronDown, ChevronUp,
   Award, ThumbsUp, AlertTriangle, BookOpen, Info, Trophy, Medal,
   Calendar, CalendarDays, CalendarRange, Download, FileText, FileSpreadsheet, FileType,
+  MessageSquare, Star, ArrowUp, ArrowDown, Minus,
 } from "lucide-react";
 import { downloadPDF, downloadExcel, downloadWord } from "@/lib/download";
 import { useToast } from "@/hooks/use-toast";
@@ -31,14 +32,15 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { KpiAssessment, User as UserType, Company } from "@shared/schema";
 
 const ASPECT_LABELS = [
-  { key: "penyelesaianTugas", label: "Penyelesaian Tugas", icon: ListTodo, color: "text-purple-500", desc: "% tugas selesai dari total" },
-  { key: "penyelesaianKasus", label: "Penyelesaian Kasus", icon: FileWarning, color: "text-amber-500", desc: "% kasus closed dari total" },
-  { key: "penyelesaianAktivitas", label: "Penyelesaian Aktivitas", icon: Activity, color: "text-blue-500", desc: "% aktivitas selesai dari total" },
-  { key: "ketepatanWaktu", label: "Ketepatan Waktu", icon: Clock, color: "text-green-500", desc: "% selesai sebelum deadline" },
-  { key: "progressRataRata", label: "Progress Rata-rata", icon: TrendingUp, color: "text-cyan-500", desc: "Rata-rata progress semua item" },
-  { key: "responsivitas", label: "Responsivitas", icon: Zap, color: "text-orange-500", desc: "Kecepatan menangani item (tanpa overdue)" },
-  { key: "bebanKerja", label: "Beban Kerja", icon: Briefcase, color: "text-indigo-500", desc: "Kapasitas item yang ditangani" },
-  { key: "konsistensi", label: "Konsistensi", icon: BarChart2, color: "text-pink-500", desc: "Rasio penyelesaian terhadap total" },
+  { key: "penyelesaianKasus", label: "Penyelesaian Kasus", icon: FileWarning, color: "text-amber-500", desc: "% kasus closed dari total", weight: 15 },
+  { key: "penyelesaianTugas", label: "Penyelesaian Tugas", icon: ListTodo, color: "text-purple-500", desc: "% tugas selesai dari total", weight: 10 },
+  { key: "penyelesaianAktivitas", label: "Penyelesaian Aktivitas", icon: Activity, color: "text-blue-500", desc: "% aktivitas selesai dari total", weight: 10 },
+  { key: "ketepatanWaktu", label: "Ketepatan Waktu", icon: Clock, color: "text-green-500", desc: "% selesai sebelum deadline", weight: 15 },
+  { key: "bebanKerja", label: "Volume & Beban Kerja", icon: Briefcase, color: "text-indigo-500", desc: "Perbandingan beban kerja terhadap rata-rata peers", weight: 15 },
+  { key: "progressRataRata", label: "Progress Rata-rata", icon: TrendingUp, color: "text-cyan-500", desc: "Rata-rata progress semua item", weight: 10 },
+  { key: "responsivitas", label: "Responsivitas", icon: Zap, color: "text-orange-500", desc: "Kecepatan menangani item (tanpa overdue)", weight: 10 },
+  { key: "kontribusiAktif", label: "Kontribusi Aktif", icon: MessageSquare, color: "text-teal-500", desc: "Komentar & update yang dilakukan, bobot lebih untuk High Risk", weight: 10 },
+  { key: "konsistensi", label: "Konsistensi", icon: BarChart2, color: "text-pink-500", desc: "Rasio penyelesaian terhadap total", weight: 5 },
 ] as const;
 
 function getGrade(score: number) {
@@ -217,24 +219,22 @@ function DasarPenilaianSection() {
 
             <div>
               <h5 className="font-semibold text-sm mb-2 flex items-center gap-1">
-                <BarChart3 className="w-3.5 h-3.5 text-purple-500" /> 8 Aspek Penilaian & Bobot
+                <BarChart3 className="w-3.5 h-3.5 text-purple-500" /> 9 Aspek Penilaian & Bobot
               </h5>
               <div className="space-y-1.5 ml-1">
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">20%</Badge><span><span className="font-medium text-foreground">Penyelesaian Kasus</span> — Kasus closed ÷ Total kasus × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Tugas</span> — Tugas selesai ÷ Total tugas × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Penyelesaian Aktivitas</span> — Aktivitas selesai ÷ Total aktivitas × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">15%</Badge><span><span className="font-medium text-foreground">Ketepatan Waktu</span> — Item selesai sebelum deadline ÷ Total item berdeadline × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Progress Rata-rata</span> — Rata-rata % progress dari semua item aktif</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Responsivitas</span> — 100% − (Item overdue ÷ Item aktif × 100)</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">10%</Badge><span><span className="font-medium text-foreground">Konsistensi</span> — Item selesai ÷ Total item × 100</span></div>
-                <div className="flex gap-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">5%</Badge><span><span className="font-medium text-foreground">Beban Kerja</span> — Total item ÷ 20 (kapasitas standar) × 100, maks 100</span></div>
+                {ASPECT_LABELS.map(a => (
+                  <div key={a.key} className="flex gap-2">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">{a.weight}%</Badge>
+                    <span><span className="font-medium text-foreground">{a.label}</span> — {a.desc}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <div>
                 <h5 className="font-semibold text-sm mb-1">Skor Total</h5>
-                <p className="text-muted-foreground">Rata-rata tertimbang dari 8 aspek sesuai bobot di atas</p>
+                <p className="text-muted-foreground">Rata-rata tertimbang dari 9 aspek sesuai bobot di atas</p>
               </div>
               <div>
                 <h5 className="font-semibold text-sm mb-1">Grade</h5>
@@ -260,6 +260,7 @@ type LiveKpi = {
   companyId: number | null;
   scores: Record<string, number>;
   totalScore: number;
+  previousScore: number | null;
   details: {
     activitiesTotal: number;
     activitiesCompleted: number;
@@ -274,6 +275,56 @@ type LiveKpi = {
     totalItems: number;
   };
 };
+
+function TrendArrow({ current, previous }: { current: number; previous: number | null }) {
+  if (previous === null || previous === undefined) return null;
+  const diff = current - previous;
+  if (diff === 0) return (
+    <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground" data-testid="trend-stable">
+      <Minus className="w-3 h-3" /> 0
+    </span>
+  );
+  if (diff > 0) return (
+    <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 dark:text-emerald-400" data-testid="trend-up">
+      <ArrowUp className="w-3 h-3" /> +{diff}
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-0.5 text-xs text-red-500" data-testid="trend-down">
+      <ArrowDown className="w-3 h-3" /> {diff}
+    </span>
+  );
+}
+
+function KekuatanAnda({ scores }: { scores: Record<string, number> }) {
+  const sorted = [...ASPECT_LABELS]
+    .map(a => ({ ...a, value: scores[a.key] || 0 }))
+    .sort((a, b) => b.value - a.value);
+  const top = sorted.filter(s => s.value > 0).slice(0, 3);
+  if (top.length === 0) return null;
+  return (
+    <div className="bg-emerald-50/60 dark:bg-emerald-900/15 border border-emerald-200/50 dark:border-emerald-800/30 rounded-lg p-3" data-testid="section-kekuatan-anda">
+      <h5 className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 mb-2">
+        <Star className="w-3.5 h-3.5" /> Kekuatan Anda
+      </h5>
+      <div className="flex flex-wrap gap-1.5">
+        {top.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <Badge
+              key={s.key}
+              className={`${i === 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"} border-0`}
+              data-testid={`badge-kekuatan-${s.key}`}
+            >
+              <Icon className="w-3 h-3 mr-1" />
+              {s.label}: {s.value}
+            </Badge>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function KpiPage() {
   usePageTitle("Penilaian KPI");
@@ -408,6 +459,7 @@ export default function KpiPage() {
     progressRataRata: kpi.problemSolvingScore,
     bebanKerja: kpi.teamworkScore,
     konsistensi: kpi.responsibilityScore,
+    kontribusiAktif: kpi.activeContributionScore || 0,
   });
 
   return (
@@ -602,7 +654,7 @@ export default function KpiPage() {
 
         {isAdmin && (
           <Select value={filterCompany} onValueChange={setFilterCompany}>
-            <SelectTrigger className="w-36" data-testid="select-filter-company">
+            <SelectTrigger className="w-full sm:w-36" data-testid="select-filter-company">
               <SelectValue placeholder="PT" />
             </SelectTrigger>
             <SelectContent>
@@ -615,7 +667,7 @@ export default function KpiPage() {
         {activeTab === "history" && (
           <>
             <Select value={filterPeriodType} onValueChange={(v) => { setFilterPeriodType(v as "all" | PeriodType); setFilterPeriod("all"); }}>
-              <SelectTrigger className="w-36" data-testid="select-filter-period-type">
+              <SelectTrigger className="w-full sm:w-36" data-testid="select-filter-period-type">
                 <SelectValue placeholder="Tipe" />
               </SelectTrigger>
               <SelectContent>
@@ -626,7 +678,7 @@ export default function KpiPage() {
               </SelectContent>
             </Select>
             <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-              <SelectTrigger className="w-40" data-testid="select-filter-period">
+              <SelectTrigger className="w-full sm:w-40" data-testid="select-filter-period">
                 <SelectValue placeholder="Periode" />
               </SelectTrigger>
               <SelectContent>
@@ -695,13 +747,17 @@ export default function KpiPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <ScoreCircle score={kpi.totalScore} size="sm" />
+                        <div className="flex flex-col items-center gap-0.5">
+                          <ScoreCircle score={kpi.totalScore} size="sm" />
+                          <TrendArrow current={kpi.totalScore} previous={kpi.previousScore} />
+                        </div>
                         {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                       </div>
                     </button>
 
                     {isExpanded && (
                       <div className="border-t px-4 py-4 space-y-4 bg-muted/10">
+                        <KekuatanAnda scores={kpi.scores} />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
@@ -711,7 +767,7 @@ export default function KpiPage() {
                           </div>
                           <div>
                             <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
-                              <BarChart3 className="w-4 h-4" /> Detail 8 Aspek
+                              <BarChart3 className="w-4 h-4" /> Detail 9 Aspek
                             </h4>
                             <div className="space-y-2">
                               {ASPECT_LABELS.map(a => {
@@ -723,11 +779,11 @@ export default function KpiPage() {
                                     <span className="text-xs w-24 sm:w-32 truncate" title={a.label}>{a.label}</span>
                                     <div className="flex-1 bg-muted rounded-full h-2 min-w-[40px]">
                                       <div
-                                        className={`h-2 rounded-full transition-all ${val >= 85 ? "bg-emerald-500" : val >= 70 ? "bg-blue-500" : val >= 55 ? "bg-amber-500" : "bg-red-500"}`}
+                                        className={`h-2 rounded-full transition-all ${val >= 70 ? "bg-emerald-500" : val >= 55 ? "bg-blue-500" : val >= 40 ? "bg-amber-500" : "bg-red-400"}`}
                                         style={{ width: `${val}%` }}
                                       />
                                     </div>
-                                    <span className="text-xs font-medium w-7 text-right">{val}</span>
+                                    <span className={`text-xs font-medium w-7 text-right ${val >= 70 ? "text-emerald-600" : val >= 55 ? "text-blue-600" : ""}`}>{val}</span>
                                   </div>
                                 );
                               })}
@@ -854,7 +910,7 @@ export default function KpiPage() {
                               <RadarChart scores={mappedScores} size={200} />
                             </div>
                             <div>
-                              <h4 className="text-sm font-semibold mb-3">Detail Skor</h4>
+                              <h4 className="text-sm font-semibold mb-3">Detail 9 Aspek</h4>
                               <div className="space-y-2">
                                 {ASPECT_LABELS.map(a => {
                                   const val = (mappedScores as any)[a.key] || 0;
@@ -865,11 +921,11 @@ export default function KpiPage() {
                                       <span className="text-xs w-24 sm:w-32 truncate">{a.label}</span>
                                       <div className="flex-1 bg-muted rounded-full h-2 min-w-[40px]">
                                         <div
-                                          className={`h-2 rounded-full ${val >= 85 ? "bg-emerald-500" : val >= 70 ? "bg-blue-500" : val >= 55 ? "bg-amber-500" : "bg-red-500"}`}
+                                          className={`h-2 rounded-full ${val >= 70 ? "bg-emerald-500" : val >= 55 ? "bg-blue-500" : val >= 40 ? "bg-amber-500" : "bg-red-400"}`}
                                           style={{ width: `${val}%` }}
                                         />
                                       </div>
-                                      <span className="text-xs font-medium w-7 text-right">{val}</span>
+                                      <span className={`text-xs font-medium w-7 text-right ${val >= 70 ? "text-emerald-600" : val >= 55 ? "text-blue-600" : ""}`}>{val}</span>
                                     </div>
                                   );
                                 })}
