@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users, Paperclip, Download } from "lucide-react";
+import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users, Paperclip, Download, X } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
@@ -24,6 +24,31 @@ import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
 const MEETING_TYPES = ["Mediasi Nasabah", "Musyawarah Pialang", "Mediasi BBJ", "Sidang Bappebti", "Negosiasi Internal", "Lainnya"];
 const RESOLUTION_PATHS = ["Belum Ditentukan", "Mediasi Internal", "Mediasi BBJ", "Sidang Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+const CASE_DOCUMENT_STAGES = [
+  "Prospek Nasabah",
+  "Simulasi Regol / Regulasi",
+  "Simulasi Transaksi",
+  "Setor Dana",
+  "Official Receipt",
+  "Aktivasi Akun",
+  "Transaksi Berjalan",
+  "Komplain Nasabah",
+  "Laporan Polisi",
+  "Laporan ke Bappebti",
+  "Perdamaian",
+  "Putusan Pengadilan",
+] as const;
+const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
+const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+const MAX_CASE_DOCUMENT_SIZE = 150 * 1024 * 1024;
 type CaseDocumentItem = {
   stage: string;
   fileName: string;
@@ -32,6 +57,15 @@ type CaseDocumentItem = {
   dataUrl: string;
   uploadedAt?: string;
 };
+function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
+  if (!raw || typeof raw !== "string") return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function KasusDetailPage() {
   const [, params] = useRoute("/kasus/:id");
@@ -43,6 +77,7 @@ export default function KasusDetailPage() {
   const [newStage, setNewStage] = useState("");
   const [newProgress, setNewProgress] = useState<number | undefined>(undefined);
   const [editing, setEditing] = useState(false);
+  const [caseDocumentsEdit, setCaseDocumentsEdit] = useState<CaseDocumentItem[]>([]);
 
   const [meetingForm, setMeetingForm] = useState({
     meetingDate: "",
@@ -178,6 +213,7 @@ export default function KasusDetailPage() {
       nextAction: caseData.nextAction,
       resolutionPath: caseData.resolutionPath,
     });
+    setCaseDocumentsEdit(parseCaseDocuments(caseData.caseDocuments));
     setEditing(true);
   };
 
@@ -198,6 +234,43 @@ export default function KasusDetailPage() {
       return [];
     }
   })();
+  const fileToDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  const handleCaseDocumentUploadEdit = async (stage: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const pending = Array.from(files);
+    const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
+    if (invalid) {
+      toast({ title: "Format tidak didukung", description: `${invalid.name} tidak didukung`, variant: "destructive" });
+      return;
+    }
+    const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
+    if (oversize) {
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      return;
+    }
+    try {
+      const encoded = await Promise.all(pending.map(async (file) => ({
+        stage,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        dataUrl: await fileToDataUrl(file),
+        uploadedAt: new Date().toISOString(),
+      })));
+      setCaseDocumentsEdit(prev => [...prev, ...encoded]);
+      toast({ title: "Berhasil", description: `${encoded.length} dokumen ditambahkan` });
+    } catch {
+      toast({ title: "Gagal", description: "Gagal membaca dokumen", variant: "destructive" });
+    }
+  };
+  const removeCaseDocumentEdit = (index: number) => {
+    setCaseDocumentsEdit(prev => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-5xl mx-auto">
@@ -351,9 +424,56 @@ export default function KasusDetailPage() {
                 <Textarea data-testid="input-edit-next-action" value={editForm.nextAction || ""} onChange={e => setEditForm({...editForm, nextAction: e.target.value})} />
               </div>
             </div>
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Dokumen Tahapan</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+              </p>
+              <div className="max-h-72 overflow-auto space-y-3">
+                {CASE_DOCUMENT_STAGES.map((stage) => {
+                  const stageDocs = caseDocumentsEdit
+                    .map((doc, idx) => ({ ...doc, idx }))
+                    .filter((doc) => doc.stage === stage);
+                  return (
+                    <div key={`detail-edit-${stage}`} className="rounded-md border p-2 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{stage}</p>
+                        <Input
+                          data-testid={`input-detail-edit-document-upload-${stage}`}
+                          type="file"
+                          multiple
+                          accept={CASE_DOCUMENT_ACCEPT}
+                          className="max-w-[220px]"
+                          onChange={async (e) => {
+                            const input = e.currentTarget;
+                            await handleCaseDocumentUploadEdit(stage, input.files);
+                            input.value = "";
+                          }}
+                        />
+                      </div>
+                      {stageDocs.length > 0 && (
+                        <div className="space-y-1">
+                          {stageDocs.map((doc) => (
+                            <div key={`detail-edit-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                              <p className="truncate font-medium">{doc.fileName}</p>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeCaseDocumentEdit(doc.idx)}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <div className="flex gap-2">
-              <Button onClick={() => updateMutation.mutate(editForm)} disabled={updateMutation.isPending} data-testid="button-save-edit">Simpan</Button>
-              <Button variant="secondary" onClick={() => setEditing(false)} data-testid="button-cancel-edit">Batal</Button>
+              <Button onClick={() => updateMutation.mutate({ ...editForm, caseDocuments: caseDocumentsEdit })} disabled={updateMutation.isPending} data-testid="button-save-edit">Simpan</Button>
+              <Button variant="secondary" onClick={() => { setEditing(false); setCaseDocumentsEdit([]); }} data-testid="button-cancel-edit">Batal</Button>
             </div>
           </CardContent>
         </Card>
