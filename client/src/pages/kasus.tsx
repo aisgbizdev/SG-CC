@@ -66,6 +66,24 @@ type CaseDocumentItem = {
   uploadedAt: string;
 };
 
+function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
+  if (!raw || typeof raw !== "string") return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((doc) =>
+      doc &&
+      typeof doc.stage === "string" &&
+      typeof doc.fileName === "string" &&
+      typeof doc.mimeType === "string" &&
+      typeof doc.size === "number" &&
+      typeof doc.dataUrl === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
 export default function KasusPage() {
   usePageTitle("Kasus Pengaduan");
   const { user } = useAuth();
@@ -327,6 +345,7 @@ export default function KasusPage() {
       managerName: c.managerName || "",
       resolutionPath: c.resolutionPath || "Belum Ditentukan",
     });
+    setCaseDocuments(parseCaseDocuments((c as any).caseDocuments));
     setEditDialogOpen(true);
   };
 
@@ -356,6 +375,7 @@ export default function KasusPage() {
         wpbName: form.wpbName || null,
         managerName: form.managerName || null,
         resolutionPath: form.resolutionPath,
+        caseDocuments,
       },
     });
   };
@@ -808,7 +828,7 @@ export default function KasusPage() {
         </div>
       )}
 
-      <Dialog open={editDialogOpen} onOpenChange={(o) => { setEditDialogOpen(o); if (!o) { setEditingCase(null); resetForm(); } }}>
+      <Dialog open={editDialogOpen} onOpenChange={(o) => { setEditDialogOpen(o); if (!o) { setEditingCase(null); resetForm(); resetCaseDocuments(); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Kasus</DialogTitle></DialogHeader>
           <div className="space-y-4">
@@ -862,6 +882,53 @@ export default function KasusPage() {
             <div className="space-y-1.5">
               <Label>Inti Pengaduan *</Label>
               <Textarea data-testid="input-edit-case-summary" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
+            </div>
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Dokumen Tahapan</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+              </p>
+              <div className="max-h-72 overflow-auto space-y-3">
+                {CASE_DOCUMENT_STAGES.map((stage) => {
+                  const stageDocs = caseDocuments
+                    .map((doc, idx) => ({ ...doc, idx }))
+                    .filter((doc) => doc.stage === stage);
+                  return (
+                    <div key={`edit-${stage}`} className="rounded-md border p-2 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{stage}</p>
+                        <Input
+                          data-testid={`input-edit-case-document-upload-${stage}`}
+                          type="file"
+                          multiple
+                          accept={CASE_DOCUMENT_ACCEPT}
+                          className="max-w-[220px]"
+                          onChange={async (e) => {
+                            const input = e.currentTarget;
+                            await handleCaseDocumentUpload(stage, input.files);
+                            input.value = "";
+                          }}
+                        />
+                      </div>
+                      {stageDocs.length > 0 && (
+                        <div className="space-y-1">
+                          {stageDocs.map((doc) => (
+                            <div key={`edit-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                              <p className="truncate font-medium">{doc.fileName}</p>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeCaseDocument(doc.idx)}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
