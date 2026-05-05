@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users } from "lucide-react";
+import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users, Paperclip, Download } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
@@ -24,6 +24,14 @@ import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
 const MEETING_TYPES = ["Mediasi Nasabah", "Musyawarah Pialang", "Mediasi BBJ", "Sidang Bappebti", "Negosiasi Internal", "Lainnya"];
 const RESOLUTION_PATHS = ["Belum Ditentukan", "Mediasi Internal", "Mediasi BBJ", "Sidang Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+type CaseDocumentItem = {
+  stage: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  dataUrl: string;
+  uploadedAt?: string;
+};
 
 export default function KasusDetailPage() {
   const [, params] = useRoute("/kasus/:id");
@@ -181,6 +189,15 @@ export default function KasusDetailPage() {
   const meetingCountSummary = Object.entries(meetingCountByType)
     .map(([type, count]) => `${type}: ${count}x`)
     .join(", ");
+  const caseDocuments: CaseDocumentItem[] = (() => {
+    if (!caseData.caseDocuments) return [];
+    try {
+      const parsed = JSON.parse(caseData.caseDocuments);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-5xl mx-auto">
@@ -406,6 +423,30 @@ export default function KasusDetailPage() {
                   {caseData.companyOffer && <div><p className="text-xs text-muted-foreground mb-1">Penawaran Perusahaan</p><p className="text-sm">{caseData.companyOffer}</p></div>}
                   {caseData.latestAction && <div><p className="text-xs text-muted-foreground mb-1">Tindakan Terakhir</p><p className="text-sm">{caseData.latestAction}</p></div>}
                   {caseData.nextAction && <div><p className="text-xs text-muted-foreground mb-1">Tindak Lanjut</p><p className="text-sm">{caseData.nextAction}</p></div>}
+                  {caseDocuments.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Dokumen Tahapan ({caseDocuments.length})</p>
+                      </div>
+                      <div className="space-y-2">
+                        {caseDocuments.map((doc, idx) => (
+                          <a
+                            key={`${doc.fileName}-${idx}`}
+                            href={doc.dataUrl}
+                            download={doc.fileName}
+                            className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{doc.fileName}</p>
+                              <p className="truncate text-xs text-muted-foreground">{doc.stage}</p>
+                            </div>
+                            <Download className="w-4 h-4 text-muted-foreground shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               <Card>

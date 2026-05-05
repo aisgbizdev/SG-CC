@@ -204,6 +204,23 @@ const activityBodySchema = z.object({
 });
 const activityPatchSchema = activityBodySchema.partial();
 
+const caseDocumentSchema = z.object({
+  stage: z.string().min(1, "Tahapan dokumen wajib diisi"),
+  fileName: z.string().min(1, "Nama file wajib diisi"),
+  mimeType: z.enum([
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ]),
+  size: z.number().int().positive().max(150 * 1024 * 1024, "Ukuran file maksimal 150MB"),
+  dataUrl: z.string().startsWith("data:", "Data dokumen tidak valid"),
+  uploadedAt: z.string().optional(),
+});
+
 const caseBodySchema = z.object({
   companyId: z.number().int().optional(),
   caseCode: z.string().min(1, "Kode kasus wajib diisi"),
@@ -233,6 +250,7 @@ const caseBodySchema = z.object({
   wpbName: z.string().optional().nullable(),
   managerName: z.string().optional().nullable(),
   resolutionPath: z.string().optional(),
+  caseDocuments: z.array(caseDocumentSchema).max(60, "Maksimal 60 dokumen").optional().nullable(),
 });
 const casePatchSchema = caseBodySchema.partial();
 
@@ -703,8 +721,13 @@ export async function registerRoutes(
       const parsed = caseBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
+      const payload = {
+        ...parsed.data,
+        companyId: parsed.data.companyId || user.companyId,
+        caseDocuments: parsed.data.caseDocuments ? JSON.stringify(parsed.data.caseDocuments) : null,
+      };
       const c = await storage.transaction(async (tx) => {
-        const newCase = await storage.createCase({ ...parsed.data, createdBy: user.id, companyId: parsed.data.companyId || user.companyId }, tx);
+        const newCase = await storage.createCase({ ...payload, createdBy: user.id }, tx);
         await storage.createAuditLog({ userId: user.id, action: "create", entityType: "case", entityId: newCase.id, details: `Membuat kasus: ${newCase.caseCode}` }, tx);
         return newCase;
       });
@@ -726,8 +749,14 @@ export async function registerRoutes(
       }
       const casePatchParsed = casePatchSchema.safeParse(req.body);
       if (!casePatchParsed.success) return res.status(400).json(formatZodError(casePatchParsed.error));
+      const patchPayload = {
+        ...casePatchParsed.data,
+        ...(casePatchParsed.data.caseDocuments !== undefined ? {
+          caseDocuments: casePatchParsed.data.caseDocuments ? JSON.stringify(casePatchParsed.data.caseDocuments) : null,
+        } : {}),
+      };
       const c = await storage.transaction(async (tx) => {
-        const updated = await storage.updateCase(existing.id, casePatchParsed.data, tx);
+        const updated = await storage.updateCase(existing.id, patchPayload, tx);
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "case", entityId: existing.id, details: `Mengupdate kasus: ${existing.caseCode}` }, tx);
         return updated;
       });

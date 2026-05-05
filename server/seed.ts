@@ -28,6 +28,7 @@ async function runMigrations() {
     await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS wpb_name text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS manager_name text`);
+    await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS case_documents text`);
     await db.execute(`
       CREATE TABLE IF NOT EXISTS case_meetings (
         id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

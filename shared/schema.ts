@@ -136,6 +136,7 @@ export const cases = pgTable("cases", {
   wpbName: text("wpb_name"),
   managerName: text("manager_name"),
   resolutionPath: text("resolution_path").notNull().default("Belum Ditentukan"),
+  caseDocuments: text("case_documents"),
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
