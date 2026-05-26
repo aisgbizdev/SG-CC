@@ -30,7 +30,14 @@ const BUCKETS = [
 ];
 const RISK_LEVELS = ["Low", "Medium", "High"];
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
-const RESOLUTION_PATHS = ["Belum Ditentukan", "Mediasi Internal", "Mediasi BBJ", "Sidang Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+const RESOLUTION_PATHS = ["Belum Ditentukan", "Pialang (Musyawarah)", "BBJ (Mediasi)", "Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+const LEGACY_RESOLUTION_LABELS: Record<string, string> = {
+  "Mediasi Internal": "Pialang (Musyawarah)",
+  "Mediasi BBJ": "BBJ (Mediasi)",
+  "Sidang Bappebti": "Bappebti",
+};
+const normalizeResolutionPath = (value?: string | null) =>
+  value ? LEGACY_RESOLUTION_LABELS[value] || value : "Belum Ditentukan";
 const CASE_DOCUMENT_STAGES = [
   "Prospek Nasabah",
   "Simulasi Regol / Regulasi",
@@ -45,6 +52,7 @@ const CASE_DOCUMENT_STAGES = [
   "Perdamaian",
   "Putusan Pengadilan",
 ] as const;
+const COMPLAINT_ATTACHMENT_STAGE = "Kronologi Pengaduan Nasabah";
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
   "application/pdf",
@@ -155,12 +163,13 @@ export default function KasusPage() {
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
     customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
-    status: "Open", summary: "", riskLevel: "Medium", priority: "Medium",
+    status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Open", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
     wpbName: "", managerName: "", resolutionPath: "Belum Ditentukan",
   });
   const [caseDocuments, setCaseDocuments] = useState<CaseDocumentItem[]>([]);
+  const [complaintAttachments, setComplaintAttachments] = useState<CaseDocumentItem[]>([]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -195,6 +204,8 @@ export default function KasusPage() {
       wpbName: form.wpbName || null,
       managerName: form.managerName || null,
       resolutionPath: form.resolutionPath,
+      complaintChronology: form.complaintChronology || null,
+      complaintAttachments,
       caseDocuments,
     });
   };
@@ -240,6 +251,40 @@ export default function KasusPage() {
     setCaseDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleComplaintAttachmentUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const pending = Array.from(files);
+    const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
+    if (invalid) {
+      toast({ title: "Format tidak didukung", description: `${invalid.name} tidak didukung`, variant: "destructive" });
+      return;
+    }
+    const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
+    if (oversize) {
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      return;
+    }
+
+    try {
+      const encoded = await Promise.all(pending.map(async (file) => ({
+        stage: COMPLAINT_ATTACHMENT_STAGE,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        dataUrl: await fileToDataUrl(file),
+        uploadedAt: new Date().toISOString(),
+      })));
+      setComplaintAttachments(prev => [...prev, ...encoded]);
+      toast({ title: "Berhasil", description: `${encoded.length} lampiran ditambahkan` });
+    } catch {
+      toast({ title: "Gagal", description: "Gagal membaca lampiran", variant: "destructive" });
+    }
+  };
+
+  const removeComplaintAttachment = (index: number) => {
+    setComplaintAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const riskOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
 
   const waitingStages = ["Proses Regulator", "Settlement / Deadlock"];
@@ -255,7 +300,8 @@ export default function KasusPage() {
     const matchBucket = bucketFilter === "all" || c.bucket === bucketFilter;
     const matchStage = stageFilter === "all" || (stageFilter === "waiting" ? waitingStages.includes(c.workflowStage) && c.status !== "Closed" : c.workflowStage === stageFilter);
     const matchBranch = branchFilter === "all" || c.branch === branchFilter;
-    const matchResolution = resolutionFilter === "all" || c.resolutionPath === resolutionFilter;
+    const caseResolution = normalizeResolutionPath(c.resolutionPath);
+    const matchResolution = resolutionFilter === "all" || caseResolution === resolutionFilter;
     const matchUncommented = !uncommentedFilter || (uncommentedIds || []).includes(c.id);
     let matchView = true;
     if (viewFilter === "active") {
@@ -312,13 +358,14 @@ export default function KasusPage() {
   const resetForm = () => setForm({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
     customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
-    status: "Open", summary: "", riskLevel: "Medium", priority: "Medium",
+    status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Open", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
     wpbName: "", managerName: "", resolutionPath: "Belum Ditentukan",
   });
   const resetCaseDocuments = () => {
     setCaseDocuments([]);
+    setComplaintAttachments([]);
   };
 
   const openEditDialog = (c: Case, e: React.MouseEvent) => {
@@ -335,6 +382,7 @@ export default function KasusPage() {
       bucket: c.bucket,
       status: c.status,
       summary: c.summary,
+      complaintChronology: c.complaintChronology || "",
       riskLevel: c.riskLevel,
       priority: c.priority,
       workflowStage: c.workflowStage,
@@ -343,9 +391,10 @@ export default function KasusPage() {
       companyId: c.companyId?.toString() || "",
       wpbName: c.wpbName || "",
       managerName: c.managerName || "",
-      resolutionPath: c.resolutionPath || "Belum Ditentukan",
+      resolutionPath: normalizeResolutionPath(c.resolutionPath),
     });
     setCaseDocuments(parseCaseDocuments((c as any).caseDocuments));
+    setComplaintAttachments(parseCaseDocuments((c as any).complaintAttachments));
     setEditDialogOpen(true);
   };
 
@@ -361,6 +410,7 @@ export default function KasusPage() {
         caseCode: form.caseCode,
         customerName: form.customerName,
         summary: form.summary,
+        complaintChronology: form.complaintChronology || null,
         branch: form.branch || null,
         dateReceived: form.dateReceived,
         accountNumber: form.accountNumber || null,
@@ -375,6 +425,7 @@ export default function KasusPage() {
         wpbName: form.wpbName || null,
         managerName: form.managerName || null,
         resolutionPath: form.resolutionPath,
+        complaintAttachments,
         caseDocuments,
       },
     });
@@ -457,8 +508,8 @@ export default function KasusPage() {
                     <Input data-testid="input-case-branch" placeholder="Cabang" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>PIC Utama</Label>
-                    <Input data-testid="input-case-pic" placeholder="PIC" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
+                    <Label>Marketing</Label>
+                    <Input data-testid="input-case-pic" placeholder="Marketing" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -481,6 +532,47 @@ export default function KasusPage() {
                 <div className="space-y-1.5">
                   <Label>Inti Pengaduan *</Label>
                   <Textarea data-testid="input-case-summary" placeholder="Ringkasan pengaduan" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Kronologi Pengaduan Nasabah</Label>
+                  <Textarea
+                    data-testid="input-case-complaint-chronology"
+                    placeholder="Tuliskan kronologi pengaduan nasabah"
+                    value={form.complaintChronology}
+                    onChange={e => setForm({...form, complaintChronology: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2 rounded-md border p-3">
+                  <div className="flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-muted-foreground" />
+                    <Label className="font-medium">Upload Lampiran / Dokumen Pengaduan</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+                  </p>
+                  <Input
+                    data-testid="input-case-complaint-attachment-upload"
+                    type="file"
+                    multiple
+                    accept={CASE_DOCUMENT_ACCEPT}
+                    onChange={async (e) => {
+                      const input = e.currentTarget;
+                      await handleComplaintAttachmentUpload(input.files);
+                      input.value = "";
+                    }}
+                  />
+                  {complaintAttachments.length > 0 && (
+                    <div className="space-y-1">
+                      {complaintAttachments.map((doc, idx) => (
+                        <div key={`complaint-${doc.fileName}-${idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                          <p className="truncate font-medium">{doc.fileName}</p>
+                          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(idx)}>
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2 rounded-md border p-3">
                   <div className="flex items-center gap-2">
@@ -692,7 +784,8 @@ export default function KasusPage() {
           byRisk[c.riskLevel] = (byRisk[c.riskLevel] || 0) + 1;
           byBucket[c.bucket] = (byBucket[c.bucket] || 0) + 1;
           byStage[c.workflowStage] = (byStage[c.workflowStage] || 0) + 1;
-          byResolution[c.resolutionPath || "Belum Ditentukan"] = (byResolution[c.resolutionPath || "Belum Ditentukan"] || 0) + 1;
+          const resolutionPath = normalizeResolutionPath(c.resolutionPath);
+          byResolution[resolutionPath] = (byResolution[resolutionPath] || 0) + 1;
         });
         return (
           <Card data-testid="card-case-summary">
@@ -784,8 +877,8 @@ export default function KasusPage() {
                       <span>{getCompanyName(c.companyId)}</span>
                       {c.branch && <span>{c.branch}</span>}
                       <span>{c.workflowStage}</span>
-                      {c.resolutionPath && c.resolutionPath !== "Belum Ditentukan" && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0" data-testid={`badge-resolution-${c.id}`}>{c.resolutionPath}</Badge>
+                      {normalizeResolutionPath(c.resolutionPath) !== "Belum Ditentukan" && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0" data-testid={`badge-resolution-${c.id}`}>{normalizeResolutionPath(c.resolutionPath)}</Badge>
                       )}
                     </div>
                   </Link>
@@ -858,7 +951,7 @@ export default function KasusPage() {
                 <Input data-testid="input-edit-case-branch" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
               </div>
               <div className="space-y-1.5">
-                <Label>PIC Utama</Label>
+                <Label>Marketing</Label>
                 <Input data-testid="input-edit-case-pic" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
               </div>
             </div>
@@ -882,6 +975,46 @@ export default function KasusPage() {
             <div className="space-y-1.5">
               <Label>Inti Pengaduan *</Label>
               <Textarea data-testid="input-edit-case-summary" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Kronologi Pengaduan Nasabah</Label>
+              <Textarea
+                data-testid="input-edit-case-complaint-chronology"
+                value={form.complaintChronology}
+                onChange={e => setForm({...form, complaintChronology: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Upload Lampiran / Dokumen Pengaduan</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+              </p>
+              <Input
+                data-testid="input-edit-case-complaint-attachment-upload"
+                type="file"
+                multiple
+                accept={CASE_DOCUMENT_ACCEPT}
+                onChange={async (e) => {
+                  const input = e.currentTarget;
+                  await handleComplaintAttachmentUpload(input.files);
+                  input.value = "";
+                }}
+              />
+              {complaintAttachments.length > 0 && (
+                <div className="space-y-1">
+                  {complaintAttachments.map((doc, idx) => (
+                    <div key={`edit-complaint-${doc.fileName}-${idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                      <p className="truncate font-medium">{doc.fileName}</p>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(idx)}>
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-center gap-2">

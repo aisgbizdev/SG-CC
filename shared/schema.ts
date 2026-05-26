@@ -118,6 +118,8 @@ export const cases = pgTable("cases", {
   bucket: text("bucket").notNull().default("Pemeriksaan Pengaduan Baru"),
   status: text("status").notNull().default("Open"),
   summary: text("summary").notNull(),
+  complaintChronology: text("complaint_chronology"),
+  complaintAttachments: text("complaint_attachments"),
   riskLevel: text("risk_level").notNull().default("Low"),
   priority: text("priority").notNull().default("Medium"),
   workflowStage: text("workflow_stage").notNull().default("Open"),

@@ -22,8 +22,21 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
 
 const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
-const MEETING_TYPES = ["Mediasi Nasabah", "Musyawarah Pialang", "Mediasi BBJ", "Sidang Bappebti", "Negosiasi Internal", "Lainnya"];
-const RESOLUTION_PATHS = ["Belum Ditentukan", "Mediasi Internal", "Mediasi BBJ", "Sidang Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+const MEETING_TYPES = ["Mediasi Nasabah", "Musyawarah Pialang", "BBJ (Mediasi)", "Bappebti", "Negosiasi Internal", "Lainnya"];
+const RESOLUTION_PATHS = ["Belum Ditentukan", "Pialang (Musyawarah)", "BBJ (Mediasi)", "Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+const LEGACY_MEETING_LABELS: Record<string, string> = {
+  "Mediasi BBJ": "BBJ (Mediasi)",
+  "Sidang Bappebti": "Bappebti",
+};
+const LEGACY_RESOLUTION_LABELS: Record<string, string> = {
+  "Mediasi Internal": "Pialang (Musyawarah)",
+  "Mediasi BBJ": "BBJ (Mediasi)",
+  "Sidang Bappebti": "Bappebti",
+};
+const normalizeMeetingType = (value?: string | null) =>
+  value ? LEGACY_MEETING_LABELS[value] || value : "";
+const normalizeResolutionPath = (value?: string | null) =>
+  value ? LEGACY_RESOLUTION_LABELS[value] || value : "Belum Ditentukan";
 const CASE_DOCUMENT_STAGES = [
   "Prospek Nasabah",
   "Simulasi Regol / Regulasi",
@@ -38,6 +51,7 @@ const CASE_DOCUMENT_STAGES = [
   "Perdamaian",
   "Putusan Pengadilan",
 ] as const;
+const COMPLAINT_ATTACHMENT_STAGE = "Kronologi Pengaduan Nasabah";
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
   "application/pdf",
@@ -78,6 +92,7 @@ export default function KasusDetailPage() {
   const [newProgress, setNewProgress] = useState<number | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const [caseDocumentsEdit, setCaseDocumentsEdit] = useState<CaseDocumentItem[]>([]);
+  const [complaintAttachmentsEdit, setComplaintAttachmentsEdit] = useState<CaseDocumentItem[]>([]);
 
   const [meetingForm, setMeetingForm] = useState({
     meetingDate: "",
@@ -199,6 +214,7 @@ export default function KasusDetailPage() {
       wpbName: caseData.wpbName,
       managerName: caseData.managerName,
       summary: caseData.summary,
+      complaintChronology: caseData.complaintChronology,
       workflowStage: caseData.workflowStage,
       progress: caseData.progress,
       targetDate: caseData.targetDate,
@@ -211,14 +227,16 @@ export default function KasusDetailPage() {
       rootCause: caseData.rootCause,
       latestAction: caseData.latestAction,
       nextAction: caseData.nextAction,
-      resolutionPath: caseData.resolutionPath,
+      resolutionPath: normalizeResolutionPath(caseData.resolutionPath),
     });
     setCaseDocumentsEdit(parseCaseDocuments(caseData.caseDocuments));
+    setComplaintAttachmentsEdit(parseCaseDocuments(caseData.complaintAttachments));
     setEditing(true);
   };
 
   const meetingCountByType = (meetingsData || []).reduce((acc: Record<string, number>, m) => {
-    acc[m.meetingType] = (acc[m.meetingType] || 0) + 1;
+    const meetingType = normalizeMeetingType(m.meetingType);
+    acc[meetingType] = (acc[meetingType] || 0) + 1;
     return acc;
   }, {});
 
@@ -229,6 +247,15 @@ export default function KasusDetailPage() {
     if (!caseData.caseDocuments) return [];
     try {
       const parsed = JSON.parse(caseData.caseDocuments);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+  const complaintAttachments: CaseDocumentItem[] = (() => {
+    if (!caseData.complaintAttachments) return [];
+    try {
+      const parsed = JSON.parse(caseData.complaintAttachments);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
@@ -270,6 +297,40 @@ export default function KasusDetailPage() {
   };
   const removeCaseDocumentEdit = (index: number) => {
     setCaseDocumentsEdit(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleComplaintAttachmentUploadEdit = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const pending = Array.from(files);
+    const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
+    if (invalid) {
+      toast({ title: "Format tidak didukung", description: `${invalid.name} tidak didukung`, variant: "destructive" });
+      return;
+    }
+    const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
+    if (oversize) {
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      return;
+    }
+
+    try {
+      const encoded = await Promise.all(pending.map(async (file) => ({
+        stage: COMPLAINT_ATTACHMENT_STAGE,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        dataUrl: await fileToDataUrl(file),
+        uploadedAt: new Date().toISOString(),
+      })));
+      setComplaintAttachmentsEdit(prev => [...prev, ...encoded]);
+      toast({ title: "Berhasil", description: `${encoded.length} lampiran ditambahkan` });
+    } catch {
+      toast({ title: "Gagal", description: "Gagal membaca lampiran", variant: "destructive" });
+    }
+  };
+
+  const removeComplaintAttachmentEdit = (index: number) => {
+    setComplaintAttachmentsEdit(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -341,7 +402,7 @@ export default function KasusDetailPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Jalur Penyelesaian</Label>
-              <Select value={editForm.resolutionPath || "Belum Ditentukan"} onValueChange={v => setEditForm({...editForm, resolutionPath: v})}>
+              <Select value={normalizeResolutionPath(editForm.resolutionPath)} onValueChange={v => setEditForm({...editForm, resolutionPath: v})}>
                 <SelectTrigger data-testid="select-edit-resolution"><SelectValue /></SelectTrigger>
                 <SelectContent>{RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
               </Select>
@@ -349,6 +410,46 @@ export default function KasusDetailPage() {
             <div className="space-y-1.5">
               <Label>Inti Pengaduan / Summary</Label>
               <Textarea data-testid="input-edit-summary" value={editForm.summary || ""} onChange={e => setEditForm({...editForm, summary: e.target.value})} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Kronologi Pengaduan Nasabah</Label>
+              <Textarea
+                data-testid="input-edit-complaint-chronology"
+                value={editForm.complaintChronology || ""}
+                onChange={e => setEditForm({...editForm, complaintChronology: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-muted-foreground" />
+                <Label className="font-medium">Upload Lampiran / Dokumen Pengaduan</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+              </p>
+              <Input
+                data-testid="input-detail-edit-complaint-attachment-upload"
+                type="file"
+                multiple
+                accept={CASE_DOCUMENT_ACCEPT}
+                onChange={async (e) => {
+                  const input = e.currentTarget;
+                  await handleComplaintAttachmentUploadEdit(input.files);
+                  input.value = "";
+                }}
+              />
+              {complaintAttachmentsEdit.length > 0 && (
+                <div className="space-y-1">
+                  {complaintAttachmentsEdit.map((doc, idx) => (
+                    <div key={`detail-complaint-${doc.fileName}-${idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                      <p className="truncate font-medium">{doc.fileName}</p>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachmentEdit(idx)}>
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
@@ -472,8 +573,8 @@ export default function KasusDetailPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => updateMutation.mutate({ ...editForm, caseDocuments: caseDocumentsEdit })} disabled={updateMutation.isPending} data-testid="button-save-edit">Simpan</Button>
-              <Button variant="secondary" onClick={() => { setEditing(false); setCaseDocumentsEdit([]); }} data-testid="button-cancel-edit">Batal</Button>
+              <Button onClick={() => updateMutation.mutate({ ...editForm, complaintAttachments: complaintAttachmentsEdit, caseDocuments: caseDocumentsEdit })} disabled={updateMutation.isPending} data-testid="button-save-edit">Simpan</Button>
+              <Button variant="secondary" onClick={() => { setEditing(false); setCaseDocumentsEdit([]); setComplaintAttachmentsEdit([]); }} data-testid="button-cancel-edit">Batal</Button>
             </div>
           </CardContent>
         </Card>
@@ -494,6 +595,33 @@ export default function KasusDetailPage() {
                     <p className="text-xs text-muted-foreground mb-1">Inti Pengaduan</p>
                     <p className="text-sm">{caseData.summary}</p>
                   </div>
+                  {caseData.complaintChronology && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Kronologi Pengaduan Nasabah</p>
+                      <p className="text-sm whitespace-pre-wrap">{caseData.complaintChronology}</p>
+                    </div>
+                  )}
+                  {complaintAttachments.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Lampiran / Dokumen Pengaduan ({complaintAttachments.length})</p>
+                      </div>
+                      <div className="space-y-2">
+                        {complaintAttachments.map((doc, idx) => (
+                          <a
+                            key={`complaint-download-${doc.fileName}-${idx}`}
+                            href={doc.dataUrl}
+                            download={doc.fileName}
+                            className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
+                          >
+                            <p className="truncate font-medium">{doc.fileName}</p>
+                            <Download className="w-4 h-4 text-muted-foreground shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Workflow Stage</p>
@@ -521,7 +649,7 @@ export default function KasusDetailPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Jalur Penyelesaian</p>
-                      <Badge variant={caseData.resolutionPath === "Belum Ditentukan" ? "secondary" : "default"} className="mt-0.5" data-testid="text-resolution-path">{caseData.resolutionPath || "Belum Ditentukan"}</Badge>
+                      <Badge variant={normalizeResolutionPath(caseData.resolutionPath) === "Belum Ditentukan" ? "secondary" : "default"} className="mt-0.5" data-testid="text-resolution-path">{normalizeResolutionPath(caseData.resolutionPath)}</Badge>
                     </div>
                   </div>
                   <div>
@@ -727,7 +855,7 @@ export default function KasusDetailPage() {
                             <CalendarDays className="w-3 h-3" />
                             <span>{new Date(m.meetingDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
                           </div>
-                          <Badge variant="outline" className="text-xs" data-testid={`badge-meeting-${m.id}`}>{m.meetingType}</Badge>
+                          <Badge variant="outline" className="text-xs" data-testid={`badge-meeting-${m.id}`}>{normalizeMeetingType(m.meetingType)}</Badge>
                         </div>
                         {canDeleteMeeting(m.createdBy) && (
                           <AlertDialog>

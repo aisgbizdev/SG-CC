@@ -232,6 +232,8 @@ const caseBodySchema = z.object({
   bucket: z.string().optional(),
   status: z.string().optional(),
   summary: z.string().min(1, "Ringkasan wajib diisi"),
+  complaintChronology: z.string().optional().nullable(),
+  complaintAttachments: z.array(caseDocumentSchema).max(20, "Maksimal 20 lampiran").optional().nullable(),
   riskLevel: z.string().optional(),
   priority: z.string().optional(),
   workflowStage: z.string().optional(),
@@ -724,6 +726,7 @@ export async function registerRoutes(
       const payload = {
         ...parsed.data,
         companyId: parsed.data.companyId || user.companyId,
+        complaintAttachments: parsed.data.complaintAttachments ? JSON.stringify(parsed.data.complaintAttachments) : null,
         caseDocuments: parsed.data.caseDocuments ? JSON.stringify(parsed.data.caseDocuments) : null,
       };
       const c = await storage.transaction(async (tx) => {
@@ -751,6 +754,9 @@ export async function registerRoutes(
       if (!casePatchParsed.success) return res.status(400).json(formatZodError(casePatchParsed.error));
       const patchPayload = {
         ...casePatchParsed.data,
+        ...(casePatchParsed.data.complaintAttachments !== undefined ? {
+          complaintAttachments: casePatchParsed.data.complaintAttachments ? JSON.stringify(casePatchParsed.data.complaintAttachments) : null,
+        } : {}),
         ...(casePatchParsed.data.caseDocuments !== undefined ? {
           caseDocuments: casePatchParsed.data.caseDocuments ? JSON.stringify(casePatchParsed.data.caseDocuments) : null,
         } : {}),
