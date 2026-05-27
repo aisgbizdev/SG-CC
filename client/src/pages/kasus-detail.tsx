@@ -528,7 +528,7 @@ export default function KasusDetailPage() {
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-center gap-2">
                 <Paperclip className="w-4 h-4 text-muted-foreground" />
-                <Label className="font-medium">Dokumen Tahapan</Label>
+                <Label className="font-medium">Dokumen Nasabah</Label>
               </div>
               <p className="text-xs text-muted-foreground">
                 Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
@@ -675,7 +675,7 @@ export default function KasusDetailPage() {
                     <div>
                       <div className="flex items-center gap-1.5 mb-2">
                         <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">Dokumen Tahapan ({caseDocuments.length})</p>
+                        <p className="text-xs text-muted-foreground">Dokumen Nasabah ({caseDocuments.length})</p>
                       </div>
                       <div className="space-y-2">
                         {caseDocuments.map((doc, idx) => (
