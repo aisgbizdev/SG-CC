@@ -115,6 +115,7 @@ export const cases = pgTable("cases", {
   customerName: text("customer_name").notNull(),
   accountNumber: text("account_number"),
   picMain: text("pic_main"),
+  branchHead: text("branch_head"),
   bucket: text("bucket").notNull().default("Pemeriksaan Pengaduan Baru"),
   status: text("status").notNull().default("Open"),
   summary: text("summary").notNull(),

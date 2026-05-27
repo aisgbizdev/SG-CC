@@ -216,9 +216,15 @@ const caseDocumentSchema = z.object({
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ]),
-  size: z.number().int().positive().max(150 * 1024 * 1024, "Ukuran file maksimal 150MB"),
+  size: z.number().int().positive().max(20 * 1024 * 1024, "Ukuran file maksimal 20MB"),
   dataUrl: z.string().startsWith("data:", "Data dokumen tidak valid"),
   uploadedAt: z.string().optional(),
+  date: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  branchApprovalDate: z.string().optional(),
+  complianceApprovalDate: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 const caseBodySchema = z.object({
@@ -229,6 +235,7 @@ const caseBodySchema = z.object({
   customerName: z.string().min(1, "Nama nasabah wajib diisi"),
   accountNumber: z.string().optional().nullable(),
   picMain: z.string().optional().nullable(),
+  branchHead: z.string().optional().nullable(),
   bucket: z.string().optional(),
   status: z.string().optional(),
   summary: z.string().min(1, "Ringkasan wajib diisi"),
@@ -752,7 +759,7 @@ export async function registerRoutes(
       }
       const casePatchParsed = casePatchSchema.safeParse(req.body);
       if (!casePatchParsed.success) return res.status(400).json(formatZodError(casePatchParsed.error));
-      const patchPayload = {
+      const patchPayload: any = {
         ...casePatchParsed.data,
         ...(casePatchParsed.data.complaintAttachments !== undefined ? {
           complaintAttachments: casePatchParsed.data.complaintAttachments ? JSON.stringify(casePatchParsed.data.complaintAttachments) : null,

@@ -47,6 +47,7 @@ async function runMigrations() {
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS resolution_path text NOT NULL DEFAULT 'Belum Ditentukan'`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS complaint_chronology text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS complaint_attachments text`);
+    await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS branch_head text`);
     await db.execute(`
       CREATE TABLE IF NOT EXISTS push_subscriptions (
         id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

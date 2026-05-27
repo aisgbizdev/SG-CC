@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -38,21 +38,32 @@ const LEGACY_RESOLUTION_LABELS: Record<string, string> = {
 };
 const normalizeResolutionPath = (value?: string | null) =>
   value ? LEGACY_RESOLUTION_LABELS[value] || value : "Belum Ditentukan";
-const CASE_DOCUMENT_STAGES = [
-  "Prospek Nasabah",
-  "Simulasi Regol / Regulasi",
-  "Simulasi Transaksi",
-  "Setor Dana",
-  "Official Receipt",
-  "Aktivasi Akun",
-  "Transaksi Berjalan",
-  "Komplain Nasabah",
-  "Laporan Polisi",
-  "Laporan ke Bappebti",
-  "Perdamaian",
-  "Putusan Pengadilan",
+type DocumentSection = {
+  stage: string;
+  fields: readonly string[];
+  note: string;
+  maxFiles?: number;
+};
+const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
+  { stage: "Pertemuan Calon Nasabah", fields: ["dateRange"], note: "FKN, foto, screenshot, chat WA / item." },
+  { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
+  { stage: "Simulasi Transaksi", fields: ["dateRange"], note: "Item screenshot demo transaksi." },
+  { stage: "Registrasi Online", fields: ["date"], note: "Tanggal regol, foto atau screenshot." },
+  { stage: "Verifikasi WPB", fields: ["date"], note: "Tanggal dan screenshot video verifikasi." },
+  { stage: "Penyetoran Margin Awal", fields: ["date"], note: "Slip setoran dan OR. Maksimal 5 upload.", maxFiles: 5 },
+  { stage: "Aktivasi Akun", fields: ["date", "approvalDates"], note: "Screenshot video aktivasi, tanggal approval Kacab dan Kepatuhan." },
+  { stage: "Pengiriman Kode Akses Transaksi", fields: ["date"], note: "Bukti kirim via email dan SMS." },
+  { stage: "Riwayat Transaksi", fields: ["dateRange"], note: "Trade history, daily statement, bukti kirim statement by email & SMS, bukti margin call." },
+  { stage: "Topup dan WD", fields: ["notes"], note: "Isi berapa kali topup dan berapa kali WD." },
 ] as const;
-const COMPLAINT_ATTACHMENT_STAGE = "Kronologi Pengaduan Nasabah";
+const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
+  { stage: "Pialang (Musyawarah)", fields: ["date", "notes"], note: "Tanggal musyawarah, hasil musyawarah, dan tanggal berkelanjutan." },
+  { stage: "BBJ (Mediasi)", fields: ["dateRange", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi." },
+  { stage: "Bappebti", fields: ["date", "notes"], note: "Perkembangan, klarifikasi, pemeriksaan, hasil pemeriksaan, dan tindak lanjut pengaduan." },
+  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, dan hasil LP." },
+  { stage: "Pengadilan", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
+  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
+] as const;
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
   "application/pdf",
@@ -63,7 +74,7 @@ const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
-const MAX_CASE_DOCUMENT_SIZE = 150 * 1024 * 1024;
+const MAX_CASE_DOCUMENT_SIZE = 20 * 1024 * 1024;
 
 type CaseDocumentItem = {
   stage: string;
@@ -72,7 +83,14 @@ type CaseDocumentItem = {
   size: number;
   dataUrl: string;
   uploadedAt: string;
+  date?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  branchApprovalDate?: string;
+  complianceApprovalDate?: string;
+  notes?: string;
 };
+type DocumentMeta = Pick<CaseDocumentItem, "date" | "dateFrom" | "dateTo" | "branchApprovalDate" | "complianceApprovalDate" | "notes">;
 
 function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
   if (!raw || typeof raw !== "string") return [];
@@ -166,10 +184,12 @@ export default function KasusPage() {
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Open", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
-    wpbName: "", managerName: "", resolutionPath: "Belum Ditentukan",
+    wpbName: "", managerName: "", branchHead: "", resolutionPath: "Belum Ditentukan",
   });
   const [caseDocuments, setCaseDocuments] = useState<CaseDocumentItem[]>([]);
   const [complaintAttachments, setComplaintAttachments] = useState<CaseDocumentItem[]>([]);
+  const [caseDocumentMeta, setCaseDocumentMeta] = useState<Record<string, DocumentMeta>>({});
+  const [complaintDocumentMeta, setComplaintDocumentMeta] = useState<Record<string, DocumentMeta>>({});
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -201,6 +221,7 @@ export default function KasusPage() {
       accountNumber: form.accountNumber || null,
       branch: form.branch || null,
       picMain: form.picMain || null,
+      branchHead: form.branchHead || null,
       wpbName: form.wpbName || null,
       managerName: form.managerName || null,
       resolutionPath: form.resolutionPath,
@@ -217,7 +238,7 @@ export default function KasusPage() {
     reader.readAsDataURL(file);
   });
 
-  const handleCaseDocumentUpload = async (stage: string, files: FileList | null) => {
+  const handleCaseDocumentUpload = async (stage: string, files: FileList | null, meta: DocumentMeta = {}) => {
     if (!files || files.length === 0) return;
     const pending = Array.from(files);
     const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
@@ -227,7 +248,7 @@ export default function KasusPage() {
     }
     const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
     if (oversize) {
-      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 20MB`, variant: "destructive" });
       return;
     }
 
@@ -251,7 +272,7 @@ export default function KasusPage() {
     setCaseDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleComplaintAttachmentUpload = async (files: FileList | null) => {
+  const handleComplaintAttachmentUpload = async (stage: string, files: FileList | null, meta: DocumentMeta = {}) => {
     if (!files || files.length === 0) return;
     const pending = Array.from(files);
     const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
@@ -261,18 +282,19 @@ export default function KasusPage() {
     }
     const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
     if (oversize) {
-      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 20MB`, variant: "destructive" });
       return;
     }
 
     try {
       const encoded = await Promise.all(pending.map(async (file) => ({
-        stage: COMPLAINT_ATTACHMENT_STAGE,
+        stage,
         fileName: file.name,
         mimeType: file.type,
         size: file.size,
         dataUrl: await fileToDataUrl(file),
         uploadedAt: new Date().toISOString(),
+        ...meta,
       })));
       setComplaintAttachments(prev => [...prev, ...encoded]);
       toast({ title: "Berhasil", description: `${encoded.length} lampiran ditambahkan` });
@@ -327,6 +349,59 @@ export default function KasusPage() {
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["du", "dk"].includes(user?.role || "");
   const canDeleteCase = (c: Case) => ["superadmin", "owner"].includes(user?.role || "") || c.createdBy === user?.id;
+  const updateDocumentMeta = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+    key: keyof DocumentMeta,
+    value: string,
+  ) => setter(prev => ({ ...prev, [stage]: { ...(prev[stage] || {}), [key]: value } }));
+  const renderDocumentMetaFields = (
+    section: { stage: string; fields: readonly string[] },
+    meta: Record<string, DocumentMeta>,
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+  ) => {
+    const current = meta[section.stage] || {};
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {section.fields.includes("date") && (
+          <div className="space-y-1">
+            <Label className="text-xs">Tanggal</Label>
+            <Input type="date" value={current.date || ""} onChange={e => updateDocumentMeta(setter, section.stage, "date", e.target.value)} />
+          </div>
+        )}
+        {section.fields.includes("dateRange") && (
+          <>
+            <div className="space-y-1">
+              <Label className="text-xs">Dari Tanggal</Label>
+              <Input type="date" value={current.dateFrom || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateFrom", e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Sampai Tanggal</Label>
+              <Input type="date" value={current.dateTo || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateTo", e.target.value)} />
+            </div>
+          </>
+        )}
+        {section.fields.includes("approvalDates") && (
+          <>
+            <div className="space-y-1">
+              <Label className="text-xs">Approval Kacab</Label>
+              <Input type="date" value={current.branchApprovalDate || ""} onChange={e => updateDocumentMeta(setter, section.stage, "branchApprovalDate", e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Approval Kepatuhan</Label>
+              <Input type="date" value={current.complianceApprovalDate || ""} onChange={e => updateDocumentMeta(setter, section.stage, "complianceApprovalDate", e.target.value)} />
+            </div>
+          </>
+        )}
+        {section.fields.includes("notes") && (
+          <div className="space-y-1 sm:col-span-2">
+            <Label className="text-xs">Catatan</Label>
+            <Textarea value={current.notes || ""} onChange={e => updateDocumentMeta(setter, section.stage, "notes", e.target.value)} />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => { await apiRequest("DELETE", `/api/cases/${id}`); },
@@ -361,11 +436,13 @@ export default function KasusPage() {
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Open", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
-    wpbName: "", managerName: "", resolutionPath: "Belum Ditentukan",
+    wpbName: "", managerName: "", branchHead: "", resolutionPath: "Belum Ditentukan",
   });
   const resetCaseDocuments = () => {
     setCaseDocuments([]);
     setComplaintAttachments([]);
+    setCaseDocumentMeta({});
+    setComplaintDocumentMeta({});
   };
 
   const openEditDialog = (c: Case, e: React.MouseEvent) => {
@@ -379,6 +456,7 @@ export default function KasusPage() {
       customerName: c.customerName,
       accountNumber: c.accountNumber || "",
       picMain: c.picMain || "",
+      branchHead: c.branchHead || "",
       bucket: c.bucket,
       status: c.status,
       summary: c.summary,
@@ -415,6 +493,7 @@ export default function KasusPage() {
         dateReceived: form.dateReceived,
         accountNumber: form.accountNumber || null,
         picMain: form.picMain || null,
+        branchHead: form.branchHead || null,
         bucket: form.bucket,
         status: form.status,
         riskLevel: form.riskLevel,
@@ -521,6 +600,10 @@ export default function KasusPage() {
                     <Label>Manager</Label>
                     <Input data-testid="input-case-manager" placeholder="Nama Manager" value={form.managerName} onChange={e => setForm({...form, managerName: e.target.value})} />
                   </div>
+                  <div className="space-y-1.5">
+                    <Label>Kepala Cabang</Label>
+                    <Input data-testid="input-case-branch-head" placeholder="Nama Kepala Cabang" value={form.branchHead} onChange={e => setForm({...form, branchHead: e.target.value})} />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Jalur Penyelesaian</Label>
@@ -545,34 +628,40 @@ export default function KasusPage() {
                 <div className="space-y-2 rounded-md border p-3">
                   <div className="flex items-center gap-2">
                     <Paperclip className="w-4 h-4 text-muted-foreground" />
-                    <Label className="font-medium">Upload Lampiran / Dokumen Pengaduan</Label>
+                    <Label className="font-medium">Dokumen Pengaduan Nasabah</Label>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
-                  </p>
-                  <Input
-                    data-testid="input-case-complaint-attachment-upload"
-                    type="file"
-                    multiple
-                    accept={CASE_DOCUMENT_ACCEPT}
-                    onChange={async (e) => {
-                      const input = e.currentTarget;
-                      await handleComplaintAttachmentUpload(input.files);
-                      input.value = "";
-                    }}
-                  />
-                  {complaintAttachments.length > 0 && (
-                    <div className="space-y-1">
-                      {complaintAttachments.map((doc, idx) => (
-                        <div key={`complaint-${doc.fileName}-${idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                          <p className="truncate font-medium">{doc.fileName}</p>
-                          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(idx)}>
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
+                  <p className="text-xs text-muted-foreground">Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.</p>
+                  <div className="max-h-72 overflow-auto space-y-3">
+                    {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
+                      const docs = complaintAttachments.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage);
+                      return (
+                        <div key={section.stage} className="rounded-md border p-2 space-y-2">
+                          <p className="text-sm font-medium">{section.stage}</p>
+                          <p className="text-xs text-muted-foreground">{section.note}</p>
+                          {renderDocumentMetaFields(section, complaintDocumentMeta, setComplaintDocumentMeta)}
+                          <Input
+                            data-testid={`input-case-complaint-document-upload-${section.stage}`}
+                            type="file"
+                            multiple
+                            accept={CASE_DOCUMENT_ACCEPT}
+                            onChange={async (e) => {
+                              const input = e.currentTarget;
+                              await handleComplaintAttachmentUpload(section.stage, input.files, complaintDocumentMeta[section.stage] || {});
+                              input.value = "";
+                            }}
+                          />
+                          {docs.map((doc) => (
+                            <div key={`complaint-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                              <p className="truncate font-medium">{doc.fileName}</p>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(doc.idx)}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="space-y-2 rounded-md border p-3">
                   <div className="flex items-center gap-2">
@@ -580,17 +669,20 @@ export default function KasusPage() {
                     <Label className="font-medium">Dokumen Nasabah</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+                    Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
                   </p>
                   <div className="max-h-72 overflow-auto space-y-3">
-                    {CASE_DOCUMENT_STAGES.map((stage) => {
+                    {CUSTOMER_DOCUMENT_SECTIONS.map((section) => {
+                      const stage = section.stage;
                       const stageDocs = caseDocuments
                         .map((doc, idx) => ({ ...doc, idx }))
                         .filter((doc) => doc.stage === stage);
                       return (
                         <div key={stage} className="rounded-md border p-2 space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-medium">{stage}</p>
+                          <p className="text-sm font-medium">{stage}</p>
+                          <p className="text-xs text-muted-foreground">{section.note}</p>
+                          {renderDocumentMetaFields(section, caseDocumentMeta, setCaseDocumentMeta)}
+                          <div className="flex items-center justify-end gap-2">
                             <Input
                               data-testid={`input-case-document-upload-${stage}`}
                               type="file"
@@ -599,7 +691,12 @@ export default function KasusPage() {
                               className="max-w-[220px]"
                               onChange={async (e) => {
                                 const input = e.currentTarget;
-                                await handleCaseDocumentUpload(stage, input.files);
+                                if (section.maxFiles && stageDocs.length + (input.files?.length || 0) > section.maxFiles) {
+                                  toast({ title: "Maksimal upload tercapai", description: `${stage} maksimal ${section.maxFiles} file`, variant: "destructive" });
+                                  input.value = "";
+                                  return;
+                                }
+                                await handleCaseDocumentUpload(stage, input.files, caseDocumentMeta[stage] || {});
                                 input.value = "";
                               }}
                             />
@@ -964,6 +1061,10 @@ export default function KasusPage() {
                 <Label>Manager</Label>
                 <Input data-testid="input-edit-case-manager" placeholder="Nama Manager" value={form.managerName} onChange={e => setForm({...form, managerName: e.target.value})} />
               </div>
+              <div className="space-y-1.5">
+                <Label>Kepala Cabang</Label>
+                <Input data-testid="input-edit-case-branch-head" placeholder="Nama Kepala Cabang" value={form.branchHead} onChange={e => setForm({...form, branchHead: e.target.value})} />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Jalur Penyelesaian</Label>
@@ -987,34 +1088,40 @@ export default function KasusPage() {
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-center gap-2">
                 <Paperclip className="w-4 h-4 text-muted-foreground" />
-                <Label className="font-medium">Upload Lampiran / Dokumen Pengaduan</Label>
+                <Label className="font-medium">Dokumen Pengaduan Nasabah</Label>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
-              </p>
-              <Input
-                data-testid="input-edit-case-complaint-attachment-upload"
-                type="file"
-                multiple
-                accept={CASE_DOCUMENT_ACCEPT}
-                onChange={async (e) => {
-                  const input = e.currentTarget;
-                  await handleComplaintAttachmentUpload(input.files);
-                  input.value = "";
-                }}
-              />
-              {complaintAttachments.length > 0 && (
-                <div className="space-y-1">
-                  {complaintAttachments.map((doc, idx) => (
-                    <div key={`edit-complaint-${doc.fileName}-${idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                      <p className="truncate font-medium">{doc.fileName}</p>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(idx)}>
-                        <X className="w-3.5 h-3.5" />
-                      </Button>
+              <p className="text-xs text-muted-foreground">Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.</p>
+              <div className="max-h-72 overflow-auto space-y-3">
+                {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
+                  const docs = complaintAttachments.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage);
+                  return (
+                    <div key={`edit-complaint-${section.stage}`} className="rounded-md border p-2 space-y-2">
+                      <p className="text-sm font-medium">{section.stage}</p>
+                      <p className="text-xs text-muted-foreground">{section.note}</p>
+                      {renderDocumentMetaFields(section, complaintDocumentMeta, setComplaintDocumentMeta)}
+                      <Input
+                        data-testid={`input-edit-case-complaint-document-upload-${section.stage}`}
+                        type="file"
+                        multiple
+                        accept={CASE_DOCUMENT_ACCEPT}
+                        onChange={async (e) => {
+                          const input = e.currentTarget;
+                          await handleComplaintAttachmentUpload(section.stage, input.files, complaintDocumentMeta[section.stage] || {});
+                          input.value = "";
+                        }}
+                      />
+                      {docs.map((doc) => (
+                        <div key={`edit-complaint-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                          <p className="truncate font-medium">{doc.fileName}</p>
+                          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(doc.idx)}>
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-center gap-2">
@@ -1022,17 +1129,20 @@ export default function KasusPage() {
                 <Label className="font-medium">Dokumen Nasabah</Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
               </p>
               <div className="max-h-72 overflow-auto space-y-3">
-                {CASE_DOCUMENT_STAGES.map((stage) => {
+                {CUSTOMER_DOCUMENT_SECTIONS.map((section) => {
+                  const stage = section.stage;
                   const stageDocs = caseDocuments
                     .map((doc, idx) => ({ ...doc, idx }))
                     .filter((doc) => doc.stage === stage);
                   return (
                     <div key={`edit-${stage}`} className="rounded-md border p-2 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{stage}</p>
+                      <p className="text-sm font-medium">{stage}</p>
+                      <p className="text-xs text-muted-foreground">{section.note}</p>
+                      {renderDocumentMetaFields(section, caseDocumentMeta, setCaseDocumentMeta)}
+                      <div className="flex items-center justify-end gap-2">
                         <Input
                           data-testid={`input-edit-case-document-upload-${stage}`}
                           type="file"
@@ -1041,7 +1151,12 @@ export default function KasusPage() {
                           className="max-w-[220px]"
                           onChange={async (e) => {
                             const input = e.currentTarget;
-                            await handleCaseDocumentUpload(stage, input.files);
+                            if (section.maxFiles && stageDocs.length + (input.files?.length || 0) > section.maxFiles) {
+                              toast({ title: "Maksimal upload tercapai", description: `${stage} maksimal ${section.maxFiles} file`, variant: "destructive" });
+                              input.value = "";
+                              return;
+                            }
+                            await handleCaseDocumentUpload(stage, input.files, caseDocumentMeta[stage] || {});
                             input.value = "";
                           }}
                         />

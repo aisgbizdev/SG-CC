@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRoute, Link } from "wouter";
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,21 +37,32 @@ const normalizeMeetingType = (value?: string | null) =>
   value ? LEGACY_MEETING_LABELS[value] || value : "";
 const normalizeResolutionPath = (value?: string | null) =>
   value ? LEGACY_RESOLUTION_LABELS[value] || value : "Belum Ditentukan";
-const CASE_DOCUMENT_STAGES = [
-  "Prospek Nasabah",
-  "Simulasi Regol / Regulasi",
-  "Simulasi Transaksi",
-  "Setor Dana",
-  "Official Receipt",
-  "Aktivasi Akun",
-  "Transaksi Berjalan",
-  "Komplain Nasabah",
-  "Laporan Polisi",
-  "Laporan ke Bappebti",
-  "Perdamaian",
-  "Putusan Pengadilan",
+type DocumentSection = {
+  stage: string;
+  fields: readonly string[];
+  note: string;
+  maxFiles?: number;
+};
+const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
+  { stage: "Pertemuan Calon Nasabah", fields: ["dateRange"], note: "FKN, foto, screenshot, chat WA / item." },
+  { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
+  { stage: "Simulasi Transaksi", fields: ["dateRange"], note: "Item screenshot demo transaksi." },
+  { stage: "Registrasi Online", fields: ["date"], note: "Tanggal regol, foto atau screenshot." },
+  { stage: "Verifikasi WPB", fields: ["date"], note: "Tanggal dan screenshot video verifikasi." },
+  { stage: "Penyetoran Margin Awal", fields: ["date"], note: "Slip setoran dan OR. Maksimal 5 upload.", maxFiles: 5 },
+  { stage: "Aktivasi Akun", fields: ["date", "approvalDates"], note: "Screenshot video aktivasi, tanggal approval Kacab dan Kepatuhan." },
+  { stage: "Pengiriman Kode Akses Transaksi", fields: ["date"], note: "Bukti kirim via email dan SMS." },
+  { stage: "Riwayat Transaksi", fields: ["dateRange"], note: "Trade history, daily statement, bukti kirim statement by email & SMS, bukti margin call." },
+  { stage: "Topup dan WD", fields: ["notes"], note: "Isi berapa kali topup dan berapa kali WD." },
 ] as const;
-const COMPLAINT_ATTACHMENT_STAGE = "Kronologi Pengaduan Nasabah";
+const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
+  { stage: "Pialang (Musyawarah)", fields: ["date", "notes"], note: "Tanggal musyawarah, hasil musyawarah, dan tanggal berkelanjutan." },
+  { stage: "BBJ (Mediasi)", fields: ["dateRange", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi." },
+  { stage: "Bappebti", fields: ["date", "notes"], note: "Perkembangan, klarifikasi, pemeriksaan, hasil pemeriksaan, dan tindak lanjut pengaduan." },
+  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, dan hasil LP." },
+  { stage: "Pengadilan", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
+  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
+] as const;
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
   "application/pdf",
@@ -62,7 +73,7 @@ const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
-const MAX_CASE_DOCUMENT_SIZE = 150 * 1024 * 1024;
+const MAX_CASE_DOCUMENT_SIZE = 20 * 1024 * 1024;
 type CaseDocumentItem = {
   stage: string;
   fileName: string;
@@ -70,7 +81,14 @@ type CaseDocumentItem = {
   size: number;
   dataUrl: string;
   uploadedAt?: string;
+  date?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  branchApprovalDate?: string;
+  complianceApprovalDate?: string;
+  notes?: string;
 };
+type DocumentMeta = Pick<CaseDocumentItem, "date" | "dateFrom" | "dateTo" | "branchApprovalDate" | "complianceApprovalDate" | "notes">;
 function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
   if (!raw || typeof raw !== "string") return [];
   try {
@@ -93,6 +111,8 @@ export default function KasusDetailPage() {
   const [editing, setEditing] = useState(false);
   const [caseDocumentsEdit, setCaseDocumentsEdit] = useState<CaseDocumentItem[]>([]);
   const [complaintAttachmentsEdit, setComplaintAttachmentsEdit] = useState<CaseDocumentItem[]>([]);
+  const [caseDocumentMeta, setCaseDocumentMeta] = useState<Record<string, DocumentMeta>>({});
+  const [complaintDocumentMeta, setComplaintDocumentMeta] = useState<Record<string, DocumentMeta>>({});
 
   const [meetingForm, setMeetingForm] = useState({
     meetingDate: "",
@@ -211,6 +231,7 @@ export default function KasusDetailPage() {
       accountNumber: caseData.accountNumber,
       branch: caseData.branch,
       picMain: caseData.picMain,
+      branchHead: caseData.branchHead,
       wpbName: caseData.wpbName,
       managerName: caseData.managerName,
       summary: caseData.summary,
@@ -267,7 +288,7 @@ export default function KasusDetailPage() {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-  const handleCaseDocumentUploadEdit = async (stage: string, files: FileList | null) => {
+  const handleCaseDocumentUploadEdit = async (stage: string, files: FileList | null, meta: DocumentMeta = {}) => {
     if (!files || files.length === 0) return;
     const pending = Array.from(files);
     const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
@@ -277,7 +298,7 @@ export default function KasusDetailPage() {
     }
     const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
     if (oversize) {
-      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 20MB`, variant: "destructive" });
       return;
     }
     try {
@@ -299,7 +320,7 @@ export default function KasusDetailPage() {
     setCaseDocumentsEdit(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleComplaintAttachmentUploadEdit = async (files: FileList | null) => {
+  const handleComplaintAttachmentUploadEdit = async (stage: string, files: FileList | null, meta: DocumentMeta = {}) => {
     if (!files || files.length === 0) return;
     const pending = Array.from(files);
     const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
@@ -309,18 +330,19 @@ export default function KasusDetailPage() {
     }
     const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
     if (oversize) {
-      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 150MB`, variant: "destructive" });
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 20MB`, variant: "destructive" });
       return;
     }
 
     try {
       const encoded = await Promise.all(pending.map(async (file) => ({
-        stage: COMPLAINT_ATTACHMENT_STAGE,
+        stage,
         fileName: file.name,
         mimeType: file.type,
         size: file.size,
         dataUrl: await fileToDataUrl(file),
         uploadedAt: new Date().toISOString(),
+        ...meta,
       })));
       setComplaintAttachmentsEdit(prev => [...prev, ...encoded]);
       toast({ title: "Berhasil", description: `${encoded.length} lampiran ditambahkan` });
@@ -331,6 +353,33 @@ export default function KasusDetailPage() {
 
   const removeComplaintAttachmentEdit = (index: number) => {
     setComplaintAttachmentsEdit(prev => prev.filter((_, i) => i !== index));
+  };
+  const updateDocumentMeta = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+    key: keyof DocumentMeta,
+    value: string,
+  ) => setter(prev => ({ ...prev, [stage]: { ...(prev[stage] || {}), [key]: value } }));
+  const renderDocumentMetaFields = (
+    section: { stage: string; fields: readonly string[] },
+    meta: Record<string, DocumentMeta>,
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+  ) => {
+    const current = meta[section.stage] || {};
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {section.fields.includes("date") && <div className="space-y-1"><Label className="text-xs">Tanggal</Label><Input type="date" value={current.date || ""} onChange={e => updateDocumentMeta(setter, section.stage, "date", e.target.value)} /></div>}
+        {section.fields.includes("dateRange") && <>
+          <div className="space-y-1"><Label className="text-xs">Dari Tanggal</Label><Input type="date" value={current.dateFrom || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateFrom", e.target.value)} /></div>
+          <div className="space-y-1"><Label className="text-xs">Sampai Tanggal</Label><Input type="date" value={current.dateTo || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateTo", e.target.value)} /></div>
+        </>}
+        {section.fields.includes("approvalDates") && <>
+          <div className="space-y-1"><Label className="text-xs">Approval Kacab</Label><Input type="date" value={current.branchApprovalDate || ""} onChange={e => updateDocumentMeta(setter, section.stage, "branchApprovalDate", e.target.value)} /></div>
+          <div className="space-y-1"><Label className="text-xs">Approval Kepatuhan</Label><Input type="date" value={current.complianceApprovalDate || ""} onChange={e => updateDocumentMeta(setter, section.stage, "complianceApprovalDate", e.target.value)} /></div>
+        </>}
+        {section.fields.includes("notes") && <div className="space-y-1 sm:col-span-2"><Label className="text-xs">Catatan</Label><Textarea value={current.notes || ""} onChange={e => updateDocumentMeta(setter, section.stage, "notes", e.target.value)} /></div>}
+      </div>
+    );
   };
 
   return (
@@ -399,6 +448,10 @@ export default function KasusDetailPage() {
                 <Label>Manager</Label>
                 <Input data-testid="input-edit-manager" value={editForm.managerName || ""} onChange={e => setEditForm({...editForm, managerName: e.target.value})} />
               </div>
+              <div className="space-y-1.5">
+                <Label>Kepala Cabang</Label>
+                <Input data-testid="input-edit-branch-head" value={editForm.branchHead || ""} onChange={e => setEditForm({...editForm, branchHead: e.target.value})} />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Jalur Penyelesaian</Label>
@@ -422,34 +475,36 @@ export default function KasusDetailPage() {
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-center gap-2">
                 <Paperclip className="w-4 h-4 text-muted-foreground" />
-                <Label className="font-medium">Upload Lampiran / Dokumen Pengaduan</Label>
+                <Label className="font-medium">Dokumen Pengaduan Nasabah</Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
               </p>
-              <Input
-                data-testid="input-detail-edit-complaint-attachment-upload"
-                type="file"
-                multiple
-                accept={CASE_DOCUMENT_ACCEPT}
-                onChange={async (e) => {
-                  const input = e.currentTarget;
-                  await handleComplaintAttachmentUploadEdit(input.files);
-                  input.value = "";
-                }}
-              />
-              {complaintAttachmentsEdit.length > 0 && (
-                <div className="space-y-1">
-                  {complaintAttachmentsEdit.map((doc, idx) => (
-                    <div key={`detail-complaint-${doc.fileName}-${idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                      <p className="truncate font-medium">{doc.fileName}</p>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachmentEdit(idx)}>
-                        <X className="w-3.5 h-3.5" />
-                      </Button>
+              <div className="max-h-72 overflow-auto space-y-3">
+                {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
+                  const docs = complaintAttachmentsEdit.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage);
+                  return (
+                    <div key={`detail-complaint-${section.stage}`} className="rounded-md border p-2 space-y-2">
+                      <p className="text-sm font-medium">{section.stage}</p>
+                      <p className="text-xs text-muted-foreground">{section.note}</p>
+                      {renderDocumentMetaFields(section, complaintDocumentMeta, setComplaintDocumentMeta)}
+                      <Input type="file" multiple accept={CASE_DOCUMENT_ACCEPT} onChange={async (e) => {
+                        const input = e.currentTarget;
+                        await handleComplaintAttachmentUploadEdit(section.stage, input.files, complaintDocumentMeta[section.stage] || {});
+                        input.value = "";
+                      }} />
+                      {docs.map((doc) => (
+                        <div key={`detail-complaint-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
+                          <p className="truncate font-medium">{doc.fileName}</p>
+                          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachmentEdit(doc.idx)}>
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
@@ -531,17 +586,20 @@ export default function KasusDetailPage() {
                 <Label className="font-medium">Dokumen Nasabah</Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 150MB per file.
+                Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
               </p>
               <div className="max-h-72 overflow-auto space-y-3">
-                {CASE_DOCUMENT_STAGES.map((stage) => {
+                {CUSTOMER_DOCUMENT_SECTIONS.map((section) => {
+                  const stage = section.stage;
                   const stageDocs = caseDocumentsEdit
                     .map((doc, idx) => ({ ...doc, idx }))
                     .filter((doc) => doc.stage === stage);
                   return (
                     <div key={`detail-edit-${stage}`} className="rounded-md border p-2 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{stage}</p>
+                      <p className="text-sm font-medium">{stage}</p>
+                      <p className="text-xs text-muted-foreground">{section.note}</p>
+                      {renderDocumentMetaFields(section, caseDocumentMeta, setCaseDocumentMeta)}
+                      <div className="flex items-center justify-end gap-2">
                         <Input
                           data-testid={`input-detail-edit-document-upload-${stage}`}
                           type="file"
@@ -550,7 +608,12 @@ export default function KasusDetailPage() {
                           className="max-w-[220px]"
                           onChange={async (e) => {
                             const input = e.currentTarget;
-                            await handleCaseDocumentUploadEdit(stage, input.files);
+                            if (section.maxFiles && stageDocs.length + (input.files?.length || 0) > section.maxFiles) {
+                              toast({ title: "Maksimal upload tercapai", description: `${stage} maksimal ${section.maxFiles} file`, variant: "destructive" });
+                              input.value = "";
+                              return;
+                            }
+                            await handleCaseDocumentUploadEdit(stage, input.files, caseDocumentMeta[stage] || {});
                             input.value = "";
                           }}
                         />
@@ -646,6 +709,10 @@ export default function KasusDetailPage() {
                     <div>
                       <p className="text-xs text-muted-foreground">Manager</p>
                       <p className="text-sm" data-testid="text-manager">{caseData.managerName || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Kepala Cabang</p>
+                      <p className="text-sm" data-testid="text-branch-head">{caseData.branchHead || "-"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Jalur Penyelesaian</p>
