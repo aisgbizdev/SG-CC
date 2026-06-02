@@ -145,7 +145,7 @@ export default function PesanPage() {
   const { totalPages, totalItems, getPageItems } = usePagination(filteredMessages, 20);
   const pagedItems = getPageItems(currentPage);
 
-  const isDuDk = user?.role === "du" || user?.role === "dk";
+  const isDuDk = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto">

@@ -158,7 +158,7 @@ export default function KasusPage() {
       setStageFilter("all");
     }
   }, [searchString]);
-  const isDuDk = ["du", "dk"].includes(user?.role || "");
+  const isDuDk = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
   const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
 
   const { data: myBranches } = useQuery<Branch[]>({
@@ -347,7 +347,7 @@ export default function KasusPage() {
   const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
   const pagedItems = getPageItems(currentPage);
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
-  const canCreate = ["du", "dk"].includes(user?.role || "");
+  const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
   const canDeleteCase = (c: Case) => ["superadmin", "owner"].includes(user?.role || "") || c.createdBy === user?.id;
   const updateDocumentMeta = (
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,

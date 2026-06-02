@@ -407,9 +407,15 @@ export default function KpiPage() {
     return usersData?.find(u => u.id === userId)?.fullName || "-";
   };
   const getUserRole = (userId: number) => {
-    if (!isAdmin && user && userId === user.id) return user.role === "du" ? "DU" : "DK";
+    if (!isAdmin && user && userId === user.id) {
+      if (["du", "cbo", "ceo"].includes(user.role)) return "DU";
+      if (["dk", "kepatuhan_cabang"].includes(user.role)) return "DK";
+      return user.role.toUpperCase();
+    }
     const u = usersData?.find(u2 => u2.id === userId);
-    return u?.role === "du" ? "DU" : u?.role === "dk" ? "DK" : u?.role?.toUpperCase() || "-";
+    if (u && ["du", "cbo", "ceo"].includes(u.role)) return "DU";
+    if (u && ["dk", "kepatuhan_cabang"].includes(u.role)) return "DK";
+    return u?.role?.toUpperCase() || "-";
   };
   const getUserCompanyId = (userId: number) => {
     if (!isAdmin && user && userId === user.id) return user.companyId;
@@ -427,7 +433,7 @@ export default function KpiPage() {
     return matchPeriod && matchCompany && matchPeriodType;
   });
 
-  const duDkUsers = usersData?.filter(u => ["du", "dk"].includes(u.role) && u.isActive) || [];
+  const duDkUsers = usersData?.filter(u => ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(u.role) && u.isActive) || [];
 
   const isLoading = activeTab === "live" ? liveLoading : histLoading;
   const isError = activeTab === "live" ? liveError : histError;
@@ -483,7 +489,7 @@ export default function KpiPage() {
                   const rows: string[] = [];
                   rows.push(["Nama", "Jabatan", "PT", "Skor", "Grade", "Aktivitas", "Kasus", "Tugas", "Overdue", ...ASPECT_LABELS.map(a => a.label)].join(","));
                   const allSorted = [...(filteredLive || [])].sort((a, b) => {
-                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    if (a.role !== b.role) return ["du", "cbo", "ceo"].includes(a.role) ? -1 : 1;
                     return b.totalScore - a.totalScore;
                   });
                   allSorted.forEach(kpi => {
@@ -523,7 +529,7 @@ export default function KpiPage() {
                     ...ASPECT_LABELS.map(a => ({ header: a.label, key: a.key, width: 18 })),
                   ];
                   const allSorted = [...(filteredLive || [])].sort((a, b) => {
-                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    if (a.role !== b.role) return ["du", "cbo", "ceo"].includes(a.role) ? -1 : 1;
                     return b.totalScore - a.totalScore;
                   });
                   const data = allSorted.map(kpi => {
@@ -561,7 +567,7 @@ export default function KpiPage() {
                     ...ASPECT_LABELS.map(a => ({ header: a.label, key: a.key, width: 18 })),
                   ];
                   const allSorted = [...(filteredLive || [])].sort((a, b) => {
-                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    if (a.role !== b.role) return ["du", "cbo", "ceo"].includes(a.role) ? -1 : 1;
                     return b.totalScore - a.totalScore;
                   });
                   const data = allSorted.map(kpi => {
@@ -599,7 +605,7 @@ export default function KpiPage() {
                     ...ASPECT_LABELS.map(a => ({ header: a.label, key: a.key, width: 1400 })),
                   ];
                   const allSorted = [...(filteredLive || [])].sort((a, b) => {
-                    if (a.role !== b.role) return a.role === "du" ? -1 : 1;
+                    if (a.role !== b.role) return ["du", "cbo", "ceo"].includes(a.role) ? -1 : 1;
                     return b.totalScore - a.totalScore;
                   });
                   const data = allSorted.map(kpi => {
@@ -703,8 +709,8 @@ export default function KpiPage() {
               </CardContent>
             </Card>
           ) : (() => {
-            const duList = [...filteredLive].filter(k => k.role === "du").sort((a, b) => b.totalScore - a.totalScore);
-            const dkList = [...filteredLive].filter(k => k.role === "dk").sort((a, b) => b.totalScore - a.totalScore);
+            const duList = [...filteredLive].filter(k => ["du", "cbo", "ceo"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
+            const dkList = [...filteredLive].filter(k => ["dk", "kepatuhan_cabang"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
 
             const renderKpiCard = (kpi: LiveKpi, idx: number) => {
               const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);

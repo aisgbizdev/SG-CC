@@ -169,7 +169,7 @@ export default function TugasPage() {
   const canCreate = ["superadmin", "owner"].includes(user?.role || "");
   const canDeleteTask = ["superadmin", "owner"].includes(user?.role || "");
   const canEditTask = ["superadmin", "owner"].includes(user?.role || "");
-  const assignableUsers = usersData?.filter((u: any) => ["du", "dk", "superadmin"].includes(u.role)) || [];
+  const assignableUsers = usersData?.filter((u: any) => ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "superadmin"].includes(u.role)) || [];
 
   const startEditMode = (task: Task) => {
     setEditForm({

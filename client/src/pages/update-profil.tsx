@@ -273,7 +273,7 @@ export default function UpdateProfilPage() {
               />
             </div>
 
-            {user && ["du", "dk"].includes(user.role) && (
+            {user && ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user.role) && (
               <div className="space-y-1.5">
                 <Label htmlFor="branchCount">Jumlah Cabang yang Dikelola</Label>
                 <Input

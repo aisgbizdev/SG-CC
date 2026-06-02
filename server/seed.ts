@@ -26,6 +26,7 @@ async function runMigrations() {
     `);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_branches_company_id ON branches(company_id)`);
     await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`);
+    await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS branch text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS wpb_name text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS manager_name text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS case_documents text`);

@@ -27,6 +27,9 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 const ROUTINE_UPDATE_TYPES = new Set([
   "activity_updated", "case_updated", "task_updated",
 ]);
+const DU_LIKE_ROLES = ["du", "cbo", "ceo"];
+const DK_LIKE_ROLES = ["dk", "kepatuhan_cabang"];
+const DU_DK_LIKE_ROLES = [...DU_LIKE_ROLES, ...DK_LIKE_ROLES];
 
 async function notifyAdminsAndOwners(
   companyId: number | null,
@@ -52,7 +55,7 @@ async function notifyAdminsAndOwners(
       if (!u.isActive || u.id === excludeUserId) return false;
       if (u.role === "superadmin") return true;
       if (u.role === "owner") return true;
-      if ((u.role === "du" || u.role === "dk") && entityType === "task") {
+      if (DU_DK_LIKE_ROLES.includes(u.role) && entityType === "task") {
         return false;
       }
       return false;
@@ -177,6 +180,7 @@ const createUserSchema = z.object({
   fullName: z.string().min(1, "Nama lengkap wajib diisi"),
   role: z.string().min(1, "Role wajib diisi"),
   companyId: z.number().int().optional().nullable(),
+  branch: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   birthDate: z.string().optional().nullable(),
@@ -555,6 +559,7 @@ export async function registerRoutes(
       if (currentUser.role !== "superadmin") {
         delete updateData.role;
         delete updateData.companyId;
+        delete updateData.branch;
         delete updateData.isActive;
       }
       if (updateData.isActive !== undefined && currentUser.role === "superadmin") {
@@ -636,7 +641,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/activities", requireRole("superadmin", "du", "dk"), async (req, res) => {
+  app.post("/api/activities", requireRole("superadmin", ...DU_DK_LIKE_ROLES), async (req, res) => {
     try {
       const parsed = activityBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
@@ -725,7 +730,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/cases", requireRole("superadmin", "du", "dk"), async (req, res) => {
+  app.post("/api/cases", requireRole("superadmin", ...DU_DK_LIKE_ROLES), async (req, res) => {
     try {
       const parsed = caseBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
@@ -849,7 +854,7 @@ export async function registerRoutes(
     try {
       const user = req.user as any;
       let filters: any = {};
-      if (["du", "dk"].includes(user.role)) {
+      if (DU_DK_LIKE_ROLES.includes(user.role)) {
         filters.assignedTo = user.id;
       }
       const data = await storage.getTasks(filters);
@@ -867,7 +872,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const task = await storage.getTask(id);
       if (!task) return res.status(404).json({ message: "Tugas tidak ditemukan" });
-      if (["du", "dk"].includes(user.role) && task.assignedTo !== user.id) {
+      if (DU_DK_LIKE_ROLES.includes(user.role) && task.assignedTo !== user.id) {
         return res.status(403).json({ message: "Akses ditolak" });
       }
       res.json(task);
@@ -899,10 +904,10 @@ export async function registerRoutes(
       const user = req.user as any;
       const existing = await storage.getTask(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Tugas tidak ditemukan" });
-      if (["du", "dk"].includes(user.role) && existing.assignedTo !== user.id) {
+      if (DU_DK_LIKE_ROLES.includes(user.role) && existing.assignedTo !== user.id) {
         return res.status(403).json({ message: "Akses ditolak" });
       }
-      if (["du", "dk"].includes(user.role)) {
+      if (DU_DK_LIKE_ROLES.includes(user.role)) {
         const duDkParsed = taskDuDkPatchSchema.safeParse(req.body);
         if (!duDkParsed.success) return res.status(400).json(formatZodError(duDkParsed.error));
         const task = await storage.updateTask(existing.id, duDkParsed.data);
@@ -1318,7 +1323,7 @@ export async function registerRoutes(
       const user = req.user as any;
       if (["superadmin", "owner"].includes(user.role)) {
         const allUsers = await storage.getUsers();
-        const duDkUsers = allUsers.filter(u => ["du", "dk"].includes(u.role) && u.isActive);
+        const duDkUsers = allUsers.filter(u => DU_DK_LIKE_ROLES.includes(u.role) && u.isActive);
         const results = await Promise.all(duDkUsers.map(u => storage.calculateLiveKpi(u.id)));
         res.json(results);
       } else {

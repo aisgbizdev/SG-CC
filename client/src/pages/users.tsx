@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Shield, Building2, User, KeyRound, Trash2, RotateCcw } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Company } from "@shared/schema";
+import type { Branch, Company } from "@shared/schema";
 
 export default function UsersPage() {
   usePageTitle("Manajemen User");
@@ -35,7 +35,18 @@ export default function UsersPage() {
   const [form, setForm] = useState({
     username: "", password: "", fullName: "",
     role: "dk", companyId: "",
+    branch: "",
     secretQuestion: "Nama ibu kandung", secretAnswer: "",
+  });
+  const { data: branchesData } = useQuery<Branch[]>({
+    queryKey: ["/api/companies", form.companyId, "branches"],
+    queryFn: async () => {
+      if (!form.companyId) return [];
+      const res = await fetch(`/api/companies/${form.companyId}/branches`, { credentials: "include" });
+      if (!res.ok) throw new Error("Gagal mengambil data cabang");
+      return res.json();
+    },
+    enabled: !!form.companyId,
   });
 
   const createMutation = useMutation({
@@ -47,7 +58,7 @@ export default function UsersPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({ title: "Berhasil", description: "User berhasil dibuat" });
       setDialogOpen(false);
-      setForm({ username: "", password: "", fullName: "", role: "dk", companyId: "", secretQuestion: "Nama ibu kandung", secretAnswer: "" });
+      setForm({ username: "", password: "", fullName: "", role: "dk", companyId: "", branch: "", secretQuestion: "Nama ibu kandung", secretAnswer: "" });
     },
     onError: (err: any) => {
       toast({ title: "Gagal", description: err.message || "Gagal membuat user", variant: "destructive" });
@@ -157,18 +168,30 @@ export default function UsersPage() {
                       <SelectItem value="owner">Owner</SelectItem>
                       <SelectItem value="du">Direktur Utama</SelectItem>
                       <SelectItem value="dk">Direktur Kepatuhan</SelectItem>
+                      <SelectItem value="cbo">CBO</SelectItem>
+                      <SelectItem value="ceo">CEO</SelectItem>
+                      <SelectItem value="kepatuhan_cabang">Kepatuhan Cabang</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>PT</Label>
-                  <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v})}>
+                  <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v, branch: ""})}>
                     <SelectTrigger><SelectValue placeholder="Pilih PT" /></SelectTrigger>
                     <SelectContent>
                       {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cabang</Label>
+                <Select value={form.branch} onValueChange={v => setForm({...form, branch: v})} disabled={!form.companyId}>
+                  <SelectTrigger><SelectValue placeholder={form.companyId ? "Pilih Cabang" : "Pilih PT dulu"} /></SelectTrigger>
+                  <SelectContent>
+                    {branchesData?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -214,6 +237,7 @@ export default function UsersPage() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       <span>@{u.username}</span>
                       <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{getCompanyName(u.companyId)}</span>
+                      {u.branch && <span className="flex items-center gap-1"><User className="w-3 h-3" />{u.branch}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">

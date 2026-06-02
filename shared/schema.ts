@@ -41,8 +41,9 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
-  role: text("role").notNull(), // superadmin, owner, du, dk
+  role: text("role").notNull(), // superadmin, owner, du, dk, cbo, ceo, kepatuhan_cabang
   companyId: integer("company_id"),
+  branch: text("branch"),
   phone: text("phone"),
   address: text("address"),
   birthDate: text("birth_date"),

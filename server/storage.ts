@@ -573,7 +573,7 @@ export class DatabaseStorage implements IStorage {
           (SELECT COUNT(*) FROM cases WHERE is_archived = false AND created_by = ${users.id}) +
           (SELECT COUNT(*) FROM tasks WHERE is_archived = false AND assigned_to = ${users.id})
         )`
-      }).from(users).where(and(sql`${users.role} IN ('du', 'dk')`, eq(users.isActive, true))),
+      }).from(users).where(and(sql`${users.role} IN ('du', 'dk', 'cbo', 'ceo', 'kepatuhan_cabang')`, eq(users.isActive, true))),
       db.select({
         uid: users.id,
         contrib: sql<number>`(
@@ -582,7 +582,7 @@ export class DatabaseStorage implements IStorage {
           (SELECT COUNT(*) FROM comments WHERE created_by = ${users.id} AND entity_type = 'case' AND entity_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false)) +
           (SELECT COUNT(*) FROM case_updates WHERE created_by = ${users.id} AND case_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false))
         )`
-      }).from(users).where(and(sql`${users.role} IN ('du', 'dk')`, eq(users.isActive, true))),
+      }).from(users).where(and(sql`${users.role} IN ('du', 'dk', 'cbo', 'ceo', 'kepatuhan_cabang')`, eq(users.isActive, true))),
     ]);
 
     const aTotal = actTotal?.count || 0;
@@ -714,7 +714,7 @@ export class DatabaseStorage implements IStorage {
           (SELECT COUNT(*) FROM tasks WHERE is_archived = false AND assigned_to = ${users.id})
         )`
       }).from(users).where(and(
-        sql`${users.role} IN ('du', 'dk')`,
+        sql`${users.role} IN ('du', 'dk', 'cbo', 'ceo', 'kepatuhan_cabang')`,
         eq(users.isActive, true)
       )),
       db.select({
@@ -726,7 +726,7 @@ export class DatabaseStorage implements IStorage {
           (SELECT COUNT(*) FROM case_updates WHERE created_by = ${users.id} AND case_id IN (SELECT id FROM cases WHERE risk_level = 'High' AND is_archived = false))
         )`
       }).from(users).where(and(
-        sql`${users.role} IN ('du', 'dk')`,
+        sql`${users.role} IN ('du', 'dk', 'cbo', 'ceo', 'kepatuhan_cabang')`,
         eq(users.isActive, true)
       )),
       db.select({ totalScore: kpiAssessments.totalScore, period: kpiAssessments.period })

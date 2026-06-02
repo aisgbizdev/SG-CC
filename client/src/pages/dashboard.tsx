@@ -69,8 +69,8 @@ export default function DashboardPage() {
     );
   }
 
-  const canAddActivity = ["du", "dk"].includes(user?.role || "");
-  const canAddCase = ["du", "dk"].includes(user?.role || "");
+  const canAddActivity = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
+  const canAddCase = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
 
   const getCompanyName = (id: number) => companiesData?.find((c: any) => c.id === id)?.code || "-";
 

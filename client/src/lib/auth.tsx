@@ -155,6 +155,9 @@ export function getRoleLabel(role: string): string {
     owner: "Owner",
     du: "Direktur Utama",
     dk: "Direktur Kepatuhan",
+    cbo: "CBO",
+    ceo: "CEO",
+    kepatuhan_cabang: "Kepatuhan Cabang",
   };
   return labels[role] || role;
 }
