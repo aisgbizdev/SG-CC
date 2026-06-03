@@ -13,9 +13,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Shield, Building2, User, KeyRound, Trash2, RotateCcw } from "lucide-react";
+import { Plus, Shield, Building2, User, KeyRound, Trash2, RotateCcw, Pencil } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Branch, Company } from "@shared/schema";
+
+const NO_COMPANY = "__none__";
+const emptyUserForm = {
+  username: "", password: "", fullName: "",
+  role: "dk", companyId: "",
+  branch: "",
+  secretQuestion: "Nama ibu kandung", secretAnswer: "",
+};
 
 export default function UsersPage() {
   usePageTitle("Manajemen User");
@@ -23,6 +31,8 @@ export default function UsersPage() {
   const { user: currentUser } = useAuth();
   const isSuperadmin = currentUser?.role === "superadmin";
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetUserId, setResetUserId] = useState<number | null>(null);
   const [resetUserName, setResetUserName] = useState("");
@@ -32,21 +42,30 @@ export default function UsersPage() {
   const { data: usersData, isLoading } = useQuery<any[]>({ queryKey: ["/api/users"] });
   const { data: companiesData } = useQuery<Company[]>({ queryKey: ["/api/companies"] });
 
-  const [form, setForm] = useState({
-    username: "", password: "", fullName: "",
-    role: "dk", companyId: "",
-    branch: "",
+  const [form, setForm] = useState(emptyUserForm);
+  const [editForm, setEditForm] = useState({
+    username: "", fullName: "", role: "dk", companyId: "", branch: "", isActive: true,
     secretQuestion: "Nama ibu kandung", secretAnswer: "",
   });
   const { data: branchesData } = useQuery<Branch[]>({
     queryKey: ["/api/companies", form.companyId, "branches"],
     queryFn: async () => {
-      if (!form.companyId) return [];
+      if (!form.companyId || form.companyId === NO_COMPANY) return [];
       const res = await fetch(`/api/companies/${form.companyId}/branches`, { credentials: "include" });
       if (!res.ok) throw new Error("Gagal mengambil data cabang");
       return res.json();
     },
-    enabled: !!form.companyId,
+    enabled: !!form.companyId && form.companyId !== NO_COMPANY,
+  });
+  const { data: editBranchesData } = useQuery<Branch[]>({
+    queryKey: ["/api/companies", editForm.companyId, "branches", "edit-user"],
+    queryFn: async () => {
+      if (!editForm.companyId) return [];
+      const res = await fetch(`/api/companies/${editForm.companyId}/branches`, { credentials: "include" });
+      if (!res.ok) throw new Error("Gagal mengambil data cabang");
+      return res.json();
+    },
+    enabled: !!editForm.companyId && editForm.companyId !== NO_COMPANY,
   });
 
   const createMutation = useMutation({
@@ -58,10 +77,26 @@ export default function UsersPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({ title: "Berhasil", description: "User berhasil dibuat" });
       setDialogOpen(false);
-      setForm({ username: "", password: "", fullName: "", role: "dk", companyId: "", branch: "", secretQuestion: "Nama ibu kandung", secretAnswer: "" });
+      setForm(emptyUserForm);
     },
     onError: (err: any) => {
       toast({ title: "Gagal", description: err.message || "Gagal membuat user", variant: "destructive" });
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async ({ userId, data }: { userId: number; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/users/${userId}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({ title: "Berhasil", description: "User berhasil diperbarui" });
+      setEditDialogOpen(false);
+      setEditingUserId(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal memperbarui user", variant: "destructive" });
     },
   });
 
@@ -120,8 +155,48 @@ export default function UsersPage() {
     }
     createMutation.mutate({
       ...form,
-      companyId: form.companyId ? parseInt(form.companyId) : null,
+      companyId: form.companyId && form.companyId !== NO_COMPANY ? parseInt(form.companyId) : null,
       isActive: true,
+    });
+  };
+
+  const openEditDialog = (u: any) => {
+    setEditingUserId(u.id);
+    setEditForm({
+      username: u.username || "",
+      fullName: u.fullName || "",
+      role: u.role || "dk",
+      companyId: u.companyId ? String(u.companyId) : "",
+      branch: u.branch || "",
+      isActive: u.isActive !== false,
+      secretQuestion: u.secretQuestion || "Nama ibu kandung",
+      secretAnswer: "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!editingUserId) return;
+    if (!editForm.username || !editForm.fullName) {
+      toast({ title: "Error", description: "Username dan nama lengkap wajib diisi", variant: "destructive" });
+      return;
+    }
+    if (editingUserId === currentUser?.id && editForm.role !== "superadmin") {
+      toast({ title: "Error", description: "Tidak bisa mengubah role akun superadmin yang sedang dipakai", variant: "destructive" });
+      return;
+    }
+    editMutation.mutate({
+      userId: editingUserId,
+      data: {
+        username: editForm.username,
+        fullName: editForm.fullName,
+        role: editForm.role,
+        companyId: editForm.companyId && editForm.companyId !== NO_COMPANY ? parseInt(editForm.companyId) : null,
+        branch: editForm.branch || null,
+        isActive: editForm.isActive,
+        secretQuestion: editForm.secretQuestion || null,
+        ...(editForm.secretAnswer ? { secretAnswer: editForm.secretAnswer } : {}),
+      },
     });
   };
 
@@ -179,6 +254,7 @@ export default function UsersPage() {
                   <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v, branch: ""})}>
                     <SelectTrigger><SelectValue placeholder="Pilih PT" /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value={NO_COMPANY}>Semua PT / Tanpa PT</SelectItem>
                       {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -186,8 +262,8 @@ export default function UsersPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
-                <Select value={form.branch} onValueChange={v => setForm({...form, branch: v})} disabled={!form.companyId}>
-                  <SelectTrigger><SelectValue placeholder={form.companyId ? "Pilih Cabang" : "Pilih PT dulu"} /></SelectTrigger>
+                <Select value={form.branch} onValueChange={v => setForm({...form, branch: v})} disabled={!form.companyId || form.companyId === NO_COMPANY}>
+                  <SelectTrigger><SelectValue placeholder={form.companyId && form.companyId !== NO_COMPANY ? "Pilih Cabang" : "Pilih PT dulu"} /></SelectTrigger>
                   <SelectContent>
                     {branchesData?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
                   </SelectContent>
@@ -276,6 +352,16 @@ export default function UsersPage() {
                     <Badge variant={u.isActive ? "default" : "secondary"}>
                       {getRoleLabel(u.role)}
                     </Badge>
+                    {isSuperadmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        data-testid={`button-edit-user-${u.id}`}
+                        onClick={() => openEditDialog(u)}
+                      >
+                        <Pencil className="w-3 h-3 mr-1" /> Edit
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -283,6 +369,91 @@ export default function UsersPage() {
           })}
         </div>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={(open) => { setEditDialogOpen(open); if (!open) setEditingUserId(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Edit User</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Username *</Label>
+                <Input data-testid="input-edit-user-username" value={editForm.username} onChange={e => setEditForm({...editForm, username: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={editForm.isActive ? "active" : "inactive"} onValueChange={v => setEditForm({...editForm, isActive: v === "active"})}>
+                  <SelectTrigger data-testid="select-edit-user-status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nama Lengkap *</Label>
+              <Input data-testid="input-edit-user-fullname" value={editForm.fullName} onChange={e => setEditForm({...editForm, fullName: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Role</Label>
+                <Select value={editForm.role} onValueChange={v => setEditForm({...editForm, role: v})}>
+                  <SelectTrigger data-testid="select-edit-user-role"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="superadmin">Superadmin</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="du">Direktur Utama</SelectItem>
+                    <SelectItem value="dk">Direktur Kepatuhan</SelectItem>
+                    <SelectItem value="cbo">CBO</SelectItem>
+                    <SelectItem value="ceo">CEO</SelectItem>
+                    <SelectItem value="kepatuhan_cabang">Kepatuhan Cabang</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>PT</Label>
+                <Select value={editForm.companyId || NO_COMPANY} onValueChange={v => setEditForm({...editForm, companyId: v === NO_COMPANY ? "" : v, branch: ""})}>
+                  <SelectTrigger data-testid="select-edit-user-company"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_COMPANY}>Semua PT / Tanpa PT</SelectItem>
+                    {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Cabang</Label>
+              <Select value={editForm.branch} onValueChange={v => setEditForm({...editForm, branch: v})} disabled={!editForm.companyId || editForm.companyId === NO_COMPANY}>
+                <SelectTrigger data-testid="select-edit-user-branch"><SelectValue placeholder={editForm.companyId && editForm.companyId !== NO_COMPANY ? "Pilih Cabang" : "Pilih PT dulu"} /></SelectTrigger>
+                <SelectContent>
+                  {editBranchesData?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Pertanyaan Rahasia</Label>
+                <Select value={editForm.secretQuestion} onValueChange={v => setEditForm({...editForm, secretQuestion: v})}>
+                  <SelectTrigger data-testid="select-edit-user-secret-question"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nama ibu kandung">Nama ibu kandung</SelectItem>
+                    <SelectItem value="Kota lahir">Kota lahir</SelectItem>
+                    <SelectItem value="Nama sekolah pertama">Nama sekolah pertama</SelectItem>
+                    <SelectItem value="Nama hewan peliharaan">Nama hewan peliharaan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Jawaban Baru</Label>
+                <Input data-testid="input-edit-user-secret-answer" placeholder="Kosongkan jika tidak diubah" value={editForm.secretAnswer} onChange={e => setEditForm({...editForm, secretAnswer: e.target.value})} />
+              </div>
+            </div>
+            <Button data-testid="button-submit-edit-user" onClick={handleEditSubmit} className="w-full" disabled={editMutation.isPending}>
+              {editMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent>

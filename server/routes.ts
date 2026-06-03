@@ -562,7 +562,7 @@ export async function registerRoutes(
         delete updateData.branch;
         delete updateData.isActive;
       }
-      if (updateData.isActive !== undefined && currentUser.role === "superadmin") {
+      if (updateData.isActive === false && currentUser.role === "superadmin") {
         if (id === currentUser.id) {
           return res.status(400).json({ message: "Tidak bisa menonaktifkan akun sendiri" });
         }
