@@ -1,6 +1,23 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+function resolveApiBaseUrl(): string {
+  const configured = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+  if (!configured) return "";
+  if (typeof window === "undefined") return configured;
+  try {
+    const base = new URL(configured);
+    const baseIsLocalhost = base.hostname === "localhost" || base.hostname === "127.0.0.1";
+    const pageIsLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    // A localhost base only makes sense when the page itself is on localhost.
+    // Otherwise (Replit preview, production), fall back to same-origin requests.
+    if (baseIsLocalhost && !pageIsLocalhost) return "";
+  } catch {
+    return "";
+  }
+  return configured;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 const AUTH_TOKEN_KEY = "sgcc_token";
 let inMemoryAuthToken: string | null = null;
 

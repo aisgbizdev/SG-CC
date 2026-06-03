@@ -56,11 +56,11 @@ function getJwtSecret() {
   return process.env.JWT_SECRET || process.env.SESSION_SECRET || "sgcc-dev-only-secret";
 }
 
-function signAuthToken(user: Express.User) {
+function signAuthToken(user: Express.User, expiresInSeconds?: number) {
   return jwt.sign(
     { sub: user.id, username: user.username, role: user.role } satisfies AuthTokenPayload,
     getJwtSecret(),
-    { expiresIn: "1d" },
+    { expiresIn: expiresInSeconds ?? 24 * 60 * 60 },
   );
 }
 
@@ -235,12 +235,15 @@ export function setupAuth(app: Express) {
       req.logIn(user, (err) => {
         if (err) return next(err);
         const rememberMe = req.body.rememberMe === true;
+        const maxAge = rememberMe
+          ? 30 * 24 * 60 * 60 * 1000
+          : 8 * 60 * 60 * 1000;
         if (req.session && req.session.cookie) {
-          req.session.cookie.maxAge = rememberMe
-            ? 30 * 24 * 60 * 60 * 1000
-            : 8 * 60 * 60 * 1000;
+          req.session.cookie.maxAge = maxAge;
         }
-        return res.json(user);
+        const token = signAuthToken(user, Math.floor(maxAge / 1000));
+        res.append("Set-Cookie", buildAuthCookie(token, maxAge));
+        return res.json({ ...user, token });
       });
     })(req, res, next);
   });

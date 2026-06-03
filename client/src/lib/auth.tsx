@@ -110,7 +110,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/auth/login", { username, password, rememberMe });
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: LoginResponse) => {
+      if (data?.token) {
+        setStoredAuthToken(data.token);
+        postAuthMessageToParent({ type: "SGCC_AUTH_TOKEN", token: data.token });
+      }
       queryClient.setQueryData(["/api/auth/me"], data);
     },
   });
