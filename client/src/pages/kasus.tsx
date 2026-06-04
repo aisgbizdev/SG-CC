@@ -483,7 +483,7 @@ export default function KasusPage() {
         {section.fields.includes("multiDates") && (
           <div className="space-y-2 sm:col-span-2">
             <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs">Tanggal Pertemuan / Musyawarah</Label>
+              <Label className="text-xs">Tanggal Mediasi</Label>
               <Button type="button" size="icon" variant="outline" className="h-7 w-7" onClick={() => addDocumentMeetingDate(setter, section.stage)}>
                 <Plus className="h-3.5 w-3.5" />
               </Button>
