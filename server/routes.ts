@@ -672,8 +672,8 @@ export async function registerRoutes(
       const existing = await storage.getActivity(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
       if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-      if (user.role !== "superadmin" && existing.createdBy !== user.id) {
-        return res.status(403).json({ message: "Hanya pembuat atau superadmin yang bisa mengedit" });
+      if (!["superadmin", "du", "dk"].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, superadmin, DU, atau DK yang bisa mengedit" });
       }
       const patchParsed = activityPatchSchema.safeParse(req.body);
       if (!patchParsed.success) return res.status(400).json(formatZodError(patchParsed.error));
