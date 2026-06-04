@@ -53,6 +53,20 @@ const BAPPEBTI_PROCESSES = [
   "Hasil Pemeriksaan Pengaduan",
   "Tindak Lanjut Pengaduan",
 ] as const;
+const KEPOLISIAN_PROCESSES = [
+  "Laporan Polisi",
+  "BAP",
+  "Perkembangan Laporan Polisi",
+  "Hasil LP",
+] as const;
+const PENGADILAN_PROCESSES = [
+  "Proses Persidangan",
+  "Putusan Pengadilan",
+] as const;
+const BAKTI_PROCESSES = [
+  "Proses Persidangan",
+  "Putusan Bakti",
+] as const;
 const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Pertemuan Calon Nasabah", fields: ["multiDates"], note: "FKN, foto, screenshot, chat WA / item. Tanggal pertemuan bisa ditambahkan historis." },
   { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
@@ -69,9 +83,9 @@ const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Pialang (Musyawarah)", fields: ["multiDates", "notes"], note: "Tanggal musyawarah historis dan hasil musyawarah." },
   { stage: "BBJ (Mediasi)", fields: ["multiDates", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi historis." },
   { stage: "Bappebti", fields: ["subStage", "date", "notes"], note: "Pilih proses Bappebti, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAPPEBTI_PROCESSES },
-  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, perkembangan laporan polisi, dan hasil LP." },
-  { stage: "Pengadilan", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
-  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan Putusan Bakti." },
+  { stage: "Kepolisian", fields: ["subStage", "date", "notes"], note: "Pilih proses Kepolisian, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: KEPOLISIAN_PROCESSES },
+  { stage: "Pengadilan", fields: ["subStage", "date", "notes"], note: "Pilih proses Pengadilan, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: PENGADILAN_PROCESSES },
+  { stage: "BAKTI", fields: ["subStage", "date", "notes"], note: "Pilih proses BAKTI, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAKTI_PROCESSES },
 ] as const;
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
@@ -512,9 +526,9 @@ export default function KasusDetailPage() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {section.fields.includes("subStage") && section.subStages && <div className="space-y-1 sm:col-span-2">
-          <Label className="text-xs">Proses Bappebti</Label>
+          <Label className="text-xs">Proses {section.stage}</Label>
           <Select value={current.subStage || ""} onValueChange={v => updateDocumentMeta(setter, section.stage, "subStage", v)}>
-            <SelectTrigger><SelectValue placeholder="Pilih proses Bappebti" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={`Pilih proses ${section.stage}`} /></SelectTrigger>
             <SelectContent>{section.subStages.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
         </div>}

@@ -32,6 +32,7 @@ const RISK_LEVELS = ["Low", "Medium", "High"];
 const WORKFLOW_STAGES = ["Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
 const normalizeWorkflowStage = (value?: string | null) => value && value !== "Open" ? value : "Pemeriksaan Internal";
 const RESOLUTION_PATHS = ["Belum Ditentukan", "Pialang (Musyawarah)", "BBJ (Mediasi)", "Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
+const SOFT_PLACEHOLDER_CLASS = "placeholder:text-muted-foreground/45";
 const LEGACY_RESOLUTION_LABELS: Record<string, string> = {
   "Mediasi Internal": "Pialang (Musyawarah)",
   "Mediasi BBJ": "BBJ (Mediasi)",
@@ -54,6 +55,20 @@ const BAPPEBTI_PROCESSES = [
   "Hasil Pemeriksaan Pengaduan",
   "Tindak Lanjut Pengaduan",
 ] as const;
+const KEPOLISIAN_PROCESSES = [
+  "Laporan Polisi",
+  "BAP",
+  "Perkembangan Laporan Polisi",
+  "Hasil LP",
+] as const;
+const PENGADILAN_PROCESSES = [
+  "Proses Persidangan",
+  "Putusan Pengadilan",
+] as const;
+const BAKTI_PROCESSES = [
+  "Proses Persidangan",
+  "Putusan Bakti",
+] as const;
 const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Pertemuan Calon Nasabah", fields: ["multiDates"], note: "FKN, foto, screenshot, chat WA / item. Tanggal pertemuan bisa ditambahkan historis." },
   { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
@@ -70,9 +85,9 @@ const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Pialang (Musyawarah)", fields: ["multiDates", "notes"], note: "Tanggal musyawarah historis dan hasil musyawarah." },
   { stage: "BBJ (Mediasi)", fields: ["multiDates", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi historis." },
   { stage: "Bappebti", fields: ["subStage", "date", "notes"], note: "Pilih proses Bappebti, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAPPEBTI_PROCESSES },
-  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, perkembangan laporan polisi, dan hasil LP." },
-  { stage: "Pengadilan", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
-  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan Putusan Bakti." },
+  { stage: "Kepolisian", fields: ["subStage", "date", "notes"], note: "Pilih proses Kepolisian, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: KEPOLISIAN_PROCESSES },
+  { stage: "Pengadilan", fields: ["subStage", "date", "notes"], note: "Pilih proses Pengadilan, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: PENGADILAN_PROCESSES },
+  { stage: "BAKTI", fields: ["subStage", "date", "notes"], note: "Pilih proses BAKTI, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAKTI_PROCESSES },
 ] as const;
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
@@ -440,9 +455,9 @@ export default function KasusPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {section.fields.includes("subStage") && section.subStages && (
           <div className="space-y-1 sm:col-span-2">
-            <Label className="text-xs">Proses Bappebti</Label>
+            <Label className="text-xs">Proses {section.stage}</Label>
             <Select value={current.subStage || ""} onValueChange={v => updateDocumentMeta(setter, section.stage, "subStage", v)}>
-              <SelectTrigger><SelectValue placeholder="Pilih proses Bappebti" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={`Pilih proses ${section.stage}`} /></SelectTrigger>
               <SelectContent>{section.subStages.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
           </div>
@@ -713,7 +728,7 @@ export default function KasusPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Kode Kasus *</Label>
-                    <Input data-testid="input-case-code" placeholder="SGF-2024-003" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} />
+                    <Input data-testid="input-case-code" placeholder="SGF-2024-003" value={form.caseCode} onChange={e => setForm({...form, caseCode: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Tanggal Masuk *</Label>
@@ -724,7 +739,7 @@ export default function KasusPage() {
                   <div className="space-y-1.5">
                     <Label>PT</Label>
                     <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v})}>
-                      <SelectTrigger><SelectValue placeholder="Pilih PT" /></SelectTrigger>
+                      <SelectTrigger className="text-muted-foreground/70"><SelectValue placeholder="Pilih PT" /></SelectTrigger>
                       <SelectContent>{companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
@@ -732,35 +747,35 @@ export default function KasusPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Nama Nasabah *</Label>
-                    <Input data-testid="input-case-customer" placeholder="Nama nasabah" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
+                    <Input data-testid="input-case-customer" placeholder="Nama nasabah" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>No. Akun</Label>
-                    <Input data-testid="input-case-account" placeholder="Nomor akun" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
+                    <Input data-testid="input-case-account" placeholder="Nomor akun" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Cabang</Label>
-                    <Input data-testid="input-case-branch" placeholder="Cabang" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
+                    <Input data-testid="input-case-branch" placeholder="Cabang" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Marketing</Label>
-                    <Input data-testid="input-case-pic" placeholder="Marketing" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} />
+                    <Input data-testid="input-case-pic" placeholder="Marketing" value={form.picMain} onChange={e => setForm({...form, picMain: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>WPB</Label>
-                    <Input data-testid="input-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} />
+                    <Input data-testid="input-case-wpb" placeholder="Nama WPB" value={form.wpbName} onChange={e => setForm({...form, wpbName: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Manager</Label>
-                    <Input data-testid="input-case-manager" placeholder="Nama Manager" value={form.managerName} onChange={e => setForm({...form, managerName: e.target.value})} />
+                    <Input data-testid="input-case-manager" placeholder="Nama Manager" value={form.managerName} onChange={e => setForm({...form, managerName: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Kepala Cabang</Label>
-                    <Input data-testid="input-case-branch-head" placeholder="Nama Kepala Cabang" value={form.branchHead} onChange={e => setForm({...form, branchHead: e.target.value})} />
+                    <Input data-testid="input-case-branch-head" placeholder="Nama Kepala Cabang" value={form.branchHead} onChange={e => setForm({...form, branchHead: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -772,7 +787,7 @@ export default function KasusPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Inti Pengaduan *</Label>
-                  <Textarea data-testid="input-case-summary" placeholder="Ringkasan pengaduan" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} />
+                  <Textarea data-testid="input-case-summary" placeholder="Ringkasan pengaduan" value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Kronologi Pengaduan Nasabah</Label>
@@ -781,6 +796,7 @@ export default function KasusPage() {
                     placeholder="Tuliskan kronologi pengaduan nasabah"
                     value={form.complaintChronology}
                     onChange={e => setForm({...form, complaintChronology: e.target.value})}
+                    className={SOFT_PLACEHOLDER_CLASS}
                   />
                 </div>
                 <div className="space-y-2 rounded-md border p-3">

@@ -71,7 +71,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <Link href="/" data-testid="link-home-logo">
           <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
-            <img src="/icon-192.png" alt="SGCC" className="w-9 h-9 rounded-md flex-shrink-0" />
+            <img src="/SGCC_logo.png" alt="SGCC" className="w-9 h-9 rounded-md flex-shrink-0 object-contain" />
             <div className="min-w-0">
               <h2 className="font-bold text-sm truncate">SG Control Center</h2>
               <p className="text-xs text-muted-foreground truncate">Pusat Kendali Grup</p>

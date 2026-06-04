@@ -9,13 +9,13 @@
   "theme_color": "#163466",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/SGCC_logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/SGCC_logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

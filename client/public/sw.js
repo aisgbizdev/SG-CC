@@ -1,8 +1,7 @@
 const CACHE_NAME = 'sgcc-v1';
 const STATIC_ASSETS = [
   '/',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/SGCC_logo.png',
   '/favicon.png'
 ];
 
@@ -70,8 +69,8 @@ self.addEventListener('push', function(event) {
     var data = event.data.json();
     var options = {
       body: data.body || '',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: '/SGCC_logo.png',
+      badge: '/SGCC_logo.png',
       vibrate: [200, 100, 200],
       data: { url: data.url || '/' },
       tag: 'sgcc-' + Date.now(),
