@@ -17,7 +17,7 @@ import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { QueryError } from "@/components/query-error";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, ArrowRight, Trash2, Pencil, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X, MessageCircle, Paperclip } from "lucide-react";
+import { Plus, Search, Filter, Trash2, ArrowUpDown, FileWarning, AlertTriangle, Shield, BarChart3, X, MessageCircle, Paperclip, Eye, Download } from "lucide-react";
 import { DownloadMenu } from "@/components/download-menu";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -29,7 +29,8 @@ const BUCKETS = [
   "Menunggu Pemeriksaan", "Proses Negosiasi / Mediasi", "Proses Regulator", "Deadlock", "Closed",
 ];
 const RISK_LEVELS = ["Low", "Medium", "High"];
-const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
+const WORKFLOW_STAGES = ["Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
+const normalizeWorkflowStage = (value?: string | null) => value && value !== "Open" ? value : "Pemeriksaan Internal";
 const RESOLUTION_PATHS = ["Belum Ditentukan", "Pialang (Musyawarah)", "BBJ (Mediasi)", "Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
 const LEGACY_RESOLUTION_LABELS: Record<string, string> = {
   "Mediasi Internal": "Pialang (Musyawarah)",
@@ -43,9 +44,18 @@ type DocumentSection = {
   fields: readonly string[];
   note: string;
   maxFiles?: number;
+  subStages?: readonly string[];
 };
+const BAPPEBTI_PROCESSES = [
+  "Perkembangan Pengaduan",
+  "Klarifikasi Pengaduan",
+  "Permintaan Dokumen",
+  "Pemeriksaan Pengaduan",
+  "Hasil Pemeriksaan Pengaduan",
+  "Tindak Lanjut Pengaduan",
+] as const;
 const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
-  { stage: "Pertemuan Calon Nasabah", fields: ["dateRange"], note: "FKN, foto, screenshot, chat WA / item." },
+  { stage: "Pertemuan Calon Nasabah", fields: ["multiDates"], note: "FKN, foto, screenshot, chat WA / item. Tanggal pertemuan bisa ditambahkan historis." },
   { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
   { stage: "Simulasi Transaksi", fields: ["dateRange"], note: "Item screenshot demo transaksi." },
   { stage: "Registrasi Online", fields: ["date"], note: "Tanggal regol, foto atau screenshot." },
@@ -57,12 +67,12 @@ const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Topup dan WD", fields: ["notes"], note: "Isi berapa kali topup dan berapa kali WD." },
 ] as const;
 const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
-  { stage: "Pialang (Musyawarah)", fields: ["date", "notes"], note: "Tanggal musyawarah, hasil musyawarah, dan tanggal berkelanjutan." },
-  { stage: "BBJ (Mediasi)", fields: ["dateRange", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi." },
-  { stage: "Bappebti", fields: ["date", "notes"], note: "Perkembangan, klarifikasi, pemeriksaan, hasil pemeriksaan, dan tindak lanjut pengaduan." },
-  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, dan hasil LP." },
+  { stage: "Pialang (Musyawarah)", fields: ["multiDates", "notes"], note: "Tanggal musyawarah historis dan hasil musyawarah." },
+  { stage: "BBJ (Mediasi)", fields: ["multiDates", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi historis." },
+  { stage: "Bappebti", fields: ["subStage", "date", "notes"], note: "Pilih proses Bappebti, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAPPEBTI_PROCESSES },
+  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, perkembangan laporan polisi, dan hasil LP." },
   { stage: "Pengadilan", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
-  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
+  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan Putusan Bakti." },
 ] as const;
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
@@ -86,11 +96,39 @@ type CaseDocumentItem = {
   date?: string;
   dateFrom?: string;
   dateTo?: string;
+  meetingDates?: string[];
+  subStage?: string;
   branchApprovalDate?: string;
   complianceApprovalDate?: string;
   notes?: string;
 };
-type DocumentMeta = Pick<CaseDocumentItem, "date" | "dateFrom" | "dateTo" | "branchApprovalDate" | "complianceApprovalDate" | "notes">;
+type DocumentMeta = Pick<CaseDocumentItem, "date" | "dateFrom" | "dateTo" | "meetingDates" | "subStage" | "branchApprovalDate" | "complianceApprovalDate" | "notes">;
+const compactDocumentValue = (value: string) => {
+  const text = value.replace(/\s+/g, " ").trim();
+  return text.length > 90 ? `${text.slice(0, 87)}...` : text;
+};
+const documentMetaSummary = (doc: CaseDocumentItem) => [
+  doc.subStage ? `Proses: ${doc.subStage}` : "",
+  doc.meetingDates?.length ? `Tanggal: ${doc.meetingDates.join(", ")}` : "",
+  doc.date ? `Tanggal: ${doc.date}` : "",
+  doc.dateFrom || doc.dateTo ? `Rentang: ${doc.dateFrom || "-"} s.d ${doc.dateTo || "-"}` : "",
+  doc.branchApprovalDate ? `Approval Kacab: ${doc.branchApprovalDate}` : "",
+  doc.complianceApprovalDate ? `Approval Kepatuhan: ${doc.complianceApprovalDate}` : "",
+  doc.notes ? `Catatan: ${compactDocumentValue(doc.notes)}` : "",
+].filter(Boolean).join("; ");
+const DocumentFileActions = ({ doc, onRemove }: { doc: CaseDocumentItem; onRemove: () => void }) => (
+  <div className="flex items-center gap-1 shrink-0">
+    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => window.open(doc.dataUrl, "_blank", "noopener,noreferrer")}>
+      <Eye className="w-3.5 h-3.5" />
+    </Button>
+    <a href={doc.dataUrl} download={doc.fileName} className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-muted" title="Download">
+      <Download className="w-3.5 h-3.5" />
+    </a>
+    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove}>
+      <X className="w-3.5 h-3.5" />
+    </Button>
+  </div>
+);
 
 function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
   if (!raw || typeof raw !== "string") return [];
@@ -136,6 +174,14 @@ export default function KasusPage() {
 
   const [editingCase, setEditingCase] = useState<Case | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [updatingCase, setUpdatingCase] = useState<Case | null>(null);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [updateForm, setUpdateForm] = useState({
+    content: "",
+    newStatus: "",
+    newStage: "",
+    newProgress: "",
+  });
 
   const [branchFilter, setBranchFilter] = useState("all");
   const [resolutionFilter, setResolutionFilter] = useState("all");
@@ -182,7 +228,7 @@ export default function KasusPage() {
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
     customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
-    workflowStage: "Open", progress: 0, targetDate: "",
+    workflowStage: "Pemeriksaan Internal", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
     wpbName: "", managerName: "", branchHead: "", resolutionPath: "Belum Ditentukan",
   });
@@ -355,14 +401,52 @@ export default function KasusPage() {
     key: keyof DocumentMeta,
     value: string,
   ) => setter(prev => ({ ...prev, [stage]: { ...(prev[stage] || {}), [key]: value } }));
+  const addDocumentMeetingDate = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+  ) => setter(prev => {
+    const current = prev[stage] || {};
+    const nextDates = [...(current.meetingDates || []), ""];
+    return { ...prev, [stage]: { ...current, meetingDates: nextDates } };
+  });
+  const updateDocumentMeetingDate = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+    index: number,
+    value: string,
+  ) => setter(prev => {
+    const current = prev[stage] || {};
+    const nextDates = [...(current.meetingDates || [])];
+    nextDates[index] = value;
+    return { ...prev, [stage]: { ...current, meetingDates: nextDates } };
+  });
+  const removeDocumentMeetingDate = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+    index: number,
+  ) => setter(prev => {
+    const current = prev[stage] || {};
+    const nextDates = (current.meetingDates || []).filter((_, i) => i !== index);
+    return { ...prev, [stage]: { ...current, meetingDates: nextDates } };
+  });
   const renderDocumentMetaFields = (
-    section: { stage: string; fields: readonly string[] },
+    section: DocumentSection,
     meta: Record<string, DocumentMeta>,
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
   ) => {
     const current = meta[section.stage] || {};
+    const meetingDates = current.meetingDates?.length ? current.meetingDates : [""];
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {section.fields.includes("subStage") && section.subStages && (
+          <div className="space-y-1 sm:col-span-2">
+            <Label className="text-xs">Proses Bappebti</Label>
+            <Select value={current.subStage || ""} onValueChange={v => updateDocumentMeta(setter, section.stage, "subStage", v)}>
+              <SelectTrigger><SelectValue placeholder="Pilih proses Bappebti" /></SelectTrigger>
+              <SelectContent>{section.subStages.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        )}
         {section.fields.includes("date") && (
           <div className="space-y-1">
             <Label className="text-xs">Tanggal</Label>
@@ -380,6 +464,26 @@ export default function KasusPage() {
               <Input type="date" value={current.dateTo || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateTo", e.target.value)} />
             </div>
           </>
+        )}
+        {section.fields.includes("multiDates") && (
+          <div className="space-y-2 sm:col-span-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">Tanggal Pertemuan / Musyawarah</Label>
+              <Button type="button" size="icon" variant="outline" className="h-7 w-7" onClick={() => addDocumentMeetingDate(setter, section.stage)}>
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            {meetingDates.map((date, index) => (
+              <div key={`${section.stage}-meeting-date-${index}`} className="flex items-center gap-2">
+                <Input type="date" value={date} onChange={e => updateDocumentMeetingDate(setter, section.stage, index, e.target.value)} />
+                {meetingDates.length > 1 && (
+                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => removeDocumentMeetingDate(setter, section.stage, index)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
         )}
         {section.fields.includes("approvalDates") && (
           <>
@@ -430,11 +534,30 @@ export default function KasusPage() {
     },
   });
 
+  const progressUpdateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await apiRequest("POST", `/api/cases/${id}/updates`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      if (updatingCase) queryClient.invalidateQueries({ queryKey: ["/api/cases", updatingCase.id, "updates"] });
+      toast({ title: "Berhasil", description: "Status/progress kasus berhasil diupdate" });
+      setUpdateDialogOpen(false);
+      setUpdatingCase(null);
+      setUpdateForm({ content: "", newStatus: "", newStage: "", newProgress: "" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Gagal", description: err.message || "Gagal update status/progress", variant: "destructive" });
+    },
+  });
+
   const resetForm = () => setForm({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
     customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
-    workflowStage: "Open", progress: 0, targetDate: "",
+    workflowStage: "Pemeriksaan Internal", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
     wpbName: "", managerName: "", branchHead: "", resolutionPath: "Belum Ditentukan",
   });
@@ -463,7 +586,7 @@ export default function KasusPage() {
       complaintChronology: c.complaintChronology || "",
       riskLevel: c.riskLevel,
       priority: c.priority,
-      workflowStage: c.workflowStage,
+      workflowStage: normalizeWorkflowStage(c.workflowStage),
       progress: c.progress,
       targetDate: c.targetDate || "",
       companyId: c.companyId?.toString() || "",
@@ -506,6 +629,41 @@ export default function KasusPage() {
         resolutionPath: form.resolutionPath,
         complaintAttachments,
         caseDocuments,
+      },
+    });
+  };
+
+  const openUpdateDialog = (c: Case, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setUpdatingCase(c);
+    setUpdateForm({
+      content: "",
+      newStatus: c.status || "Open",
+      newStage: normalizeWorkflowStage(c.workflowStage),
+      newProgress: String(c.progress ?? 0),
+    });
+    setUpdateDialogOpen(true);
+  };
+
+  const handleProgressUpdateSubmit = () => {
+    if (!updatingCase) return;
+    if (!updateForm.content.trim()) {
+      toast({ title: "Error", description: "Catatan update wajib diisi", variant: "destructive" });
+      return;
+    }
+    const parsedProgress = updateForm.newProgress === "" ? undefined : Number(updateForm.newProgress);
+    if (parsedProgress !== undefined && (Number.isNaN(parsedProgress) || parsedProgress < 0 || parsedProgress > 100)) {
+      toast({ title: "Error", description: "Progress harus 0 sampai 100", variant: "destructive" });
+      return;
+    }
+    progressUpdateMutation.mutate({
+      id: updatingCase.id,
+      data: {
+        content: updateForm.content.trim(),
+        newStatus: updateForm.newStatus || null,
+        newStage: updateForm.newStage || null,
+        newProgress: parsedProgress,
       },
     });
   };
@@ -631,9 +789,11 @@ export default function KasusPage() {
                     <Label className="font-medium">Dokumen Pengaduan Nasabah</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.</p>
-                  <div className="max-h-72 overflow-auto space-y-3">
+                  <div className="space-y-3">
                     {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
-                      const docs = complaintAttachments.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage);
+                      const currentMeta = complaintDocumentMeta[section.stage] || {};
+                      const uploadStage = currentMeta.subStage ? `${section.stage} - ${currentMeta.subStage}` : section.stage;
+                      const docs = complaintAttachments.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage || doc.stage.startsWith(`${section.stage} - `));
                       return (
                         <div key={section.stage} className="rounded-md border p-2 space-y-2">
                           <p className="text-sm font-medium">{section.stage}</p>
@@ -646,16 +806,18 @@ export default function KasusPage() {
                             accept={CASE_DOCUMENT_ACCEPT}
                             onChange={async (e) => {
                               const input = e.currentTarget;
-                              await handleComplaintAttachmentUpload(section.stage, input.files, complaintDocumentMeta[section.stage] || {});
+                              await handleComplaintAttachmentUpload(uploadStage, input.files, currentMeta);
                               input.value = "";
                             }}
                           />
                           {docs.map((doc) => (
                             <div key={`complaint-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                              <p className="truncate font-medium">{doc.fileName}</p>
-                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(doc.idx)}>
-                                <X className="w-3.5 h-3.5" />
-                              </Button>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium">{doc.fileName}</p>
+                                <p className="truncate text-muted-foreground">{doc.stage}</p>
+                                {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
+                              </div>
+                              <DocumentFileActions doc={doc} onRemove={() => removeComplaintAttachment(doc.idx)} />
                             </div>
                           ))}
                         </div>
@@ -671,7 +833,7 @@ export default function KasusPage() {
                   <p className="text-xs text-muted-foreground">
                     Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
                   </p>
-                  <div className="max-h-72 overflow-auto space-y-3">
+                  <div className="space-y-3">
                     {CUSTOMER_DOCUMENT_SECTIONS.map((section) => {
                       const stage = section.stage;
                       const stageDocs = caseDocuments
@@ -705,10 +867,12 @@ export default function KasusPage() {
                             <div className="space-y-1">
                               {stageDocs.map((doc) => (
                                 <div key={`${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                                  <p className="truncate font-medium">{doc.fileName}</p>
-                                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeCaseDocument(doc.idx)}>
-                                    <X className="w-3.5 h-3.5" />
-                                  </Button>
+                                  <div className="min-w-0">
+                                    <p className="truncate font-medium">{doc.fileName}</p>
+                                    <p className="truncate text-muted-foreground">{doc.stage}</p>
+                                    {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
+                                  </div>
+                                  <DocumentFileActions doc={doc} onRemove={() => removeCaseDocument(doc.idx)} />
                                 </div>
                               ))}
                             </div>
@@ -984,11 +1148,11 @@ export default function KasusPage() {
                       <p className="text-sm font-medium">{c.progress}%</p>
                       <Progress value={c.progress} className="h-1.5 w-20" />
                     </div>
-                    {canEditCase(c) && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" data-testid={`button-edit-case-${c.id}`} onClick={e => openEditDialog(c, e)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" data-testid={`button-view-case-${c.id}`} asChild>
+                      <Link href={`/kasus/${c.id}`}>
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                    </Button>
                     {canDeleteCase(c) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -1008,7 +1172,6 @@ export default function KasusPage() {
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
-                    <Link href={`/kasus/${c.id}`}><ArrowRight className="w-4 h-4 text-muted-foreground" /></Link>
                   </div>
                 </div>
               </CardContent>
@@ -1017,6 +1180,69 @@ export default function KasusPage() {
           <DataPagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
         </div>
       )}
+
+      <Dialog open={updateDialogOpen} onOpenChange={(open) => {
+        setUpdateDialogOpen(open);
+        if (!open) {
+          setUpdatingCase(null);
+          setUpdateForm({ content: "", newStatus: "", newStage: "", newProgress: "" });
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Update Status / Progress</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            {updatingCase && (
+              <div className="rounded-md border bg-muted/40 p-3">
+                <p className="text-sm font-medium">{updatingCase.caseCode} - {updatingCase.customerName}</p>
+                <p className="text-xs text-muted-foreground">
+                  Status saat ini: {updatingCase.status} | Stage: {updatingCase.workflowStage} | Progress: {updatingCase.progress}%
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={updateForm.newStatus} onValueChange={v => setUpdateForm({...updateForm, newStatus: v})}>
+                  <SelectTrigger data-testid="select-update-case-status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Open", "In Progress", "Closed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Stage</Label>
+                <Select value={updateForm.newStage} onValueChange={v => setUpdateForm({...updateForm, newStage: v})}>
+                  <SelectTrigger data-testid="select-update-case-stage"><SelectValue /></SelectTrigger>
+                  <SelectContent>{WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Progress (%)</Label>
+                <Input
+                  data-testid="input-update-case-progress"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={updateForm.newProgress}
+                  onChange={e => setUpdateForm({...updateForm, newProgress: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Catatan Update *</Label>
+              <Textarea
+                data-testid="input-update-case-content"
+                placeholder="Contoh: Sudah dilakukan follow up, menunggu dokumen tambahan..."
+                value={updateForm.content}
+                onChange={e => setUpdateForm({...updateForm, content: e.target.value})}
+              />
+            </div>
+            <Button data-testid="button-submit-update-case" onClick={handleProgressUpdateSubmit} className="w-full" disabled={progressUpdateMutation.isPending}>
+              {progressUpdateMutation.isPending ? "Menyimpan..." : "Simpan Update"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={(o) => { setEditDialogOpen(o); if (!o) { setEditingCase(null); resetForm(); resetCaseDocuments(); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1091,9 +1317,11 @@ export default function KasusPage() {
                 <Label className="font-medium">Dokumen Pengaduan Nasabah</Label>
               </div>
               <p className="text-xs text-muted-foreground">Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.</p>
-              <div className="max-h-72 overflow-auto space-y-3">
+              <div className="space-y-3">
                 {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
-                  const docs = complaintAttachments.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage);
+                  const currentMeta = complaintDocumentMeta[section.stage] || {};
+                  const uploadStage = currentMeta.subStage ? `${section.stage} - ${currentMeta.subStage}` : section.stage;
+                  const docs = complaintAttachments.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage || doc.stage.startsWith(`${section.stage} - `));
                   return (
                     <div key={`edit-complaint-${section.stage}`} className="rounded-md border p-2 space-y-2">
                       <p className="text-sm font-medium">{section.stage}</p>
@@ -1106,16 +1334,18 @@ export default function KasusPage() {
                         accept={CASE_DOCUMENT_ACCEPT}
                         onChange={async (e) => {
                           const input = e.currentTarget;
-                          await handleComplaintAttachmentUpload(section.stage, input.files, complaintDocumentMeta[section.stage] || {});
+                          await handleComplaintAttachmentUpload(uploadStage, input.files, currentMeta);
                           input.value = "";
                         }}
                       />
                       {docs.map((doc) => (
                         <div key={`edit-complaint-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                          <p className="truncate font-medium">{doc.fileName}</p>
-                          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachment(doc.idx)}>
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{doc.fileName}</p>
+                            <p className="truncate text-muted-foreground">{doc.stage}</p>
+                            {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
+                          </div>
+                          <DocumentFileActions doc={doc} onRemove={() => removeComplaintAttachment(doc.idx)} />
                         </div>
                       ))}
                     </div>
@@ -1131,7 +1361,7 @@ export default function KasusPage() {
               <p className="text-xs text-muted-foreground">
                 Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
               </p>
-              <div className="max-h-72 overflow-auto space-y-3">
+              <div className="space-y-3">
                 {CUSTOMER_DOCUMENT_SECTIONS.map((section) => {
                   const stage = section.stage;
                   const stageDocs = caseDocuments
@@ -1165,10 +1395,12 @@ export default function KasusPage() {
                         <div className="space-y-1">
                           {stageDocs.map((doc) => (
                             <div key={`edit-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                              <p className="truncate font-medium">{doc.fileName}</p>
-                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeCaseDocument(doc.idx)}>
-                                <X className="w-3.5 h-3.5" />
-                              </Button>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium">{doc.fileName}</p>
+                                <p className="truncate text-muted-foreground">{doc.stage}</p>
+                                {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
+                              </div>
+                              <DocumentFileActions doc={doc} onRemove={() => removeCaseDocument(doc.idx)} />
                             </div>
                           ))}
                         </div>

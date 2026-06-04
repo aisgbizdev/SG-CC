@@ -226,6 +226,8 @@ const caseDocumentSchema = z.object({
   date: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
+  meetingDates: z.array(z.string()).optional(),
+  subStage: z.string().optional(),
   branchApprovalDate: z.string().optional(),
   complianceApprovalDate: z.string().optional(),
   notes: z.string().optional(),
@@ -264,13 +266,15 @@ const caseBodySchema = z.object({
   managerName: z.string().optional().nullable(),
   resolutionPath: z.string().optional(),
   caseDocuments: z.array(caseDocumentSchema).max(60, "Maksimal 60 dokumen").optional().nullable(),
+  timelineNote: z.string().optional().nullable(),
 });
 const casePatchSchema = caseBodySchema.partial();
 
 const caseUpdateBodySchema = z.object({
   content: z.string().min(1, "Konten update wajib diisi"),
+  newStatus: z.string().optional().nullable(),
   newStage: z.string().optional(),
-  newProgress: z.number().int().min(0).max(100).optional(),
+  newProgress: z.number().int().min(0).max(100).optional().nullable(),
 });
 
 const taskBodySchema = z.object({
@@ -764,17 +768,93 @@ export async function registerRoutes(
       }
       const casePatchParsed = casePatchSchema.safeParse(req.body);
       if (!casePatchParsed.success) return res.status(400).json(formatZodError(casePatchParsed.error));
+      const { timelineNote, ...casePatchData } = casePatchParsed.data;
       const patchPayload: any = {
-        ...casePatchParsed.data,
-        ...(casePatchParsed.data.complaintAttachments !== undefined ? {
-          complaintAttachments: casePatchParsed.data.complaintAttachments ? JSON.stringify(casePatchParsed.data.complaintAttachments) : null,
+        ...casePatchData,
+        ...(casePatchData.complaintAttachments !== undefined ? {
+          complaintAttachments: casePatchData.complaintAttachments ? JSON.stringify(casePatchData.complaintAttachments) : null,
         } : {}),
-        ...(casePatchParsed.data.caseDocuments !== undefined ? {
-          caseDocuments: casePatchParsed.data.caseDocuments ? JSON.stringify(casePatchParsed.data.caseDocuments) : null,
+        ...(casePatchData.caseDocuments !== undefined ? {
+          caseDocuments: casePatchData.caseDocuments ? JSON.stringify(casePatchData.caseDocuments) : null,
         } : {}),
       };
+      const compactTimelineValue = (value: unknown) => {
+        if (value === null || value === undefined || value === "") return "-";
+        const text = String(value).replace(/\s+/g, " ").trim();
+        return text.length > 120 ? `${text.slice(0, 117)}...` : text;
+      };
+      const summarizeDocumentJson = (value: unknown) => {
+        if (!value) return "0 file";
+        try {
+          const docs = typeof value === "string" ? JSON.parse(value) : value;
+          if (!Array.isArray(docs) || docs.length === 0) return "0 file";
+          return `${docs.length} file: ${docs.map((doc: any) => {
+            const meta = [
+              doc?.stage ? `stage: ${doc.stage}` : "",
+              doc?.subStage ? `proses: ${doc.subStage}` : "",
+              Array.isArray(doc?.meetingDates) && doc.meetingDates.length ? `tanggal: ${doc.meetingDates.join(", ")}` : "",
+              doc?.date ? `tanggal: ${doc.date}` : "",
+              doc?.notes ? `catatan: ${compactTimelineValue(doc.notes)}` : "",
+            ].filter(Boolean).join("; ");
+            return doc?.fileName ? `${doc.fileName}${meta ? ` (${meta})` : ""}` : "";
+          }).filter(Boolean).join(", ")}`;
+        } catch {
+          return compactTimelineValue(value);
+        }
+      };
+      const timelineLabels: Record<string, string> = {
+        customerName: "Nama Nasabah",
+        accountNumber: "No. Akun",
+        branch: "Cabang",
+        picMain: "Marketing",
+        branchHead: "Kepala Cabang",
+        wpbName: "WPB",
+        managerName: "Manager",
+        resolutionPath: "Jalur Penyelesaian",
+        summary: "Inti Pengaduan",
+        complaintChronology: "Kronologi Pengaduan Nasabah",
+        status: "Status",
+        riskLevel: "Risk Level",
+        bucket: "Bucket",
+        workflowStage: "Workflow Stage",
+        progress: "Progress",
+        targetDate: "Target Penyelesaian",
+        customerRequest: "Permintaan Nasabah",
+        companyOffer: "Penawaran Perusahaan",
+        settlementResult: "Hasil Settlement",
+        findings: "Temuan",
+        rootCause: "Root Cause",
+        latestAction: "Tindakan Terakhir",
+        nextAction: "Tindak Lanjut",
+        complaintAttachments: "Dokumen Pengaduan Nasabah",
+        caseDocuments: "Dokumen Nasabah",
+      };
+      const timelineChanges = Object.keys(patchPayload).flatMap((key) => {
+        if (!(key in timelineLabels)) return [];
+        const before = (existing as any)[key];
+        const after = patchPayload[key];
+        const beforeText = key === "complaintAttachments" || key === "caseDocuments" ? summarizeDocumentJson(before) : compactTimelineValue(before);
+        const afterText = key === "complaintAttachments" || key === "caseDocuments" ? summarizeDocumentJson(after) : compactTimelineValue(after);
+        if (beforeText === afterText) return [];
+        const suffix = key === "progress" ? "%" : "";
+        return [`${timelineLabels[key]}: ${beforeText}${suffix} -> ${afterText}${suffix}`];
+      });
+      const timelineContentParts = [
+        ...(timelineChanges.length > 0 ? [`Update data kasus:\n${timelineChanges.map((change) => `- ${change}`).join("\n")}`] : []),
+        ...(timelineNote?.trim() ? [timelineNote.trim()] : []),
+      ];
       const c = await storage.transaction(async (tx) => {
         const updated = await storage.updateCase(existing.id, patchPayload, tx);
+        await storage.createCaseUpdate({
+          caseId: existing.id,
+          createdBy: user.id,
+          content: timelineContentParts.length > 0
+            ? timelineContentParts.join("\n\n")
+            : "Update data kasus disimpan tanpa perubahan field.",
+          ...(typeof patchPayload.status === "string" ? { newStatus: patchPayload.status } : {}),
+          ...(typeof patchPayload.workflowStage === "string" ? { newStage: patchPayload.workflowStage } : {}),
+          ...(typeof patchPayload.progress === "number" ? { newProgress: patchPayload.progress } : {}),
+        }, tx);
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "case", entityId: existing.id, details: `Mengupdate kasus: ${existing.caseCode}` }, tx);
         return updated;
       });
@@ -836,10 +916,11 @@ export async function registerRoutes(
       if (!cuParsed.success) return res.status(400).json(formatZodError(cuParsed.error));
       const update = await storage.transaction(async (tx) => {
         const upd = await storage.createCaseUpdate({ ...cuParsed.data, caseId, createdBy: user.id }, tx);
-        if (cuParsed.data.newStage || cuParsed.data.newProgress !== undefined) {
+        if (cuParsed.data.newStatus || cuParsed.data.newStage || (cuParsed.data.newProgress !== undefined && cuParsed.data.newProgress !== null)) {
           const updateData: any = {};
+          if (cuParsed.data.newStatus) updateData.status = cuParsed.data.newStatus;
           if (cuParsed.data.newStage) updateData.workflowStage = cuParsed.data.newStage;
-          if (cuParsed.data.newProgress !== undefined) updateData.progress = cuParsed.data.newProgress;
+          if (cuParsed.data.newProgress !== undefined && cuParsed.data.newProgress !== null) updateData.progress = cuParsed.data.newProgress;
           await storage.updateCase(caseId, updateData, tx);
         }
         return upd;

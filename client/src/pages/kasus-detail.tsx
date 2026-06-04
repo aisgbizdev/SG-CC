@@ -16,12 +16,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge, RiskBadge } from "@/components/status-badges";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users, Paperclip, Download, X } from "lucide-react";
+import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users, Paperclip, Download, X, Plus, Eye } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
 
-const WORKFLOW_STAGES = ["Open", "Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
+const WORKFLOW_STAGES = ["Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
+const normalizeWorkflowStage = (value?: string | null) => value && value !== "Open" ? value : "Pemeriksaan Internal";
 const MEETING_TYPES = ["Mediasi Nasabah", "Musyawarah Pialang", "BBJ (Mediasi)", "Bappebti", "Negosiasi Internal", "Lainnya"];
 const RESOLUTION_PATHS = ["Belum Ditentukan", "Pialang (Musyawarah)", "BBJ (Mediasi)", "Bappebti", "BAKTI", "Pengadilan", "Kepolisian"];
 const LEGACY_MEETING_LABELS: Record<string, string> = {
@@ -42,9 +43,18 @@ type DocumentSection = {
   fields: readonly string[];
   note: string;
   maxFiles?: number;
+  subStages?: readonly string[];
 };
+const BAPPEBTI_PROCESSES = [
+  "Perkembangan Pengaduan",
+  "Klarifikasi Pengaduan",
+  "Permintaan Dokumen",
+  "Pemeriksaan Pengaduan",
+  "Hasil Pemeriksaan Pengaduan",
+  "Tindak Lanjut Pengaduan",
+] as const;
 const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
-  { stage: "Pertemuan Calon Nasabah", fields: ["dateRange"], note: "FKN, foto, screenshot, chat WA / item." },
+  { stage: "Pertemuan Calon Nasabah", fields: ["multiDates"], note: "FKN, foto, screenshot, chat WA / item. Tanggal pertemuan bisa ditambahkan historis." },
   { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
   { stage: "Simulasi Transaksi", fields: ["dateRange"], note: "Item screenshot demo transaksi." },
   { stage: "Registrasi Online", fields: ["date"], note: "Tanggal regol, foto atau screenshot." },
@@ -56,12 +66,12 @@ const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Topup dan WD", fields: ["notes"], note: "Isi berapa kali topup dan berapa kali WD." },
 ] as const;
 const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
-  { stage: "Pialang (Musyawarah)", fields: ["date", "notes"], note: "Tanggal musyawarah, hasil musyawarah, dan tanggal berkelanjutan." },
-  { stage: "BBJ (Mediasi)", fields: ["dateRange", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi." },
-  { stage: "Bappebti", fields: ["date", "notes"], note: "Perkembangan, klarifikasi, pemeriksaan, hasil pemeriksaan, dan tindak lanjut pengaduan." },
-  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, dan hasil LP." },
+  { stage: "Pialang (Musyawarah)", fields: ["multiDates", "notes"], note: "Tanggal musyawarah historis dan hasil musyawarah." },
+  { stage: "BBJ (Mediasi)", fields: ["multiDates", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi historis." },
+  { stage: "Bappebti", fields: ["subStage", "date", "notes"], note: "Pilih proses Bappebti, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAPPEBTI_PROCESSES },
+  { stage: "Kepolisian", fields: ["date", "notes"], note: "Laporan Polisi, BAP, perkembangan laporan polisi, dan hasil LP." },
   { stage: "Pengadilan", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
-  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan putusan pengadilan." },
+  { stage: "BAKTI", fields: ["date", "notes"], note: "Proses persidangan dan Putusan Bakti." },
 ] as const;
 const CASE_DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx";
 const ALLOWED_CASE_DOCUMENT_MIME_TYPES = new Set([
@@ -84,11 +94,13 @@ type CaseDocumentItem = {
   date?: string;
   dateFrom?: string;
   dateTo?: string;
+  meetingDates?: string[];
+  subStage?: string;
   branchApprovalDate?: string;
   complianceApprovalDate?: string;
   notes?: string;
 };
-type DocumentMeta = Pick<CaseDocumentItem, "date" | "dateFrom" | "dateTo" | "branchApprovalDate" | "complianceApprovalDate" | "notes">;
+type DocumentMeta = Pick<CaseDocumentItem, "date" | "dateFrom" | "dateTo" | "meetingDates" | "subStage" | "branchApprovalDate" | "complianceApprovalDate" | "notes">;
 function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
   if (!raw || typeof raw !== "string") return [];
   try {
@@ -106,6 +118,7 @@ export default function KasusDetailPage() {
   const { toast } = useToast();
   const [commentText, setCommentText] = useState("");
   const [updateContent, setUpdateContent] = useState("");
+  const [newStatus, setNewStatus] = useState("");
   const [newStage, setNewStage] = useState("");
   const [newProgress, setNewProgress] = useState<number | undefined>(undefined);
   const [editing, setEditing] = useState(false);
@@ -132,17 +145,119 @@ export default function KasusDetailPage() {
   const { data: companiesData } = useQuery<any[]>({ queryKey: ["/api/companies"] });
 
   const [editForm, setEditForm] = useState<Partial<Case>>({});
+  const compactValue = (value: unknown) => {
+    if (value === null || value === undefined || value === "") return "-";
+    const text = String(value).replace(/\s+/g, " ").trim();
+    return text.length > 90 ? `${text.slice(0, 87)}...` : text;
+  };
+  const documentSummary = (docs: CaseDocumentItem[]) =>
+    docs.length ? `${docs.length} file: ${docs.map((doc) => doc.fileName).join(", ")}` : "0 file";
+  const documentMetaSummary = (doc: CaseDocumentItem) => [
+    doc.subStage ? `Proses: ${doc.subStage}` : "",
+    doc.meetingDates?.length ? `Tanggal: ${doc.meetingDates.join(", ")}` : "",
+    doc.date ? `Tanggal: ${doc.date}` : "",
+    doc.dateFrom || doc.dateTo ? `Rentang: ${doc.dateFrom || "-"} s.d ${doc.dateTo || "-"}` : "",
+    doc.branchApprovalDate ? `Approval Kacab: ${doc.branchApprovalDate}` : "",
+    doc.complianceApprovalDate ? `Approval Kepatuhan: ${doc.complianceApprovalDate}` : "",
+    doc.notes ? `Catatan: ${compactValue(doc.notes)}` : "",
+  ].filter(Boolean).join("; ");
+  const DocumentFileActions = ({ doc, onRemove }: { doc: CaseDocumentItem; onRemove: () => void }) => (
+    <div className="flex items-center gap-1 shrink-0">
+      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => window.open(doc.dataUrl, "_blank", "noopener,noreferrer")}>
+        <Eye className="w-3.5 h-3.5" />
+      </Button>
+      <a href={doc.dataUrl} download={doc.fileName} className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-muted" title="Download">
+        <Download className="w-3.5 h-3.5" />
+      </a>
+      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove}>
+        <X className="w-3.5 h-3.5" />
+      </Button>
+    </div>
+  );
+  const getDocumentTimelineLogs = (stage: string) => (caseUpdates || [])
+    .filter((update) => {
+      const content = update.content || "";
+      return content.includes(` / ${stage}:`) || content.includes(`(${stage})`) || content.includes(`(${stage} -`);
+    })
+    .slice(0, 5);
+  const buildDocumentMetaTimelineNote = () => {
+    const lines: string[] = [];
+    const collect = (title: string, sections: readonly DocumentSection[], meta: Record<string, DocumentMeta>) => {
+      sections.forEach((section) => {
+        const current = meta[section.stage];
+        if (!current) return;
+        const details: string[] = [];
+        const meetingDates = (current.meetingDates || []).filter(Boolean);
+        if (meetingDates.length > 0) details.push(`Tanggal: ${meetingDates.join(", ")}`);
+        if (current.subStage) details.push(`Proses: ${current.subStage}`);
+        if (current.date) details.push(`Tanggal: ${current.date}`);
+        if (current.dateFrom || current.dateTo) details.push(`Rentang: ${current.dateFrom || "-"} s.d ${current.dateTo || "-"}`);
+        if (current.branchApprovalDate) details.push(`Approval Kacab: ${current.branchApprovalDate}`);
+        if (current.complianceApprovalDate) details.push(`Approval Kepatuhan: ${current.complianceApprovalDate}`);
+        if (current.notes?.trim()) details.push(`Catatan: ${compactValue(current.notes)}`);
+        if (details.length > 0) lines.push(`- ${title} / ${section.stage}: ${details.join("; ")}`);
+      });
+    };
+    collect("Dokumen Pengaduan Nasabah", COMPLAINT_DOCUMENT_SECTIONS, complaintDocumentMeta);
+    collect("Dokumen Nasabah", CUSTOMER_DOCUMENT_SECTIONS, caseDocumentMeta);
+    return lines.length > 0 ? `Update metadata dokumen:\n${lines.join("\n")}` : "";
+  };
+  const buildCaseChangeHistory = (data: any) => {
+    if (!caseData) return "";
+    const fieldLabels: Array<[keyof Case, string]> = [
+      ["customerName", "Nama Nasabah"],
+      ["accountNumber", "No. Akun"],
+      ["branch", "Cabang"],
+      ["picMain", "Marketing"],
+      ["branchHead", "Kepala Cabang"],
+      ["wpbName", "WPB"],
+      ["managerName", "Manager"],
+      ["resolutionPath", "Jalur Penyelesaian"],
+      ["summary", "Inti Pengaduan"],
+      ["complaintChronology", "Kronologi Pengaduan Nasabah"],
+      ["status", "Status"],
+      ["riskLevel", "Risk Level"],
+      ["bucket", "Bucket"],
+      ["workflowStage", "Workflow Stage"],
+      ["progress", "Progress"],
+      ["targetDate", "Target Penyelesaian"],
+      ["customerRequest", "Permintaan Nasabah"],
+      ["companyOffer", "Penawaran Perusahaan"],
+      ["findings", "Temuan"],
+      ["rootCause", "Root Cause"],
+      ["latestAction", "Tindakan Terakhir"],
+      ["nextAction", "Tindak Lanjut"],
+    ];
+    const changes = fieldLabels.flatMap(([key, label]) => {
+      const before = key === "workflowStage" ? normalizeWorkflowStage(caseData[key] as string) : key === "resolutionPath" ? normalizeResolutionPath(caseData[key] as string) : caseData[key];
+      const after = data[key];
+      if (String(before ?? "") === String(after ?? "")) return [];
+      const suffix = key === "progress" ? "%" : "";
+      return [`${label}: ${compactValue(before)}${suffix} -> ${compactValue(after)}${suffix}`];
+    });
+    const oldComplaintDocs = parseCaseDocuments(caseData.complaintAttachments);
+    if (documentSummary(oldComplaintDocs) !== documentSummary(data.complaintAttachments || [])) {
+      changes.push(`Dokumen Pengaduan Nasabah: ${documentSummary(oldComplaintDocs)} -> ${documentSummary(data.complaintAttachments || [])}`);
+    }
+    const oldCaseDocs = parseCaseDocuments(caseData.caseDocuments);
+    if (documentSummary(oldCaseDocs) !== documentSummary(data.caseDocuments || [])) {
+      changes.push(`Dokumen Nasabah: ${documentSummary(oldCaseDocs)} -> ${documentSummary(data.caseDocuments || [])}`);
+    }
+    return changes.length ? `Update data kasus:\n${changes.map((change) => `- ${change}`).join("\n")}` : "";
+  };
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("PATCH", `/api/cases/${id}`, data);
-      return res.json();
+      const updated = await res.json();
+      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", id, "updates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-      toast({ title: "Berhasil", description: "Kasus diperbarui" });
+      toast({ title: "Berhasil", description: "Update kasus tersimpan ke timeline" });
       setEditing(false);
     },
   });
@@ -157,6 +272,7 @@ export default function KasusDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       setUpdateContent("");
+      setNewStatus("");
       setNewStage("");
       setNewProgress(undefined);
       toast({ title: "Berhasil", description: "Update ditambahkan" });
@@ -236,7 +352,7 @@ export default function KasusDetailPage() {
       managerName: caseData.managerName,
       summary: caseData.summary,
       complaintChronology: caseData.complaintChronology,
-      workflowStage: caseData.workflowStage,
+      workflowStage: normalizeWorkflowStage(caseData.workflowStage),
       progress: caseData.progress,
       targetDate: caseData.targetDate,
       customerRequest: caseData.customerRequest,
@@ -360,19 +476,65 @@ export default function KasusDetailPage() {
     key: keyof DocumentMeta,
     value: string,
   ) => setter(prev => ({ ...prev, [stage]: { ...(prev[stage] || {}), [key]: value } }));
+  const addDocumentMeetingDate = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+  ) => setter(prev => {
+    const current = prev[stage] || {};
+    return { ...prev, [stage]: { ...current, meetingDates: [...(current.meetingDates || []), ""] } };
+  });
+  const updateDocumentMeetingDate = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+    index: number,
+    value: string,
+  ) => setter(prev => {
+    const current = prev[stage] || {};
+    const nextDates = [...(current.meetingDates || [])];
+    nextDates[index] = value;
+    return { ...prev, [stage]: { ...current, meetingDates: nextDates } };
+  });
+  const removeDocumentMeetingDate = (
+    setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
+    stage: string,
+    index: number,
+  ) => setter(prev => {
+    const current = prev[stage] || {};
+    return { ...prev, [stage]: { ...current, meetingDates: (current.meetingDates || []).filter((_, i) => i !== index) } };
+  });
   const renderDocumentMetaFields = (
-    section: { stage: string; fields: readonly string[] },
+    section: DocumentSection,
     meta: Record<string, DocumentMeta>,
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
   ) => {
     const current = meta[section.stage] || {};
+    const meetingDates = current.meetingDates?.length ? current.meetingDates : [""];
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {section.fields.includes("subStage") && section.subStages && <div className="space-y-1 sm:col-span-2">
+          <Label className="text-xs">Proses Bappebti</Label>
+          <Select value={current.subStage || ""} onValueChange={v => updateDocumentMeta(setter, section.stage, "subStage", v)}>
+            <SelectTrigger><SelectValue placeholder="Pilih proses Bappebti" /></SelectTrigger>
+            <SelectContent>{section.subStages.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>}
         {section.fields.includes("date") && <div className="space-y-1"><Label className="text-xs">Tanggal</Label><Input type="date" value={current.date || ""} onChange={e => updateDocumentMeta(setter, section.stage, "date", e.target.value)} /></div>}
         {section.fields.includes("dateRange") && <>
           <div className="space-y-1"><Label className="text-xs">Dari Tanggal</Label><Input type="date" value={current.dateFrom || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateFrom", e.target.value)} /></div>
           <div className="space-y-1"><Label className="text-xs">Sampai Tanggal</Label><Input type="date" value={current.dateTo || ""} onChange={e => updateDocumentMeta(setter, section.stage, "dateTo", e.target.value)} /></div>
         </>}
+        {section.fields.includes("multiDates") && <div className="space-y-2 sm:col-span-2">
+          <div className="flex items-center justify-between gap-2">
+            <Label className="text-xs">Tanggal Pertemuan / Musyawarah</Label>
+            <Button type="button" size="icon" variant="outline" className="h-7 w-7" onClick={() => addDocumentMeetingDate(setter, section.stage)}><Plus className="h-3.5 w-3.5" /></Button>
+          </div>
+          {meetingDates.map((date, index) => (
+            <div key={`${section.stage}-meeting-date-${index}`} className="flex items-center gap-2">
+              <Input type="date" value={date} onChange={e => updateDocumentMeetingDate(setter, section.stage, index, e.target.value)} />
+              {meetingDates.length > 1 && <Button type="button" size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => removeDocumentMeetingDate(setter, section.stage, index)}><X className="h-3.5 w-3.5" /></Button>}
+            </div>
+          ))}
+        </div>}
         {section.fields.includes("approvalDates") && <>
           <div className="space-y-1"><Label className="text-xs">Approval Kacab</Label><Input type="date" value={current.branchApprovalDate || ""} onChange={e => updateDocumentMeta(setter, section.stage, "branchApprovalDate", e.target.value)} /></div>
           <div className="space-y-1"><Label className="text-xs">Approval Kepatuhan</Label><Input type="date" value={current.complianceApprovalDate || ""} onChange={e => updateDocumentMeta(setter, section.stage, "complianceApprovalDate", e.target.value)} /></div>
@@ -395,7 +557,7 @@ export default function KasusDetailPage() {
           <p className="text-sm text-muted-foreground">{caseData.customerName} - {getCompanyName(caseData.companyId)}</p>
         </div>
         <div className="flex items-center gap-2">
-          {canEdit && !editing && <Button size="sm" onClick={startEdit} data-testid="button-edit-case">Edit</Button>}
+          {canEdit && !editing && <Button size="sm" onClick={startEdit} data-testid="button-edit-case">Update</Button>}
           {canDelete && !editing && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -480,9 +642,12 @@ export default function KasusDetailPage() {
               <p className="text-xs text-muted-foreground">
                 Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
               </p>
-              <div className="max-h-72 overflow-auto space-y-3">
+              <div className="space-y-3">
                 {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
-                  const docs = complaintAttachmentsEdit.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage);
+                  const currentMeta = complaintDocumentMeta[section.stage] || {};
+                  const uploadStage = currentMeta.subStage ? `${section.stage} - ${currentMeta.subStage}` : section.stage;
+                  const docs = complaintAttachmentsEdit.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage || doc.stage.startsWith(`${section.stage} - `));
+                  const logs = getDocumentTimelineLogs(section.stage);
                   return (
                     <div key={`detail-complaint-${section.stage}`} className="rounded-md border p-2 space-y-2">
                       <p className="text-sm font-medium">{section.stage}</p>
@@ -490,17 +655,27 @@ export default function KasusDetailPage() {
                       {renderDocumentMetaFields(section, complaintDocumentMeta, setComplaintDocumentMeta)}
                       <Input type="file" multiple accept={CASE_DOCUMENT_ACCEPT} onChange={async (e) => {
                         const input = e.currentTarget;
-                        await handleComplaintAttachmentUploadEdit(section.stage, input.files, complaintDocumentMeta[section.stage] || {});
+                        await handleComplaintAttachmentUploadEdit(uploadStage, input.files, currentMeta);
                         input.value = "";
                       }} />
                       {docs.map((doc) => (
                         <div key={`detail-complaint-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                          <p className="truncate font-medium">{doc.fileName}</p>
-                          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeComplaintAttachmentEdit(doc.idx)}>
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{doc.fileName}</p>
+                            <p className="truncate text-muted-foreground">{doc.stage}</p>
+                            {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
+                          </div>
+                          <DocumentFileActions doc={doc} onRemove={() => removeComplaintAttachmentEdit(doc.idx)} />
                         </div>
                       ))}
+                      {logs.length > 0 && (
+                        <div className="rounded-md bg-muted/40 p-2 text-xs space-y-1">
+                          <p className="font-medium">Log tersimpan</p>
+                          {logs.map((log) => (
+                            <p key={log.id} className="whitespace-pre-wrap text-muted-foreground">{log.content}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -588,12 +763,13 @@ export default function KasusDetailPage() {
               <p className="text-xs text-muted-foreground">
                 Format: PDF, JPG/JPEG, PNG, DOC/DOCX, XLS/XLSX. Maks 20MB per file.
               </p>
-              <div className="max-h-72 overflow-auto space-y-3">
+              <div className="space-y-3">
                 {CUSTOMER_DOCUMENT_SECTIONS.map((section) => {
                   const stage = section.stage;
                   const stageDocs = caseDocumentsEdit
                     .map((doc, idx) => ({ ...doc, idx }))
                     .filter((doc) => doc.stage === stage);
+                  const logs = getDocumentTimelineLogs(stage);
                   return (
                     <div key={`detail-edit-${stage}`} className="rounded-md border p-2 space-y-2">
                       <p className="text-sm font-medium">{stage}</p>
@@ -622,11 +798,21 @@ export default function KasusDetailPage() {
                         <div className="space-y-1">
                           {stageDocs.map((doc) => (
                             <div key={`detail-edit-${doc.fileName}-${doc.idx}`} className="flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs">
-                              <p className="truncate font-medium">{doc.fileName}</p>
-                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeCaseDocumentEdit(doc.idx)}>
-                                <X className="w-3.5 h-3.5" />
-                              </Button>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium">{doc.fileName}</p>
+                                <p className="truncate text-muted-foreground">{doc.stage}</p>
+                                {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
+                              </div>
+                              <DocumentFileActions doc={doc} onRemove={() => removeCaseDocumentEdit(doc.idx)} />
                             </div>
+                          ))}
+                        </div>
+                      )}
+                      {logs.length > 0 && (
+                        <div className="rounded-md bg-muted/40 p-2 text-xs space-y-1">
+                          <p className="font-medium">Log tersimpan</p>
+                          {logs.map((log) => (
+                            <p key={log.id} className="whitespace-pre-wrap text-muted-foreground">{log.content}</p>
                           ))}
                         </div>
                       )}
@@ -636,7 +822,9 @@ export default function KasusDetailPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => updateMutation.mutate({ ...editForm, complaintAttachments: complaintAttachmentsEdit, caseDocuments: caseDocumentsEdit })} disabled={updateMutation.isPending} data-testid="button-save-edit">Simpan</Button>
+              <Button onClick={() => updateMutation.mutate({ ...editForm, complaintAttachments: complaintAttachmentsEdit, caseDocuments: caseDocumentsEdit, timelineNote: buildDocumentMetaTimelineNote() || null })} disabled={updateMutation.isPending} data-testid="button-save-edit">
+                {updateMutation.isPending ? "Menyimpan..." : "Simpan Update"}
+              </Button>
               <Button variant="secondary" onClick={() => { setEditing(false); setCaseDocumentsEdit([]); setComplaintAttachmentsEdit([]); }} data-testid="button-cancel-edit">Batal</Button>
             </div>
           </CardContent>
@@ -672,15 +860,20 @@ export default function KasusDetailPage() {
                       </div>
                       <div className="space-y-2">
                         {complaintAttachments.map((doc, idx) => (
-                          <a
+                          <div
                             key={`complaint-download-${doc.fileName}-${idx}`}
-                            href={doc.dataUrl}
-                            download={doc.fileName}
                             className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
                           >
                             <p className="truncate font-medium">{doc.fileName}</p>
-                            <Download className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </a>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(doc.dataUrl, "_blank", "noopener,noreferrer")}>
+                                <Eye className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                              <a href={doc.dataUrl} download={doc.fileName} className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted" title="Download">
+                                <Download className="w-4 h-4 text-muted-foreground" />
+                              </a>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -746,18 +939,23 @@ export default function KasusDetailPage() {
                       </div>
                       <div className="space-y-2">
                         {caseDocuments.map((doc, idx) => (
-                          <a
+                          <div
                             key={`${doc.fileName}-${idx}`}
-                            href={doc.dataUrl}
-                            download={doc.fileName}
                             className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
                           >
                             <div className="min-w-0">
                               <p className="truncate font-medium">{doc.fileName}</p>
                               <p className="truncate text-xs text-muted-foreground">{doc.stage}</p>
                             </div>
-                            <Download className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </a>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(doc.dataUrl, "_blank", "noopener,noreferrer")}>
+                                <Eye className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                              <a href={doc.dataUrl} download={doc.fileName} className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted" title="Download">
+                                <Download className="w-4 h-4 text-muted-foreground" />
+                              </a>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -783,16 +981,20 @@ export default function KasusDetailPage() {
                   <div className="p-3 bg-muted/50 rounded-md space-y-3">
                     <p className="text-sm font-medium">Tambah Update Progress</p>
                     <Textarea data-testid="input-update-content" placeholder="Isi update..." value={updateContent} onChange={e => setUpdateContent(e.target.value)} />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Select value={newStatus} onValueChange={setNewStatus}>
+                        <SelectTrigger data-testid="select-update-status"><SelectValue placeholder="Status baru (opsional)" /></SelectTrigger>
+                        <SelectContent>{["Open", "In Progress", "Closed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
                       <Select value={newStage} onValueChange={setNewStage}>
-                        <SelectTrigger><SelectValue placeholder="Stage baru (opsional)" /></SelectTrigger>
+                        <SelectTrigger data-testid="select-update-stage"><SelectValue placeholder="Stage baru (opsional)" /></SelectTrigger>
                         <SelectContent>{WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                       </Select>
                       <Input data-testid="input-update-progress" type="number" min={0} max={100} placeholder="Progress % baru" value={newProgress ?? ""} onChange={e => setNewProgress(e.target.value ? parseInt(e.target.value) : undefined)} />
                     </div>
                     <Button data-testid="button-submit-update" size="sm" onClick={() => {
                       if (!updateContent.trim()) return;
-                      caseUpdateMutation.mutate({ content: updateContent, newStage: newStage || null, newProgress: newProgress ?? null });
+                      caseUpdateMutation.mutate({ content: updateContent, newStatus: newStatus || null, newStage: newStage || null, newProgress: newProgress ?? null });
                     }} disabled={caseUpdateMutation.isPending}>Tambah Update</Button>
                   </div>
                 )}
@@ -805,7 +1007,8 @@ export default function KasusDetailPage() {
                         <span>{new Date(u.createdAt).toLocaleString("id-ID")}</span>
                         <span className="font-medium">{getUserName(u.createdBy)}</span>
                       </div>
-                      <p className="text-sm">{u.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">{u.content}</p>
+                      {u.newStatus && <p className="text-xs text-purple-600 dark:text-purple-400">Status: {u.newStatus}</p>}
                       {u.newStage && <p className="text-xs text-blue-600 dark:text-blue-400">Stage: {u.newStage}</p>}
                       {u.newProgress !== null && <p className="text-xs text-emerald-600 dark:text-emerald-400">Progress: {u.newProgress}%</p>}
                     </div>
