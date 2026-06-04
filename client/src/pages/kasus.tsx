@@ -409,7 +409,7 @@ export default function KasusPage() {
   const pagedItems = getPageItems(currentPage);
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
-  const canDeleteCase = (c: Case) => ["superadmin", "owner"].includes(user?.role || "") || c.createdBy === user?.id;
+  const canDeleteCase = (c: Case) => ["superadmin", "owner", "du", "dk"].includes(user?.role || "") || c.createdBy === user?.id;
   const updateDocumentMeta = (
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
     stage: string,

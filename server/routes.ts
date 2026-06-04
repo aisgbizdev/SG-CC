@@ -695,8 +695,8 @@ export async function registerRoutes(
       const existing = await storage.getActivity(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
       if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-      if (!["superadmin", "owner"].includes(user.role) && existing.createdBy !== user.id) {
-        return res.status(403).json({ message: "Hanya pembuat, owner, atau superadmin yang bisa menghapus" });
+      if (!["superadmin", "owner", "du", "dk"].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, owner, superadmin, DU, atau DK yang bisa menghapus" });
       }
       await storage.transaction(async (tx) => {
         await storage.updateActivity(existing.id, { isArchived: true }, tx);
