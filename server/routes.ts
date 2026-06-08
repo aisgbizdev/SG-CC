@@ -329,6 +329,7 @@ const profilePatchSchema = z.object({
   birthDate: z.string().optional().nullable(),
   branchCount: z.number().int().optional().nullable(),
   position: z.string().optional().nullable(),
+  avatarUrl: z.string().max(500000, "Ukuran foto terlalu besar (maks 500KB)").optional().nullable(),
 });
 
 const resetPasswordSchema = z.object({
@@ -1327,9 +1328,10 @@ export async function registerRoutes(
       const parsed = profilePatchSchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
-      const { fullName, phone, address, birthDate, branchCount, position } = parsed.data;
+      const { fullName, phone, address, birthDate, branchCount, position, avatarUrl } = parsed.data;
       const updated = await storage.updateUser(user.id, {
         fullName, phone, address, birthDate, branchCount, position,
+        ...(avatarUrl !== undefined ? { avatarUrl } : {}),
         profileCompleted: true,
       });
       if (!updated) return res.status(404).json({ message: "User tidak ditemukan" });

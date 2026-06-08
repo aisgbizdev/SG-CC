@@ -85,7 +85,7 @@ export default function UpdateProfilPage() {
 
   const avatarMutation = useMutation({
     mutationFn: async (avatarUrl: string) => {
-      const res = await apiRequest("POST", "/api/profile/avatar", { avatarUrl });
+      const res = await apiRequest("PATCH", "/api/profile", { avatarUrl });
       return res.json();
     },
     onSuccess: () => {
@@ -101,7 +101,7 @@ export default function UpdateProfilPage() {
 
   const deleteAvatarMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("DELETE", "/api/profile/avatar");
+      const res = await apiRequest("PATCH", "/api/profile", { avatarUrl: null });
       return res.json();
     },
     onSuccess: () => {
