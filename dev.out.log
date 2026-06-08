@@ -6,51 +6,11 @@ Migrasi schema selesai.
 === VERIFIKASI DATA ===
 Users aktif: 16
 Perusahaan aktif: 5
-Kasus aktif: 121
-Aktivitas aktif: 526
+Kasus aktif: 122
+Aktivitas aktif: 543
 Tugas aktif: 6
 Pengumuman aktif: 2
-✓ Data kasus lengkap (121/105)
+✓ Data kasus lengkap (122/105)
 === VERIFIKASI SELESAI ===
-[2m07.27.44[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
-7:27:49 AM [express] serving on port 5000
+2:47:16 PM [express] serving on port 5000
 Sistem pengingat otomatis aktif (interval: 1 jam)
-Auto-cleanup: 6 notifikasi lama (>7 hari) dihapus
-7:28:43 AM [express] GET /api/auth/me 401 in 2ms
-7:29:00 AM [express] POST /api/auth/login 200 in 3057ms
-7:29:01 AM [express] GET /api/notifications/unread-count 200 in 982ms
-7:29:03 AM [express] GET /api/companies 304 in 2991ms
-7:29:05 AM [express] GET /api/action-items 304 in 4632ms
-7:29:06 AM [express] GET /api/dashboard 200 in 5501ms
-7:29:35 AM [express] GET /api/notifications/unread-count 304 in 4022ms
-7:30:08 AM [express] GET /api/notifications/unread-count 304 in 2581ms
-7:38:04 AM [express] GET /api/notifications/unread-count 304 in 2561ms
-7:38:09 AM [express] GET /api/users 200 in 5987ms
-7:38:37 AM [express] GET /api/notifications/unread-count 304 in 3089ms
-7:39:10 AM [express] GET /api/notifications/unread-count 304 in 2581ms
-7:39:43 AM [express] GET /api/notifications/unread-count 304 in 2570ms
-7:40:15 AM [express] GET /api/notifications/unread-count 304 in 2531ms
-7:40:48 AM [express] GET /api/notifications/unread-count 304 in 2511ms
-7:41:21 AM [express] GET /api/notifications/unread-count 304 in 2598ms
-7:41:54 AM [express] GET /api/notifications/unread-count 304 in 2466ms
-[2m07.42.15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/lib/auth.tsx, /src/index.css[22m
-[2m07.42.18[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/lib/auth.tsx[22m Could not Fast Refresh ("getRoleLabel" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
-[2m07.42.18[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/pages/aktivitas-detail.tsx, /src/components/mobile-bottom-nav.tsx, /src/pages/dashboard.tsx, /src/pages/login.tsx, /src/pages/pengaturan.tsx, /src/components/app-sidebar.tsx, /src/pages/update-profil.tsx, /src/pages/pesan.tsx, /src/pages/users.tsx, /src/pages/pengumuman.tsx, /src/pages/tugas.tsx, /src/pages/aktivitas.tsx, /src/pages/kasus-detail.tsx, /src/pages/kasus.tsx, /src/pages/kpi.tsx[22m
-[2m07.42.46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/users.tsx, /src/index.css[22m
-7:42:52 AM [express] GET /api/notifications/unread-count 304 in 1011ms
-[2m07.42.59[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/users.tsx, /src/index.css[22m
-[2m07.43.12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/users.tsx, /src/index.css[22m
-7:43:23 AM [express] GET /api/notifications/unread-count 304 in 988ms
-[2m07.43.42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus.tsx, /src/index.css[22m
-[2m07.43.45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/aktivitas.tsx, /src/index.css[22m
-[2m07.43.50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
-[2m07.43.53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/aktivitas-detail.tsx, /src/index.css[22m
-7:43:56 AM [express] GET /api/notifications/unread-count 304 in 2476ms
-[2m07.43.58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m
-[2m07.44.01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/update-profil.tsx, /src/index.css[22m
-[2m07.44.09[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pesan.tsx, /src/index.css[22m
-[2m07.44.17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/tugas.tsx, /src/index.css[22m
-7:44:27 AM [express] GET /api/notifications/unread-count 304 in 990ms
-[2m07.44.37[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kpi.tsx, /src/index.css[22m
-7:45:00 AM [express] GET /api/notifications/unread-count 304 in 2724ms
-7:45:35 AM [express] GET /api/notifications/unread-count 304 in 4691ms

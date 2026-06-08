@@ -13,11 +13,50 @@ import { UserCircle, Save, ArrowLeft, Camera, Upload, Trash2 } from "lucide-reac
 import { Link } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 
+const MAX_AVATAR_FILE_SIZE = 500000;
+const MAX_AVATAR_DATA_URL_LENGTH = 500000;
+const AVATAR_MAX_DIMENSION = 512;
+
+async function imageFileToAvatarDataUrl(file: File): Promise<string> {
+  const imageUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Gagal membaca file gambar"));
+      img.src = imageUrl;
+    });
+
+    const scale = Math.min(1, AVATAR_MAX_DIMENSION / Math.max(image.width, image.height));
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Browser tidak mendukung kompresi gambar");
+
+    context.drawImage(image, 0, 0, width, height);
+
+    for (const quality of [0.85, 0.75, 0.65, 0.55, 0.45]) {
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      if (dataUrl.length <= MAX_AVATAR_DATA_URL_LENGTH) return dataUrl;
+    }
+
+    throw new Error("Foto masih terlalu besar setelah dikompres");
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
 export default function UpdateProfilPage() {
   usePageTitle("Update Profil");
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessingAvatar, setIsProcessingAvatar] = useState(false);
 
   const { data: profile, isLoading } = useQuery<any>({
     queryKey: ["/api/profile"],
@@ -93,24 +132,30 @@ export default function UpdateProfilPage() {
     });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
+
     if (!file.type.startsWith("image/")) {
       toast({ title: "Error", description: "File harus berupa gambar", variant: "destructive" });
       return;
     }
-    if (file.size > 500000) {
+
+    if (file.size > MAX_AVATAR_FILE_SIZE) {
       toast({ title: "Error", description: "Ukuran foto maksimal 500KB", variant: "destructive" });
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      avatarMutation.mutate(base64);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
+
+    setIsProcessingAvatar(true);
+    try {
+      const avatarUrl = await imageFileToAvatarDataUrl(file);
+      avatarMutation.mutate(avatarUrl);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Gagal memproses foto", variant: "destructive" });
+    } finally {
+      setIsProcessingAvatar(false);
+    }
   };
 
   if (isLoading || !actualData) {
@@ -160,11 +205,11 @@ export default function UpdateProfilPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={avatarMutation.isPending}
+                  disabled={avatarMutation.isPending || isProcessingAvatar}
                   data-testid="button-upload-photo"
                 >
                   <Upload className="w-4 h-4 mr-1" />
-                  {avatarMutation.isPending ? "Mengupload..." : "Pilih File"}
+                  {avatarMutation.isPending || isProcessingAvatar ? "Mengupload..." : "Pilih File"}
                 </Button>
                 <input
                   type="file"
@@ -178,7 +223,7 @@ export default function UpdateProfilPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => document.getElementById("camera-input")?.click()}
-                  disabled={avatarMutation.isPending}
+                  disabled={avatarMutation.isPending || isProcessingAvatar}
                   data-testid="button-camera-photo"
                 >
                   <Camera className="w-4 h-4 mr-1" /> Kamera
