@@ -82,6 +82,7 @@ const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
   { stage: "Topup dan WD", fields: ["notes"], note: "Isi berapa kali topup dan berapa kali WD." },
 ] as const;
 const COMPLAINT_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
+  { stage: "Kronologi Pengaduan Nasabah", fields: [], note: "Upload file pendukung kronologi pengaduan nasabah." },
   { stage: "Pialang (Musyawarah)", fields: ["multiDates", "notes"], note: "Tanggal musyawarah historis dan hasil musyawarah." },
   { stage: "BBJ (Mediasi)", fields: ["multiDates", "notes"], note: "Klarifikasi dan tanggapan, serta undangan mediasi historis." },
   { stage: "Bappebti", fields: ["subStage", "date", "notes"], note: "Pilih proses Bappebti, isi tanggal/catatan, lalu upload dokumen terkait.", subStages: BAPPEBTI_PROCESSES },
@@ -449,6 +450,7 @@ export default function KasusPage() {
     meta: Record<string, DocumentMeta>,
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
   ) => {
+    if (section.fields.length === 0) return null;
     const current = meta[section.stage] || {};
     const meetingDates = current.meetingDates?.length ? current.meetingDates : [""];
     return (
@@ -483,7 +485,7 @@ export default function KasusPage() {
         {section.fields.includes("multiDates") && (
           <div className="space-y-2 sm:col-span-2">
             <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs">Tanggal Mediasi</Label>
+              <Label className="text-xs">Tanggal</Label>
               <Button type="button" size="icon" variant="outline" className="h-7 w-7" onClick={() => addDocumentMeetingDate(setter, section.stage)}>
                 <Plus className="h-3.5 w-3.5" />
               </Button>

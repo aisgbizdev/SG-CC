@@ -12,5 +12,19 @@ Tugas aktif: 6
 Pengumuman aktif: 2
 ✓ Data kasus lengkap (122/105)
 === VERIFIKASI SELESAI ===
-2:47:16 PM [express] serving on port 5000
+3:01:54 PM [express] serving on port 5000
 Sistem pengingat otomatis aktif (interval: 1 jam)
+3:02:51 PM [express] GET /api/auth/me 304 in 927ms
+3:02:52 PM [express] GET /api/notifications/unread-count 304 in 1505ms
+3:02:53 PM [express] GET /api/companies 304 in 1782ms
+3:02:54 PM [express] GET /api/dashboard 304 in 3009ms
+3:02:54 PM [express] GET /api/action-items 304 in 3601ms
+3:02:56 PM [express] GET /api/cases 304 in 1166ms
+3:02:56 PM [express] GET /api/branches/my-company 304 in 1169ms
+3:02:56 PM [express] GET /api/uncommented-cases 304 in 1776ms
+3:03:17 PM [express] GET /api/comments/case/134 304 in 3017ms
+3:03:17 PM [express] GET /api/cases/134 304 in 3072ms
+3:03:18 PM [express] GET /api/cases/134/meetings 304 in 3306ms
+3:03:18 PM [express] GET /api/cases/134/updates 304 in 3310ms
+3:03:18 PM [express] GET /api/users 304 in 4230ms
+3:03:24 PM [express] GET /api/notifications/unread-count 304 in 1302ms
