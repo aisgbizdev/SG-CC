@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, apiRequestBinary } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,11 @@ import { UserCircle, Save, ArrowLeft, Camera, Upload, Trash2 } from "lucide-reac
 import { Link } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
 
-const MAX_AVATAR_FILE_SIZE = 500000;
-const MAX_AVATAR_DATA_URL_LENGTH = 500000;
+const MAX_AVATAR_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_AVATAR_BLOB_SIZE = 360000;
 const AVATAR_MAX_DIMENSION = 512;
 
-async function imageFileToAvatarDataUrl(file: File): Promise<string> {
+async function imageFileToAvatarBlob(file: File): Promise<Blob> {
   const imageUrl = URL.createObjectURL(file);
 
   try {
@@ -41,8 +41,10 @@ async function imageFileToAvatarDataUrl(file: File): Promise<string> {
     context.drawImage(image, 0, 0, width, height);
 
     for (const quality of [0.85, 0.75, 0.65, 0.55, 0.45]) {
-      const dataUrl = canvas.toDataURL("image/jpeg", quality);
-      if (dataUrl.length <= MAX_AVATAR_DATA_URL_LENGTH) return dataUrl;
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/jpeg", quality),
+      );
+      if (blob && blob.size <= MAX_AVATAR_BLOB_SIZE) return blob;
     }
 
     throw new Error("Foto masih terlalu besar setelah dikompres");
@@ -84,8 +86,8 @@ export default function UpdateProfilPage() {
   });
 
   const avatarMutation = useMutation({
-    mutationFn: async (avatarUrl: string) => {
-      const res = await apiRequest("PATCH", "/api/profile", { avatarUrl });
+    mutationFn: async (blob: Blob) => {
+      const res = await apiRequestBinary("POST", "/api/profile/avatar", blob);
       return res.json();
     },
     onSuccess: () => {
@@ -143,14 +145,14 @@ export default function UpdateProfilPage() {
     }
 
     if (file.size > MAX_AVATAR_FILE_SIZE) {
-      toast({ title: "Error", description: "Ukuran foto maksimal 500KB", variant: "destructive" });
+      toast({ title: "Error", description: "Ukuran foto maksimal 5MB", variant: "destructive" });
       return;
     }
 
     setIsProcessingAvatar(true);
     try {
-      const avatarUrl = await imageFileToAvatarDataUrl(file);
-      avatarMutation.mutate(avatarUrl);
+      const blob = await imageFileToAvatarBlob(file);
+      avatarMutation.mutate(blob);
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Gagal memproses foto", variant: "destructive" });
     } finally {

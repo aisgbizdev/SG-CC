@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireRole } from "./auth";
@@ -1342,22 +1342,35 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/profile/avatar", requireAuth, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const { avatarUrl } = req.body;
-      if (!avatarUrl || typeof avatarUrl !== "string") {
-        return res.status(400).json({ message: "Data foto tidak valid" });
+  app.post(
+    "/api/profile/avatar",
+    requireAuth,
+    express.raw({
+      type: (req) => (req.headers["content-type"] || "").startsWith("image/"),
+      limit: "1mb",
+    }),
+    async (req, res) => {
+      try {
+        const user = req.user as any;
+        const contentType = (req.headers["content-type"] || "").split(";")[0].trim();
+        if (!contentType.startsWith("image/")) {
+          return res.status(415).json({ message: "File harus berupa gambar" });
+        }
+        const buf = req.body as Buffer;
+        if (!Buffer.isBuffer(buf) || buf.length === 0) {
+          return res.status(400).json({ message: "Data foto tidak valid" });
+        }
+        if (buf.length > 600000) {
+          return res.status(400).json({ message: "Ukuran foto terlalu besar (maks 600KB)" });
+        }
+        const avatarUrl = `data:${contentType};base64,${buf.toString("base64")}`;
+        await storage.updateUser(user.id, { avatarUrl });
+        res.json({ message: "Foto profil berhasil diperbarui", avatarUrl });
+      } catch (err: any) {
+        res.status(500).json({ message: err.message || "Gagal mengupload foto" });
       }
-      if (avatarUrl.length > 500000) {
-        return res.status(400).json({ message: "Ukuran foto terlalu besar (maks 500KB)" });
-      }
-      await storage.updateUser(user.id, { avatarUrl });
-      res.json({ message: "Foto profil berhasil diperbarui", avatarUrl });
-    } catch (err: any) {
-      res.status(500).json({ message: err.message || "Gagal mengupload foto" });
-    }
-  });
+    },
+  );
 
   app.delete("/api/profile/avatar", requireAuth, async (req, res) => {
     try {

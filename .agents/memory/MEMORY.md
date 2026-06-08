@@ -1,0 +1,1 @@
+- [Replit edge WAF blocks base64 in request bodies](replit-waf-base64-uploads.md) — prod 403 (HTML) on uploads sending `data:...;base64` JSON; send raw binary instead.

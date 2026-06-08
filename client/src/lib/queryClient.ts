@@ -92,6 +92,22 @@ export async function apiRequest(
   return res;
 }
 
+export async function apiRequestBinary(
+  method: string,
+  url: string,
+  body: Blob,
+): Promise<Response> {
+  const res = await fetch(apiUrl(url), {
+    method,
+    headers: buildHeaders({ "Content-Type": body.type || "application/octet-stream" }),
+    body,
+    credentials: "include",
+  });
+
+  await throwIfResNotOk(res);
+  return res;
+}
+
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
