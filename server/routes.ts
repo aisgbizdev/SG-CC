@@ -25,7 +25,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 }
 
 const ROUTINE_UPDATE_TYPES = new Set([
-  "activity_updated", "case_updated", "task_updated",
+  "activity_updated", "task_updated",
 ]);
 const DU_LIKE_ROLES = ["du", "cbo", "ceo"];
 const DK_LIKE_ROLES = ["dk", "kepatuhan_cabang"];
@@ -844,6 +844,24 @@ export async function registerRoutes(
         ...(timelineChanges.length > 0 ? [`Update data kasus:\n${timelineChanges.map((change) => `- ${change}`).join("\n")}`] : []),
         ...(timelineNote?.trim() ? [timelineNote.trim()] : []),
       ];
+      const buildNotificationChangeLines = () => {
+        const fieldLines = timelineChanges.map((change) => `mengupdate ${change}`);
+        const metadataLines = (timelineNote || "")
+          .split("\n")
+          .flatMap((line) => {
+            const match = line.match(/^- .+? \/ (.+?): (.+)$/);
+            if (!match) return [];
+            const [, stage, detailsText] = match;
+            return detailsText.split(";").map((detail) => {
+              const [rawLabel, ...rawValueParts] = detail.split(":");
+              const label = rawLabel.trim();
+              const value = rawValueParts.join(":").trim();
+              if (!label || !value) return "";
+              return `mengupdate ${label.toLowerCase()} dari ${stage}: ${value}`;
+            }).filter(Boolean);
+          });
+        return [...fieldLines, ...metadataLines];
+      };
       const c = await storage.transaction(async (tx) => {
         const updated = await storage.updateCase(existing.id, patchPayload, tx);
         await storage.createCaseUpdate({
@@ -859,7 +877,11 @@ export async function registerRoutes(
         await storage.createAuditLog({ userId: user.id, action: "update", entityType: "case", entityId: existing.id, details: `Mengupdate kasus: ${existing.caseCode}` }, tx);
         return updated;
       });
-      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", `${user.fullName} memperbarui kasus: ${existing.caseCode}`, "case", existing.id, user.id, "medium", 60);
+      const notificationChangeLines = buildNotificationChangeLines();
+      const caseUpdateMessage = notificationChangeLines.length > 0
+        ? `${user.fullName} memperbarui kasus ${existing.caseCode}:\n${notificationChangeLines.map((change) => `- ${change}`).join("\n")}`
+        : `${user.fullName} memperbarui kasus ${existing.caseCode}`;
+      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", caseUpdateMessage, "case", existing.id, user.id);
       if (casePatchParsed.data.riskLevel === "High" && existing.riskLevel !== "High") {
         notifyAdminsAndOwners(existing.companyId, "case_high_risk", "Kasus Risiko Tinggi", `Kasus ${existing.caseCode} dinaikkan ke risiko TINGGI oleh ${user.fullName}`, "case", existing.id, user.id, "high");
       }

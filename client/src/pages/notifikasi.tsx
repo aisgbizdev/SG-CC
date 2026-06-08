@@ -182,7 +182,7 @@ export default function NotifikasiPage() {
                   </div>
                   <div className="flex-1 min-w-0 space-y-0.5">
                     <p className={`text-sm ${!n.isRead ? "font-medium" : ""}`}>{n.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{n.message}</p>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.message}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {new Date(n.createdAt).toLocaleString("id-ID")}
