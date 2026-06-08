@@ -1,8 +1,3 @@
-Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
-  npx update-browserslist-db@latest
-  Why you should do it regularly: https://github.com/browserslist/update-db#readme
-
-A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
 ValidationError: The Express 'trust proxy' setting is true, which allows anyone to trivially bypass IP-based rate limiting. See https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/ for more information.
     at Object.trustProxy (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:324:13)
     at wrappedValidations.<computed> [as trustProxy] (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:656:22)

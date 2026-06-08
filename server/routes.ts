@@ -1340,6 +1340,33 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/profile/avatar", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { avatarUrl } = req.body;
+      if (!avatarUrl || typeof avatarUrl !== "string") {
+        return res.status(400).json({ message: "Data foto tidak valid" });
+      }
+      if (avatarUrl.length > 500000) {
+        return res.status(400).json({ message: "Ukuran foto terlalu besar (maks 500KB)" });
+      }
+      await storage.updateUser(user.id, { avatarUrl });
+      res.json({ message: "Foto profil berhasil diperbarui", avatarUrl });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal mengupload foto" });
+    }
+  });
+
+  app.delete("/api/profile/avatar", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      await storage.updateUser(user.id, { avatarUrl: null });
+      res.json({ message: "Foto profil berhasil dihapus" });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Gagal menghapus foto" });
+    }
+  });
+
   app.post("/api/users/:id/reset-password", requireRole("superadmin"), async (req, res) => {
     try {
       const parsed = resetPasswordSchema.safeParse(req.body);
