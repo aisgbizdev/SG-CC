@@ -41,6 +41,7 @@ async function notifyAdminsAndOwners(
   excludeUserId: number,
   priority: string = "medium",
   throttleMinutes: number = 0,
+  options: { includeActor?: boolean } = {},
 ) {
   try {
     if (ROUTINE_UPDATE_TYPES.has(type)) {
@@ -52,9 +53,11 @@ async function notifyAdminsAndOwners(
     const triggerRole = triggerUser?.role || "";
 
     const targets = allUsers.filter(u => {
-      if (!u.isActive || u.id === excludeUserId) return false;
+      if (!u.isActive) return false;
+      if (!options.includeActor && u.id === excludeUserId) return false;
       if (u.role === "superadmin") return true;
       if (u.role === "owner") return true;
+      if (options.includeActor && u.id === excludeUserId) return true;
       if (DU_DK_LIKE_ROLES.includes(u.role) && entityType === "task") {
         return false;
       }
@@ -881,7 +884,7 @@ export async function registerRoutes(
       const caseUpdateMessage = notificationChangeLines.length > 0
         ? `${user.fullName} memperbarui kasus ${existing.caseCode}:\n${notificationChangeLines.map((change) => `- ${change}`).join("\n")}`
         : `${user.fullName} memperbarui kasus ${existing.caseCode}`;
-      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", caseUpdateMessage, "case", existing.id, user.id);
+      notifyAdminsAndOwners(existing.companyId, "case_updated", "Kasus Diperbarui", caseUpdateMessage, "case", existing.id, user.id, "medium", 0, { includeActor: true });
       if (casePatchParsed.data.riskLevel === "High" && existing.riskLevel !== "High") {
         notifyAdminsAndOwners(existing.companyId, "case_high_risk", "Kasus Risiko Tinggi", `Kasus ${existing.caseCode} dinaikkan ke risiko TINGGI oleh ${user.fullName}`, "case", existing.id, user.id, "high");
       }
