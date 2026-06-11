@@ -70,7 +70,7 @@ const BAKTI_PROCESSES = [
   "Putusan Bakti",
 ] as const;
 const CUSTOMER_DOCUMENT_SECTIONS: readonly DocumentSection[] = [
-  { stage: "Pertemuan Calon Nasabah", fields: ["multiDates"], note: "FKN, foto, screenshot, chat WA / item. Tanggal pertemuan bisa ditambahkan historis." },
+  { stage: "Pertemuan Calon Nasabah", fields: ["multiDates"], note: "FKN, foto, screenshot, chat WA. Tanggal pertemuan bisa ditambahkan historis." },
   { stage: "Edukasi Pra Regol", fields: ["date"], note: "Screenshot video pra-regol." },
   { stage: "Simulasi Transaksi", fields: ["dateRange"], note: "Item screenshot demo transaksi." },
   { stage: "Registrasi Online", fields: ["date"], note: "Tanggal regol, foto atau screenshot." },
