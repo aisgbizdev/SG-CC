@@ -48,10 +48,10 @@ export default function AktivitasPage() {
   const companyOrder = ["SGB", "RFB", "BPF", "KPF", "EWF"];
   const getCompanyCode = (companyId: number) => companiesData?.find(c => c.id === companyId)?.code || "";
   const duDkUsers = (usersData || [])
-    .filter((u: any) => ["du", "dk"].includes(u.role) && u.isActive)
+    .filter((u: any) => ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(u.role) && u.isActive)
     .sort((a: any, b: any) => {
-      const roleOrder = a.role === "du" ? 0 : 1;
-      const roleOrderB = b.role === "du" ? 0 : 1;
+      const roleOrder = ["du", "cbo", "ceo"].includes(a.role) ? 0 : 1;
+      const roleOrderB = ["du", "cbo", "ceo"].includes(b.role) ? 0 : 1;
       if (roleOrder !== roleOrderB) return roleOrder - roleOrderB;
       const compA = companyOrder.indexOf(getCompanyCode(a.companyId));
       const compB = companyOrder.indexOf(getCompanyCode(b.companyId));
@@ -131,7 +131,7 @@ export default function AktivitasPage() {
   const { totalPages, totalItems, getPageItems } = usePagination(filtered, 20);
   const pagedItems = getPageItems(currentPage);
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
-  const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
+  const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
   const canDelete = (a: Activity) => ["superadmin", "owner"].includes(user?.role || "") || a.createdBy === user?.id;
   const activityCategories = categories?.filter(c => c.type === "activity") || [];
 

@@ -31,6 +31,14 @@ import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
+const KEPATUHAN_CABANG_ALLOWED_PATHS = ["/", "/kasus", "/pengaturan", "/update-profil"];
+
+function isKepatuhanCabangPathAllowed(path: string) {
+  return KEPATUHAN_CABANG_ALLOWED_PATHS.some((allowedPath) => (
+    path === allowedPath || (allowedPath !== "/" && path.startsWith(`${allowedPath}/`))
+  ));
+}
+
 function HeaderBar() {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
@@ -68,16 +76,18 @@ function HeaderBar() {
         )}
       </div>
       <div className="flex items-center gap-1">
-        <Link href="/notifikasi">
-          <Button variant="ghost" size="icon" className="relative" data-testid="button-header-notifications">
-            <Bell className="w-4 h-4" />
-            {unreadCount && unreadCount.count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                {unreadCount.count > 9 ? "9+" : unreadCount.count}
-              </span>
-            )}
-          </Button>
-        </Link>
+        {user?.role !== "kepatuhan_cabang" && (
+          <Link href="/notifikasi">
+            <Button variant="ghost" size="icon" className="relative" data-testid="button-header-notifications">
+              <Bell className="w-4 h-4" />
+              {unreadCount && unreadCount.count > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount.count > 9 ? "9+" : unreadCount.count}
+                </span>
+              )}
+            </Button>
+          </Link>
+        )}
         <Button variant="ghost" size="icon" onClick={logout} data-testid="button-header-logout" title="Keluar">
           <LogOut className="w-4 h-4" />
         </Button>
@@ -107,6 +117,9 @@ function AuthenticatedApp() {
   }
 
   if (location === "/login") return <Redirect to="/" />;
+  if (user.role === "kepatuhan_cabang" && !isKepatuhanCabangPathAllowed(location)) {
+    return <Redirect to="/" />;
+  }
 
   const style = {
     "--sidebar-width": "16rem",
@@ -123,17 +136,21 @@ function AuthenticatedApp() {
             <ErrorBoundary>
               <Switch>
                 <Route path="/" component={DashboardPage} />
-                <Route path="/aktivitas" component={AktivitasPage} />
-                <Route path="/aktivitas/:id" component={AktivitasDetailPage} />
                 <Route path="/kasus" component={KasusPage} />
                 <Route path="/kasus/:id" component={KasusDetailPage} />
-                <Route path="/tugas" component={TugasPage} />
-                <Route path="/kpi" component={KpiPage} />
-                <Route path="/pengumuman" component={PengumumanPage} />
-                <Route path="/pesan" component={PesanPage} />
-                <Route path="/notifikasi" component={NotifikasiPage} />
                 <Route path="/pengaturan" component={PengaturanPage} />
                 <Route path="/update-profil" component={UpdateProfilPage} />
+                {user?.role !== "kepatuhan_cabang" && (
+                  <>
+                    <Route path="/aktivitas" component={AktivitasPage} />
+                    <Route path="/aktivitas/:id" component={AktivitasDetailPage} />
+                    <Route path="/tugas" component={TugasPage} />
+                    <Route path="/kpi" component={KpiPage} />
+                    <Route path="/pengumuman" component={PengumumanPage} />
+                    <Route path="/pesan" component={PesanPage} />
+                    <Route path="/notifikasi" component={NotifikasiPage} />
+                  </>
+                )}
                 {user?.role === "superadmin" && (
                   <>
                     <Route path="/users" component={UsersPage} />

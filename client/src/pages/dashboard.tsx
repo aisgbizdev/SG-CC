@@ -43,7 +43,10 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { data: stats, isLoading, isError, refetch } = useQuery<any>({ queryKey: ["/api/dashboard"] });
   const { data: companiesData } = useQuery<any[]>({ queryKey: ["/api/companies"] });
-  const { data: actionItems } = useQuery<any[]>({ queryKey: ["/api/action-items"] });
+  const { data: actionItems } = useQuery<any[]>({
+    queryKey: ["/api/action-items"],
+    enabled: user?.role !== "kepatuhan_cabang",
+  });
 
   if (isLoading) {
     return (
@@ -69,10 +72,191 @@ export default function DashboardPage() {
     );
   }
 
-  const canAddActivity = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
-  const canAddCase = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "");
+  const canAddActivity = ["du", "dk", "cbo", "ceo", "apuppt"].includes(user?.role || "");
+  const canAddCase = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
+  const isKepatuhanCabang = user?.role === "kepatuhan_cabang";
 
   const getCompanyName = (id: number) => companiesData?.find((c: any) => c.id === id)?.code || "-";
+
+  if (isKepatuhanCabang) {
+    const caseActionItems = [
+      ...(stats?.overdueCases > 0 ? [{
+        href: "/kasus?view=active",
+        icon: AlertTriangle,
+        title: `${stats.overdueCases} kasus melewati target`,
+        subtitle: "Kasus pengaduan - perlu ditindak",
+      }] : []),
+      ...(stats?.longWaitingCases > 0 ? [{
+        href: "/kasus?stage=waiting",
+        icon: Clock,
+        title: `${stats.longWaitingCases} kasus menunggu >30 hari`,
+        subtitle: "Kasus pengaduan - perlu ditinjau",
+      }] : []),
+      ...((stats?.highRiskCases || []) as Case[]).slice(0, 5).map((c) => ({
+        href: `/kasus/${c.id}`,
+        icon: ShieldAlert,
+        title: `${c.caseCode} - ${c.customerName}`,
+        subtitle: "Kasus risiko tinggi",
+      })),
+    ];
+
+    return (
+      <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              Selamat datang, {user?.fullName} ({getRoleLabel(user?.role || "")})
+            </p>
+          </div>
+          {canAddCase && (
+            <Link href="/kasus?action=new">
+              <Button size="sm" variant="secondary" data-testid="button-quick-add-case">
+                <Plus className="w-4 h-4 mr-1" /> Kasus Baru
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent" data-testid="card-ai-compliance">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Bot className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">SG Compliance & Risk Assistant</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                Asisten AI untuk memahami KYC, APU PPT, pencegahan risiko, dan panduan komunikasi aman dengan nasabah.
+              </p>
+            </div>
+            <a
+              href="https://chatgpt.com/g/g-693fa1b8cc388191b1ceffe68d41b514-sg-compliance-risk-assistant"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button size="sm" variant="outline" className="flex-shrink-0" data-testid="button-open-ai-compliance">
+                <Bot className="w-4 h-4 mr-1" /> Buka AI
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
+
+        {caseActionItems.length > 0 && (
+          <Card className="border-amber-200 dark:border-amber-900/50" data-testid="card-action-items">
+            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-amber-500" />
+                <h3 className="font-semibold text-sm">Perlu Ditindak</h3>
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs" data-testid="badge-action-items-count">{caseActionItems.length}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <div className="space-y-2">
+                {caseActionItems.map((item, idx) => (
+                  <Link key={`${item.href}-${idx}`} href={item.href}>
+                    <div className="flex items-center gap-3 p-2.5 rounded-md bg-amber-50/50 dark:bg-amber-900/10 hover-elevate cursor-pointer" data-testid={`case-action-item-${idx}`}>
+                      <div className="w-8 h-8 rounded-md bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Total Kasus" value={stats?.totalCases || 0} icon={FileWarning} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" href="/kasus" />
+          <StatCard title="Kasus Aktif" value={stats?.activeCases || 0} icon={FileWarning} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" subtitle={`${stats?.overdueCases || 0} overdue`} href="/kasus?view=active" />
+          <StatCard title="Menunggu Keputusan" value={stats?.waitingCases || 0} icon={Clock} color="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" subtitle={`${stats?.longWaitingCases || 0} menunggu >30 hari`} href="/kasus?stage=waiting" />
+          <StatCard title="Kasus Selesai" value={stats?.closedCases || 0} icon={CheckCircle2} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" subtitle={`dari ${stats?.totalCases || 0} total`} href="/kasus?view=closed" />
+        </div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+            <div className="flex items-center gap-2">
+              <FileWarning className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-semibold text-sm">Kasus Terbaru</h3>
+            </div>
+            <Link href="/kasus">
+              <Button variant="ghost" size="sm" data-testid="link-all-cases">
+                Semua <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {stats?.recentCases?.length > 0 ? (
+              <div className="space-y-3">
+                {stats.recentCases.map((c: Case) => (
+                  <Link key={c.id} href={`/kasus/${c.id}`}>
+                    <div className="p-3 rounded-md bg-muted/50 hover-elevate cursor-pointer space-y-1.5" data-testid={`card-case-${c.id}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-primary" data-testid={`text-account-recent-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
+                            <span className="text-xs text-muted-foreground">{c.caseCode}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{c.customerName}</p>
+                        </div>
+                        <RiskBadge level={c.riskLevel} />
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{getCompanyName(c.companyId)}</span>
+                        <StatusBadge status={c.status} />
+                      </div>
+                      <Progress value={c.progress} className="h-1.5" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">Belum ada kasus</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {stats?.highRiskCases?.length > 0 && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-red-500" />
+                <h3 className="font-semibold text-sm">Kasus Risiko Tinggi</h3>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <div className="space-y-2">
+                {stats.highRiskCases.map((c: Case) => (
+                  <Link key={c.id} href={`/kasus/${c.id}`}>
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 hover-elevate cursor-pointer" data-testid={`card-high-risk-${c.id}`}>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-primary" data-testid={`text-account-highrisk-${c.id}`}>No. Akun: {c.accountNumber || "-"}</span>
+                          <span className="text-xs text-muted-foreground">{c.caseCode}</span>
+                          <span className="text-sm">- {c.customerName}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{c.summary}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0 space-y-1">
+                        <RiskBadge level={c.riskLevel} />
+                        <p className="text-xs text-muted-foreground">{c.progress}%</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">

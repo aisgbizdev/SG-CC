@@ -28,7 +28,7 @@ export function MobileBottomNav() {
 
   const totalBadge = unreadCount?.count || 0;
 
-  const moreMenuItems = [
+  const moreMenuItems = user.role === "kepatuhan_cabang" ? [] : [
     { title: "Penilaian KPI", url: "/kpi", icon: BarChart3 },
     { title: "Pengumuman", url: "/pengumuman", icon: Megaphone },
     { title: "Pesan", url: "/pesan", icon: Mail },
@@ -42,7 +42,11 @@ export function MobileBottomNav() {
 
   const isMoreActive = moreMenuItems.some(item => isActive(item.url));
 
-  const primaryTabs = [
+  const primaryTabs = user.role === "kepatuhan_cabang" ? [
+    { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    { title: "Kasus", url: "/kasus", icon: FileWarning },
+    { title: "Profil", url: "/pengaturan", icon: Settings },
+  ] : [
     { title: "Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Aktivitas", url: "/aktivitas", icon: Activity },
     { title: "Kasus", url: "/kasus", icon: FileWarning },
@@ -68,6 +72,7 @@ export function MobileBottomNav() {
           );
         })}
 
+        {user.role !== "kepatuhan_cabang" && (
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button
@@ -128,6 +133,7 @@ export function MobileBottomNav() {
             </div>
           </SheetContent>
         </Sheet>
+        )}
       </div>
     </nav>
   );

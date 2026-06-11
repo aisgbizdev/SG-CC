@@ -162,6 +162,7 @@ export function getRoleLabel(role: string): string {
     cbo: "CBO",
     ceo: "CEO",
     kepatuhan_cabang: "Kepatuhan Cabang",
+    apuppt: "APUPPT",
   };
   return labels[role] || role;
 }

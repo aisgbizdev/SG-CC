@@ -246,6 +246,7 @@ export default function UsersPage() {
                       <SelectItem value="cbo">CBO</SelectItem>
                       <SelectItem value="ceo">CEO</SelectItem>
                       <SelectItem value="kepatuhan_cabang">Kepatuhan Cabang</SelectItem>
+                      <SelectItem value="apuppt">APUPPT</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -407,6 +408,7 @@ export default function UsersPage() {
                     <SelectItem value="cbo">CBO</SelectItem>
                     <SelectItem value="ceo">CEO</SelectItem>
                     <SelectItem value="kepatuhan_cabang">Kepatuhan Cabang</SelectItem>
+                    <SelectItem value="apuppt">APUPPT</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

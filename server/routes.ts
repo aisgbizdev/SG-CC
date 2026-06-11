@@ -28,7 +28,7 @@ const ROUTINE_UPDATE_TYPES = new Set([
   "activity_updated", "task_updated",
 ]);
 const DU_LIKE_ROLES = ["du", "cbo", "ceo"];
-const DK_LIKE_ROLES = ["dk", "kepatuhan_cabang"];
+const DK_LIKE_ROLES = ["dk", "kepatuhan_cabang", "apuppt"];
 const DU_DK_LIKE_ROLES = [...DU_LIKE_ROLES, ...DK_LIKE_ROLES];
 
 async function notifyAdminsAndOwners(
@@ -676,8 +676,8 @@ export async function registerRoutes(
       const existing = await storage.getActivity(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
       if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-      if (!["superadmin", "du", "dk"].includes(user.role) && existing.createdBy !== user.id) {
-        return res.status(403).json({ message: "Hanya pembuat, superadmin, DU, atau DK yang bisa mengedit" });
+      if (!["superadmin", ...DU_DK_LIKE_ROLES].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, superadmin, atau role operasional yang bisa mengedit" });
       }
       const patchParsed = activityPatchSchema.safeParse(req.body);
       if (!patchParsed.success) return res.status(400).json(formatZodError(patchParsed.error));
@@ -699,8 +699,8 @@ export async function registerRoutes(
       const existing = await storage.getActivity(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Aktivitas tidak ditemukan" });
       if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-      if (!["superadmin", "owner", "du", "dk"].includes(user.role) && existing.createdBy !== user.id) {
-        return res.status(403).json({ message: "Hanya pembuat, owner, superadmin, DU, atau DK yang bisa menghapus" });
+      if (!["superadmin", "owner", ...DU_DK_LIKE_ROLES].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, owner, superadmin, atau role operasional yang bisa menghapus" });
       }
       await storage.transaction(async (tx) => {
         await storage.updateActivity(existing.id, { isArchived: true }, tx);
@@ -767,8 +767,8 @@ export async function registerRoutes(
       const existing = await storage.getCase(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Kasus tidak ditemukan" });
       if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-      if (user.role !== "superadmin" && existing.createdBy !== user.id) {
-        return res.status(403).json({ message: "Hanya pembuat atau superadmin yang bisa mengedit" });
+      if (!["superadmin", ...DK_LIKE_ROLES, "du"].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, superadmin, DU, atau role compliance yang bisa mengedit" });
       }
       const casePatchParsed = casePatchSchema.safeParse(req.body);
       if (!casePatchParsed.success) return res.status(400).json(formatZodError(casePatchParsed.error));
@@ -903,8 +903,8 @@ export async function registerRoutes(
       const existing = await storage.getCase(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Kasus tidak ditemukan" });
       if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
-      if (!["superadmin", "owner"].includes(user.role) && existing.createdBy !== user.id) {
-        return res.status(403).json({ message: "Hanya pembuat, owner, atau superadmin yang bisa menghapus" });
+      if (!["superadmin", "owner", "du", ...DK_LIKE_ROLES].includes(user.role) && existing.createdBy !== user.id) {
+        return res.status(403).json({ message: "Hanya pembuat, owner, superadmin, DU, atau role compliance yang bisa menghapus" });
       }
       await storage.transaction(async (tx) => {
         await storage.updateCase(existing.id, { isArchived: true }, tx);

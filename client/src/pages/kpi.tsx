@@ -409,12 +409,12 @@ export default function KpiPage() {
   const getUserRole = (userId: number) => {
     if (!isAdmin && user && userId === user.id) {
       if (["du", "cbo", "ceo"].includes(user.role)) return "DU";
-      if (["dk", "kepatuhan_cabang"].includes(user.role)) return "DK";
+      if (["dk", "kepatuhan_cabang", "apuppt"].includes(user.role)) return user.role === "apuppt" ? "APUPPT" : "DK";
       return user.role.toUpperCase();
     }
     const u = usersData?.find(u2 => u2.id === userId);
     if (u && ["du", "cbo", "ceo"].includes(u.role)) return "DU";
-    if (u && ["dk", "kepatuhan_cabang"].includes(u.role)) return "DK";
+    if (u && ["dk", "kepatuhan_cabang", "apuppt"].includes(u.role)) return u.role === "apuppt" ? "APUPPT" : "DK";
     return u?.role?.toUpperCase() || "-";
   };
   const getUserCompanyId = (userId: number) => {
@@ -433,7 +433,7 @@ export default function KpiPage() {
     return matchPeriod && matchCompany && matchPeriodType;
   });
 
-  const duDkUsers = usersData?.filter(u => ["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(u.role) && u.isActive) || [];
+  const duDkUsers = usersData?.filter(u => ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(u.role) && u.isActive) || [];
 
   const isLoading = activeTab === "live" ? liveLoading : histLoading;
   const isError = activeTab === "live" ? liveError : histError;
@@ -710,7 +710,7 @@ export default function KpiPage() {
             </Card>
           ) : (() => {
             const duList = [...filteredLive].filter(k => ["du", "cbo", "ceo"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
-            const dkList = [...filteredLive].filter(k => ["dk", "kepatuhan_cabang"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
+            const dkList = [...filteredLive].filter(k => ["dk", "kepatuhan_cabang", "apuppt"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
 
             const renderKpiCard = (kpi: LiveKpi, idx: number) => {
               const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);

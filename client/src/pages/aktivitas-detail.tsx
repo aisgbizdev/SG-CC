@@ -65,7 +65,7 @@ export default function AktivitasDetailPage() {
 
   const [, setLocation] = useWouterLocation();
   const canEdit = user?.role === "superadmin" ||
-    (["du", "dk", "cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "") && activity?.createdBy === user?.id);
+    (["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "") && activity?.createdBy === user?.id);
   const canDelete = ["superadmin", "owner"].includes(user?.role || "") || activity?.createdBy === user?.id;
 
   const deleteMutation = useMutation({

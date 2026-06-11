@@ -45,7 +45,10 @@ export function AppSidebar() {
 
   if (!user) return null;
 
-  const mainMenuItems = [
+  const mainMenuItems = user.role === "kepatuhan_cabang" ? [
+    { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    { title: "Kasus Pengaduan", url: "/kasus", icon: FileWarning },
+  ] : [
     { title: "Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Aktivitas", url: "/aktivitas", icon: Activity },
     { title: "Kasus Pengaduan", url: "/kasus", icon: FileWarning },
@@ -56,7 +59,7 @@ export function AppSidebar() {
     { title: "Penilaian KPI", url: "/kpi", icon: BarChart3 },
   ];
 
-  const adminMenuItems = user.role === "superadmin" ? [
+  const adminMenuItems = user.role === "kepatuhan_cabang" ? [] : user.role === "superadmin" ? [
     { title: "Manajemen User", url: "/users", icon: Users },
     { title: "Manajemen PT", url: "/companies", icon: Building2 },
     { title: "Pengaturan", url: "/pengaturan", icon: Settings },
@@ -127,46 +130,50 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Alat Bantu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a
-                    href="https://chatgpt.com/g/g-693fa1b8cc388191b1ceffe68d41b514-sg-compliance-risk-assistant"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-testid="nav-ai-compliance"
-                    className="flex items-center gap-2"
-                  >
-                    <Bot className="w-4 h-4" />
-                    <span className="flex-1">AI Compliance</span>
-                    <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>{user.role === "superadmin" ? "Administrasi" : "Lainnya"}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild data-active={location === item.url}>
-                    <Link href={item.url} data-testid={`nav-${item.url.replace("/", "")}`}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
+        {user.role !== "kepatuhan_cabang" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Alat Bantu</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a
+                      href="https://chatgpt.com/g/g-693fa1b8cc388191b1ceffe68d41b514-sg-compliance-risk-assistant"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-ai-compliance"
+                      className="flex items-center gap-2"
+                    >
+                      <Bot className="w-4 h-4" />
+                      <span className="flex-1">AI Compliance</span>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {adminMenuItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{user.role === "superadmin" ? "Administrasi" : "Lainnya"}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild data-active={location === item.url}>
+                      <Link href={item.url} data-testid={`nav-${item.url.replace("/", "")}`}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-3">
@@ -187,7 +194,7 @@ export function AppSidebar() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
               <Link href="/pengaturan" data-testid="menu-settings">
-                <Settings className="w-4 h-4 mr-2" /> Pengaturan
+                <Settings className="w-4 h-4 mr-2" /> {user.role === "kepatuhan_cabang" ? "Edit Profil" : "Pengaturan"}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={logout} data-testid="menu-logout">
