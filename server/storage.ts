@@ -22,6 +22,24 @@ import * as schema from "@shared/schema";
 
 type TxOrDb = NodePgDatabase<typeof schema>;
 
+function normalizeBranchName(branch?: string | null): string {
+  return (branch || "").trim().toLowerCase();
+}
+
+function branchAliases(branch: string): string[] {
+  const normalized = normalizeBranchName(branch);
+  const aliases: Record<string, string[]> = {
+    "tcc": ["tcc", "tcc batavia"],
+    "tcc batavia": ["tcc", "tcc batavia"],
+  };
+  return aliases[normalized] || [normalized];
+}
+
+function branchCaseCondition(branch: string) {
+  const aliases = branchAliases(branch);
+  return sql`lower(trim(${cases.branch})) in ${aliases}`;
+}
+
 export interface IStorage {
   getCompanies(): Promise<Company[]>;
   getCompany(id: number): Promise<Company | undefined>;
@@ -49,7 +67,7 @@ export interface IStorage {
   createActivity(data: InsertActivity, tx?: TxOrDb): Promise<Activity>;
   updateActivity(id: number, data: Partial<Activity>, tx?: TxOrDb): Promise<Activity | undefined>;
 
-  getCases(companyId?: number): Promise<Case[]>;
+  getCases(companyId?: number, branch?: string | null): Promise<Case[]>;
   getCase(id: number): Promise<Case | undefined>;
   createCase(data: InsertCase, tx?: TxOrDb): Promise<Case>;
   updateCase(id: number, data: Partial<Case>, tx?: TxOrDb): Promise<Case | undefined>;
@@ -91,7 +109,7 @@ export interface IStorage {
 
   createAuditLog(data: InsertAuditLog, tx?: TxOrDb): Promise<AuditLog>;
 
-  getDashboardStats(companyId?: number): Promise<any>;
+  getDashboardStats(companyId?: number, branch?: string | null): Promise<any>;
 
   getKpiAssessments(userId?: number): Promise<KpiAssessment[]>;
   getKpiAssessment(id: number): Promise<KpiAssessment | undefined>;
@@ -224,11 +242,12 @@ export class DatabaseStorage implements IStorage {
     return activity;
   }
 
-  async getCases(companyId?: number): Promise<Case[]> {
-    if (companyId) {
-      return db.select().from(cases).where(and(eq(cases.companyId, companyId), eq(cases.isArchived, false))).orderBy(desc(cases.createdAt));
-    }
-    return db.select().from(cases).where(eq(cases.isArchived, false)).orderBy(desc(cases.createdAt));
+  async getCases(companyId?: number, branch?: string | null): Promise<Case[]> {
+    const conditions = [eq(cases.isArchived, false)];
+    if (companyId) conditions.push(eq(cases.companyId, companyId));
+    if (branch === null) conditions.push(sql`false`);
+    if (branch) conditions.push(branchCaseCondition(branch));
+    return db.select().from(cases).where(and(...conditions)).orderBy(desc(cases.createdAt));
   }
 
   async getCase(id: number): Promise<Case | undefined> {
@@ -409,14 +428,16 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  async getDashboardStats(companyId?: number): Promise<any> {
+  async getDashboardStats(companyId?: number, branch?: string | null): Promise<any> {
     const today = new Date().toISOString().split("T")[0];
     const actConditions = companyId
       ? and(eq(activities.isArchived, false), eq(activities.companyId, companyId))
       : eq(activities.isArchived, false);
-    const caseConditions = companyId
-      ? and(eq(cases.isArchived, false), eq(cases.companyId, companyId))
-      : eq(cases.isArchived, false);
+    const caseFilterConditions = [eq(cases.isArchived, false)];
+    if (companyId) caseFilterConditions.push(eq(cases.companyId, companyId));
+    if (branch === null) caseFilterConditions.push(sql`false`);
+    if (branch) caseFilterConditions.push(branchCaseCondition(branch));
+    const caseConditions = and(...caseFilterConditions);
     const taskConditions = eq(tasks.isArchived, false);
 
     const waitingCondition = and(

@@ -372,6 +372,31 @@ function canAccessCompany(user: any, companyId: number | null): boolean {
   return user.companyId === companyId;
 }
 
+function normalizeBranchName(branch?: string | null): string {
+  return (branch || "").trim().toLowerCase();
+}
+
+function branchAliases(branch?: string | null): string[] {
+  const normalized = normalizeBranchName(branch);
+  const aliases: Record<string, string[]> = {
+    "tcc": ["tcc", "tcc batavia"],
+    "tcc batavia": ["tcc", "tcc batavia"],
+  };
+  return aliases[normalized] || (normalized ? [normalized] : []);
+}
+
+function canAccessCase(user: any, c: { companyId: number | null; branch?: string | null }): boolean {
+  if (!canAccessCompany(user, c.companyId)) return false;
+  if (user.role !== "kepatuhan_cabang") return true;
+  const allowedBranches = branchAliases(user.branch);
+  return allowedBranches.length > 0 && allowedBranches.includes(normalizeBranchName(c.branch));
+}
+
+function branchScopeForUser(user: any): string | null | undefined {
+  if (user.role !== "kepatuhan_cabang") return undefined;
+  return user.branch || null;
+}
+
 function parseId(param: string): number | null {
   if (!/^\d+$/.test(param)) return null;
   return parseInt(param);
@@ -595,7 +620,7 @@ export async function registerRoutes(
     try {
       const user = req.user as any;
       const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
-      const stats = await storage.getDashboardStats(companyId);
+      const stats = await storage.getDashboardStats(companyId, branchScopeForUser(user));
       res.json(stats);
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal mengambil data dashboard" });
@@ -716,7 +741,7 @@ export async function registerRoutes(
     try {
       const user = req.user as any;
       const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
-      const data = await storage.getCases(companyId);
+      const data = await storage.getCases(companyId, branchScopeForUser(user));
       const pagination = parsePagination(req.query);
       res.json(paginateArray(data, pagination));
     } catch (err: any) {
@@ -731,7 +756,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const c = await storage.getCase(id);
       if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
       res.json(c);
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal mengambil data kasus" });
@@ -743,9 +768,13 @@ export async function registerRoutes(
       const parsed = caseBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
+      if (user.role === "kepatuhan_cabang" && !user.branch) {
+        return res.status(400).json({ message: "Cabang user belum diatur" });
+      }
       const payload = {
         ...parsed.data,
         companyId: parsed.data.companyId || user.companyId,
+        ...(user.role === "kepatuhan_cabang" ? { branch: user.branch } : {}),
         complaintAttachments: parsed.data.complaintAttachments ? JSON.stringify(parsed.data.complaintAttachments) : null,
         caseDocuments: parsed.data.caseDocuments ? JSON.stringify(parsed.data.caseDocuments) : null,
       };
@@ -766,7 +795,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const existing = await storage.getCase(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, existing)) return res.status(403).json({ message: "Akses ditolak" });
       if (!["superadmin", ...DK_LIKE_ROLES, "du"].includes(user.role) && existing.createdBy !== user.id) {
         return res.status(403).json({ message: "Hanya pembuat, superadmin, DU, atau role compliance yang bisa mengedit" });
       }
@@ -775,6 +804,7 @@ export async function registerRoutes(
       const { timelineNote, ...casePatchData } = casePatchParsed.data;
       const patchPayload: any = {
         ...casePatchData,
+        ...(user.role === "kepatuhan_cabang" ? { branch: user.branch } : {}),
         ...(casePatchData.complaintAttachments !== undefined ? {
           complaintAttachments: casePatchData.complaintAttachments ? JSON.stringify(casePatchData.complaintAttachments) : null,
         } : {}),
@@ -902,7 +932,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const existing = await storage.getCase(parseInt(req.params.id));
       if (!existing) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, existing.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, existing)) return res.status(403).json({ message: "Akses ditolak" });
       if (!["superadmin", "owner", "du", ...DK_LIKE_ROLES].includes(user.role) && existing.createdBy !== user.id) {
         return res.status(403).json({ message: "Hanya pembuat, owner, superadmin, DU, atau role compliance yang bisa menghapus" });
       }
@@ -923,7 +953,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const c = await storage.getCase(id);
       if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
       const data = await storage.getCaseUpdates(c.id);
       res.json(data);
     } catch (err: any) {
@@ -937,7 +967,7 @@ export async function registerRoutes(
       const caseId = parseInt(req.params.id);
       const c = await storage.getCase(caseId);
       if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
       const cuParsed = caseUpdateBodySchema.safeParse(req.body);
       if (!cuParsed.success) return res.status(400).json(formatZodError(cuParsed.error));
       const update = await storage.transaction(async (tx) => {
@@ -1144,6 +1174,12 @@ export async function registerRoutes(
     try {
       const entityId = parseId(req.params.entityId);
       if (!entityId) return res.status(400).json({ message: "ID tidak valid" });
+      const user = req.user as any;
+      if (req.params.entityType === "case") {
+        const c = await storage.getCase(entityId);
+        if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+        if (!canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
+      }
       const data = await storage.getComments(req.params.entityType, entityId);
       res.json(data);
     } catch (err: any) {
@@ -1156,13 +1192,14 @@ export async function registerRoutes(
       const parsed = commentBodySchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json(formatZodError(parsed.error));
       const user = req.user as any;
-      const comment = await storage.createComment({ ...parsed.data, createdBy: user.id });
       const entityType = parsed.data.entityType;
       const entityId = parsed.data.entityId;
       let companyId: number | null = null;
       let entityTitle = "";
       if (entityType === "case") {
         const entity = await storage.getCase(entityId);
+        if (!entity) return res.status(404).json({ message: "Kasus tidak ditemukan" });
+        if (!canAccessCase(user, entity)) return res.status(403).json({ message: "Akses ditolak" });
         if (entity) { companyId = entity.companyId; entityTitle = entity.caseCode; }
       } else if (entityType === "activity") {
         const entity = await storage.getActivity(entityId);
@@ -1171,6 +1208,7 @@ export async function registerRoutes(
         const entity = await storage.getTask(entityId);
         if (entity) { companyId = entity.companyId; entityTitle = entity.title; }
       }
+      const comment = await storage.createComment({ ...parsed.data, createdBy: user.id });
       notifyCommentParticipants(entityType, entityId, user.id, user.fullName, entityTitle, companyId);
       res.json(comment);
     } catch (err: any) {
@@ -1547,6 +1585,9 @@ export async function registerRoutes(
       const user = req.user as any;
       if (!user.companyId) return res.json([]);
       const branchList = await storage.getBranchesByCompany(user.companyId);
+      if (user.role === "kepatuhan_cabang") {
+        return res.json(branchList.filter((branch) => normalizeBranchName(branch.name) === normalizeBranchName(user.branch)));
+      }
       res.json(branchList);
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal mengambil data cabang" });
@@ -1560,7 +1601,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const c = await storage.getCase(caseId);
       if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
       const meetings = await storage.getMeetingsByCase(caseId);
       res.json(meetings);
     } catch (err: any) {
@@ -1575,7 +1616,7 @@ export async function registerRoutes(
       const user = req.user as any;
       const c = await storage.getCase(caseId);
       if (!c) return res.status(404).json({ message: "Kasus tidak ditemukan" });
-      if (!canAccessCompany(user, c.companyId)) return res.status(403).json({ message: "Akses ditolak" });
+      if (!canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
       const meetingSchema = z.object({
         meetingDate: z.string().min(1, "Tanggal pertemuan wajib diisi"),
         meetingType: z.string().min(1, "Jenis pertemuan wajib diisi"),
@@ -1611,6 +1652,8 @@ export async function registerRoutes(
       const allMeetings = await db.select().from(caseMeetings).where(eq(caseMeetings.id, id));
       if (allMeetings.length === 0) return res.status(404).json({ message: "Pertemuan tidak ditemukan" });
       const meeting = allMeetings[0];
+      const c = await storage.getCase(meeting.caseId);
+      if (!c || !canAccessCase(user, c)) return res.status(403).json({ message: "Akses ditolak" });
       if (user.role !== "superadmin" && meeting.createdBy !== user.id) {
         return res.status(403).json({ message: "Hanya pembuat atau superadmin yang bisa menghapus pertemuan" });
       }

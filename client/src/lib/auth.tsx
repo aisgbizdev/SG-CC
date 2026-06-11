@@ -9,6 +9,7 @@ type AuthUser = {
   fullName: string;
   role: string;
   companyId: number | null;
+  branch: string | null;
   isActive: boolean;
   profileCompleted: boolean;
   avatarUrl: string | null;

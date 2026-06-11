@@ -18,6 +18,7 @@ declare global {
       fullName: string;
       role: string;
       companyId: number | null;
+      branch: string | null;
       isActive: boolean;
       profileCompleted: boolean;
     }
@@ -160,6 +161,7 @@ export function setupAuth(app: Express) {
         fullName: user.fullName,
         role: user.role,
         companyId: user.companyId,
+        branch: user.branch,
         isActive: user.isActive,
         profileCompleted: user.profileCompleted,
       };
@@ -199,6 +201,7 @@ export function setupAuth(app: Express) {
           fullName: user.fullName,
           role: user.role,
           companyId: user.companyId,
+          branch: user.branch,
           isActive: user.isActive,
           profileCompleted: user.profileCompleted,
         });
@@ -219,6 +222,7 @@ export function setupAuth(app: Express) {
         fullName: user.fullName,
         role: user.role,
         companyId: user.companyId,
+        branch: user.branch,
         isActive: user.isActive,
         profileCompleted: user.profileCompleted,
         avatarUrl: user.avatarUrl,
