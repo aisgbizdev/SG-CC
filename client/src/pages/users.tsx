@@ -51,8 +51,7 @@ export default function UsersPage() {
     queryKey: ["/api/companies", form.companyId, "branches"],
     queryFn: async () => {
       if (!form.companyId || form.companyId === NO_COMPANY) return [];
-      const res = await fetch(`/api/companies/${form.companyId}/branches`, { credentials: "include" });
-      if (!res.ok) throw new Error("Gagal mengambil data cabang");
+      const res = await apiRequest("GET", `/api/companies/${form.companyId}/branches`);
       return res.json();
     },
     enabled: !!form.companyId && form.companyId !== NO_COMPANY,
@@ -61,8 +60,7 @@ export default function UsersPage() {
     queryKey: ["/api/companies", editForm.companyId, "branches", "edit-user"],
     queryFn: async () => {
       if (!editForm.companyId) return [];
-      const res = await fetch(`/api/companies/${editForm.companyId}/branches`, { credentials: "include" });
-      if (!res.ok) throw new Error("Gagal mengambil data cabang");
+      const res = await apiRequest("GET", `/api/companies/${editForm.companyId}/branches`);
       return res.json();
     },
     enabled: !!editForm.companyId && editForm.companyId !== NO_COMPANY,
@@ -266,7 +264,13 @@ export default function UsersPage() {
                 <Select value={form.branch} onValueChange={v => setForm({...form, branch: v})} disabled={!form.companyId || form.companyId === NO_COMPANY}>
                   <SelectTrigger><SelectValue placeholder={form.companyId && form.companyId !== NO_COMPANY ? "Pilih Cabang" : "Pilih PT dulu"} /></SelectTrigger>
                   <SelectContent>
-                    {branchesData?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                    {!branchesData ? (
+                      <SelectItem value="__loading_branch__" disabled>Memuat cabang...</SelectItem>
+                    ) : branchesData.length === 0 ? (
+                      <SelectItem value="__empty_branch__" disabled>Belum ada cabang aktif</SelectItem>
+                    ) : (
+                      branchesData.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -428,7 +432,13 @@ export default function UsersPage() {
               <Select value={editForm.branch} onValueChange={v => setEditForm({...editForm, branch: v})} disabled={!editForm.companyId || editForm.companyId === NO_COMPANY}>
                 <SelectTrigger data-testid="select-edit-user-branch"><SelectValue placeholder={editForm.companyId && editForm.companyId !== NO_COMPANY ? "Pilih Cabang" : "Pilih PT dulu"} /></SelectTrigger>
                 <SelectContent>
-                  {editBranchesData?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                  {!editBranchesData ? (
+                    <SelectItem value="__loading_edit_branch__" disabled>Memuat cabang...</SelectItem>
+                  ) : editBranchesData.length === 0 ? (
+                    <SelectItem value="__empty_edit_branch__" disabled>Belum ada cabang aktif</SelectItem>
+                  ) : (
+                    editBranchesData.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)
+                  )}
                 </SelectContent>
               </Select>
             </div>
