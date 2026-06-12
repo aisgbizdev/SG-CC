@@ -338,7 +338,7 @@ export default function KasusDetailPage() {
   const getCompanyName = (companyId: number) => companiesData?.find((c: any) => c.id === companyId)?.name || "-";
 
   const [, setLocation] = useWouterLocation();
-  const canEdit = ["superadmin", "du", "dk", "apuppt"].includes(user?.role || "") || (["cbo", "ceo", "kepatuhan_cabang"].includes(user?.role || "") && caseData?.createdBy === user?.id);
+  const canEdit = ["superadmin", "du", "dk", "kepatuhan_cabang", "apuppt"].includes(user?.role || "") || (["cbo", "ceo"].includes(user?.role || "") && caseData?.createdBy === user?.id);
   const canUpdate = ["superadmin", "du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
   const canDelete = ["superadmin", "owner", "du", "dk", "apuppt"].includes(user?.role || "") || caseData?.createdBy === user?.id;
   const canDeleteMeeting = (createdBy: number) => user?.role === "superadmin" || createdBy === user?.id;

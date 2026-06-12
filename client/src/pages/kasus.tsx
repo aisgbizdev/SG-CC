@@ -708,7 +708,8 @@ export default function KasusPage() {
     });
   };
 
-  const canEditCase = (c: Case) => user?.role === "superadmin" || c.createdBy === user?.id;
+  const canUpdateCase = () => ["superadmin", "du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
+  const canEditCase = (c: Case) => ["superadmin", "du", "dk", "kepatuhan_cabang", "apuppt"].includes(user?.role || "") || c.createdBy === user?.id;
 
   return (
     <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
@@ -1187,6 +1188,11 @@ export default function KasusPage() {
                         <Eye className="w-4 h-4" />
                       </Link>
                     </Button>
+                    {canUpdateCase() && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" data-testid={`button-update-case-${c.id}`} onClick={(e) => openUpdateDialog(c, e)}>
+                        <MessageCircle className="w-4 h-4" />
+                      </Button>
+                    )}
                     {canDeleteCase(c) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
