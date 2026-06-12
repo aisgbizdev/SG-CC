@@ -12,8 +12,31 @@ Tugas aktif: 6
 Pengumuman aktif: 2
 ✓ Data kasus lengkap (125/105)
 === VERIFIKASI SELESAI ===
-11:03:50 AM [express] serving on port 5000
+2:47:54 PM [express] serving on port 5000
 Sistem pengingat otomatis aktif (interval: 1 jam)
-11:04:15 AM [express] GET /api/auth/me 304 in 1366ms
-11:04:17 AM [express] GET /api/companies 304 in 1765ms
-11:04:17 AM [express] GET /api/notifications/unread-count 304 in 1772ms
+2:48:12 PM [express] GET /api/auth/me 304 in 855ms
+2:48:13 PM [express] GET /api/companies 304 in 1127ms
+2:48:14 PM [express] GET /api/kpi 304 in 1146ms
+2:48:14 PM [express] GET /api/notifications/unread-count 304 in 2022ms
+2:48:27 PM [express] GET /api/users 304 in 14702ms
+Auto-cleanup: 6 notifikasi lama (>7 hari) dihapus
+2:48:28 PM [express] GET /api/kpi/live 200 in 15566ms
+2:48:29 PM [express] POST /api/auth/login 200 in 10917ms
+2:48:56 PM [express] GET /api/kpi/live 200 in 27508ms
+2:48:57 PM [express] GET /api/notifications/unread-count 304 in 11976ms
+2:49:30 PM [express] GET /api/notifications/unread-count 304 in 3029ms
+2:49:45 PM [express] GET /api/kpi/live 304 in 17166ms
+2:50:04 PM [express] GET /api/notifications/unread-count 304 in 3767ms
+2:50:37 PM [express] GET /api/notifications/unread-count 304 in 2956ms
+2:51:01 PM [express] GET /api/kpi/live 304 in 15430ms
+2:51:08 PM [express] GET /api/notifications/unread-count 304 in 1216ms
+2:51:41 PM [express] GET /api/notifications/unread-count 304 in 3151ms
+2:52:22 PM [express] GET /api/kpi/live 304 in 20091ms
+2:52:22 PM [express] GET /api/notifications/unread-count 304 in 10833ms
+[2m2:52:39 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kpi.tsx, /src/index.css[22m
+2:52:55 PM [express] GET /api/notifications/unread-count 304 in 2669ms
+[2m2:52:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kpi.tsx, /src/index.css[22m
+2:53:31 PM [express] GET /api/notifications/unread-count 304 in 5546ms
+2:54:07 PM [express] GET /api/notifications/unread-count 304 in 6052ms
+2:54:52 PM [express] GET /api/notifications/unread-count 304 in 15397ms
+2:54:52 PM [express] GET /api/kpi/live 304 in 49863ms

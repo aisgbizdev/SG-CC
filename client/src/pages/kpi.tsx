@@ -43,11 +43,22 @@ const ASPECT_LABELS = [
   { key: "konsistensi", label: "Konsistensi", icon: BarChart2, color: "text-pink-500", desc: "Rasio penyelesaian terhadap total", weight: 5 },
 ] as const;
 
+const clampScoreDisplay = (value: number) => Math.max(0, Math.min(100, Math.round(Number.isFinite(value) ? value : 0)));
+
 function getGrade(score: number) {
+  score = clampScoreDisplay(score);
   if (score >= 85) return { grade: "A", label: "Sangat Baik", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" };
   if (score >= 70) return { grade: "B", label: "Baik", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" };
   if (score >= 55) return { grade: "C", label: "Cukup", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" };
   return { grade: "D", label: "Perlu Perbaikan", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" };
+}
+
+function getRoleLabel(role?: string | null) {
+  if (["du", "cbo", "ceo"].includes(role || "")) return "DU";
+  if (role === "dk") return "DK";
+  if (role === "kepatuhan_cabang") return "Kepatuhan Cabang";
+  if (role === "apuppt") return "APUPPT";
+  return role?.toUpperCase() || "-";
 }
 
 function RadarChart({ scores, size = 200 }: { scores: Record<string, number>; size?: number }) {
@@ -58,7 +69,7 @@ function RadarChart({ scores, size = 200 }: { scores: Record<string, number>; si
 
   const getPoint = (index: number, value: number) => {
     const angle = (Math.PI * 2 * index) / n - Math.PI / 2;
-    const dist = (value / 100) * r;
+    const dist = (clampScoreDisplay(value) / 100) * r;
     return { x: cx + dist * Math.cos(angle), y: cy + dist * Math.sin(angle) };
   };
 
@@ -122,6 +133,7 @@ function RadarChart({ scores, size = 200 }: { scores: Record<string, number>; si
 }
 
 function ScoreCircle({ score, size = "md" }: { score: number; size?: "sm" | "md" | "lg" }) {
+  score = clampScoreDisplay(score);
   const { grade, className } = getGrade(score);
   const sz = size === "sm" ? "w-12 h-12" : size === "lg" ? "w-24 h-24" : "w-16 h-16";
   const textSz = size === "sm" ? "text-sm" : size === "lg" ? "text-3xl" : "text-xl";
@@ -210,10 +222,10 @@ function DasarPenilaianSection() {
                 <Info className="w-3.5 h-3.5 text-blue-500" /> Sumber Data
               </h5>
               <ul className="space-y-1 text-muted-foreground ml-1">
-                <li><span className="font-medium text-foreground">Total Item</span> = Jumlah Aktivitas + Kasus + Tugas yang tercatat di sistem untuk DU/DK</li>
+                <li><span className="font-medium text-foreground">Total Item</span> = Jumlah Aktivitas + Kasus + Tugas yang tercatat di sistem untuk role operasional</li>
                 <li><span className="font-medium text-foreground">Avg Progress</span> = Rata-rata % progress dari semua item aktif (aktivitas, kasus, tugas) — hanya dihitung dari kategori yang memiliki data</li>
                 <li><span className="font-medium text-foreground">Overdue</span> = Item yang melewati deadline/target date tapi belum diselesaikan</li>
-                <li className="text-[11px] italic">Data diambil dari modul Aktivitas (dibuat oleh DU/DK), Kasus (dibuat oleh DU/DK), dan Tugas (yang di-assign ke DU/DK)</li>
+                <li className="text-[11px] italic">Data diambil dari modul Aktivitas, Kasus, dan Tugas sesuai role pegawai yang dinilai</li>
               </ul>
             </div>
 
@@ -298,7 +310,7 @@ function TrendArrow({ current, previous }: { current: number; previous: number |
 
 function KekuatanAnda({ scores }: { scores: Record<string, number> }) {
   const sorted = [...ASPECT_LABELS]
-    .map(a => ({ ...a, value: scores[a.key] || 0 }))
+    .map(a => ({ ...a, value: clampScoreDisplay(scores[a.key] || 0) }))
     .sort((a, b) => b.value - a.value);
   const top = sorted.filter(s => s.value > 0).slice(0, 3);
   if (top.length === 0) return null;
@@ -408,14 +420,10 @@ export default function KpiPage() {
   };
   const getUserRole = (userId: number) => {
     if (!isAdmin && user && userId === user.id) {
-      if (["du", "cbo", "ceo"].includes(user.role)) return "DU";
-      if (["dk", "kepatuhan_cabang", "apuppt"].includes(user.role)) return user.role === "apuppt" ? "APUPPT" : "DK";
-      return user.role.toUpperCase();
+      return getRoleLabel(user.role);
     }
     const u = usersData?.find(u2 => u2.id === userId);
-    if (u && ["du", "cbo", "ceo"].includes(u.role)) return "DU";
-    if (u && ["dk", "kepatuhan_cabang", "apuppt"].includes(u.role)) return u.role === "apuppt" ? "APUPPT" : "DK";
-    return u?.role?.toUpperCase() || "-";
+    return getRoleLabel(u?.role);
   };
   const getUserCompanyId = (userId: number) => {
     if (!isAdmin && user && userId === user.id) return user.companyId;
@@ -473,7 +481,7 @@ export default function KpiPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-kpi-title">Penilaian KPI</h1>
-          <p className="text-sm text-muted-foreground">Monitoring performa DU & DK secara real-time</p>
+          <p className="text-sm text-muted-foreground">Monitoring performa role operasional secara real-time</p>
         </div>
         {isAdmin && (
           <div className="flex items-center gap-2">
@@ -710,7 +718,8 @@ export default function KpiPage() {
             </Card>
           ) : (() => {
             const duList = [...filteredLive].filter(k => ["du", "cbo", "ceo"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
-            const dkList = [...filteredLive].filter(k => ["dk", "kepatuhan_cabang", "apuppt"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
+            const dkList = [...filteredLive].filter(k => ["dk", "apuppt"].includes(k.role)).sort((a, b) => b.totalScore - a.totalScore);
+            const kepatuhanCabangList = [...filteredLive].filter(k => k.role === "kepatuhan_cabang").sort((a, b) => b.totalScore - a.totalScore);
 
             const renderKpiCard = (kpi: LiveKpi, idx: number) => {
               const { grade, label, className: gradeCls } = getGrade(kpi.totalScore);
@@ -741,6 +750,7 @@ export default function KpiPage() {
                             <Building2 className="w-3 h-3 mr-1" />
                             {getCompanyName(kpi.companyId)}
                           </Badge>
+                          <Badge variant="secondary">{getRoleLabel(kpi.role)}</Badge>
                           <Badge className={gradeCls}>{grade} - {label}</Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -777,7 +787,7 @@ export default function KpiPage() {
                             </h4>
                             <div className="space-y-2">
                               {ASPECT_LABELS.map(a => {
-                                const val = kpi.scores[a.key] || 0;
+                                const val = clampScoreDisplay(kpi.scores[a.key] || 0);
                                 const Icon = a.icon;
                                 return (
                                   <div key={a.key} className="flex items-center gap-1.5">
@@ -847,6 +857,17 @@ export default function KpiPage() {
                     </h3>
                     <div className="space-y-3">
                       {dkList.map((kpi, idx) => renderKpiCard(kpi, idx))}
+                    </div>
+                  </div>
+                )}
+                {kepatuhanCabangList.length > 0 && (
+                  <div>
+                    <h3 className="text-base font-bold mb-3 flex items-center gap-2" data-testid="heading-peringkat-kepatuhan-cabang">
+                      <Trophy className="w-5 h-5 text-amber-500" /> Peringkat Kepatuhan Cabang
+                      <Badge variant="secondary" className="ml-1">{kepatuhanCabangList.length} orang</Badge>
+                    </h3>
+                    <div className="space-y-3">
+                      {kepatuhanCabangList.map((kpi, idx) => renderKpiCard(kpi, idx))}
                     </div>
                   </div>
                 )}
@@ -1000,7 +1021,7 @@ export default function KpiPage() {
           </p>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Pegawai (DU/DK)</Label>
+              <Label>Pegawai</Label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger data-testid="select-kpi-user">
                   <SelectValue placeholder="Pilih pegawai" />
@@ -1008,7 +1029,7 @@ export default function KpiPage() {
                 <SelectContent>
                   {duDkUsers.map(u => (
                     <SelectItem key={u.id} value={u.id.toString()}>
-                      {u.fullName} ({u.role.toUpperCase()}) - {getCompanyName(u.companyId)}
+                      {u.fullName} ({getRoleLabel(u.role)}) - {getCompanyName(u.companyId)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1077,7 +1098,7 @@ export default function KpiPage() {
               <Textarea
                 value={strengths}
                 onChange={e => setStrengths(e.target.value)}
-                placeholder="Apa kelebihan utama DU/DK ini? (misal: teliti, responsif, pengetahuan regulasi baik)"
+                placeholder="Apa kelebihan utama pegawai ini? (misal: teliti, responsif, pengetahuan regulasi baik)"
                 rows={2}
                 data-testid="input-kpi-strengths"
               />

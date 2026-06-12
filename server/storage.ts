@@ -29,6 +29,11 @@ type DashboardUserScope = {
 
 const DU_DK_LIKE_ROLES = ["du", "cbo", "ceo", "dk", "kepatuhan_cabang", "apuppt"];
 
+function clampScore(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
 function normalizeBranchName(branch?: string | null): string {
   return (branch || "").trim().toLowerCase();
 }
@@ -493,9 +498,11 @@ export class DatabaseStorage implements IStorage {
       [pendingTasks],
       [completedTasks],
       [totalAnnouncements],
+      [highRiskCasesCount],
       recentActivities,
       recentCases,
       highRiskCases,
+      casesByCompany,
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actConditions),
       db.select({ count: count() }).from(cases).where(caseConditions),
@@ -509,9 +516,18 @@ export class DatabaseStorage implements IStorage {
       db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`)),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"))),
       db.select({ count: count() }).from(announcements).where(announcementConditions),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), nonClosedCaseCondition)),
       db.select().from(activities).where(actConditions).orderBy(desc(activities.createdAt)).limit(5),
       db.select().from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5),
       db.select().from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), nonClosedCaseCondition)).orderBy(desc(cases.createdAt)).limit(5),
+      db.select({
+        companyId: cases.companyId,
+        total: count(),
+        active: sql<number>`count(*) filter (where ${cases.status} != 'Closed')`,
+        waiting: sql<number>`count(*) filter (where ${cases.status} != 'Closed' and ${cases.workflowStage} in ('Proses Regulator', 'Settlement / Deadlock'))`,
+        closed: sql<number>`count(*) filter (where ${cases.status} = 'Closed')`,
+        highRisk: sql<number>`count(*) filter (where ${cases.riskLevel} = 'High' and ${cases.status} != 'Closed')`,
+      }).from(cases).where(caseConditions).groupBy(cases.companyId).orderBy(desc(count())),
     ]);
 
     return {
@@ -527,9 +543,11 @@ export class DatabaseStorage implements IStorage {
       pendingTasks: pendingTasks?.count || 0,
       completedTasks: completedTasks?.count || 0,
       totalAnnouncements: totalAnnouncements?.count || 0,
+      highRiskCasesCount: highRiskCasesCount?.count || 0,
       recentActivities,
       recentCases,
       highRiskCases,
+      casesByCompany,
     };
   }
 
@@ -600,11 +618,11 @@ export class DatabaseStorage implements IStorage {
       db.select({ avg: sql<number>`COALESCE(AVG(${activities.progress}), 0)` }).from(activities).where(actConditions),
       db.select({ avg: sql<number>`COALESCE(AVG(${cases.progress}), 0)` }).from(cases).where(caseConditions),
       db.select({ avg: sql<number>`COALESCE(AVG(${tasks.progress}), 0)` }).from(tasks).where(taskConditions),
-      db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"), sql`${tasks.updatedAt}::date <= ${tasks.deadline}::date`)),
+      db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"), sql`${tasks.deadline} IS NOT NULL`, sql`${tasks.updatedAt}::date <= ${tasks.deadline}::date`)),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.deadline} IS NOT NULL`)),
-      db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"), sql`${activities.updatedAt}::date <= COALESCE(${activities.targetDate}::date, ${activities.updatedAt}::date)`)),
+      db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"), sql`${activities.targetDate} IS NOT NULL`, sql`${activities.updatedAt}::date <= ${activities.targetDate}::date`)),
       db.select({ count: count() }).from(activities).where(and(actConditions, sql`${activities.targetDate} IS NOT NULL`)),
-      db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"), sql`${cases.updatedAt}::date <= COALESCE(${cases.targetDate}::date, ${cases.updatedAt}::date)`)),
+      db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"), sql`${cases.targetDate} IS NOT NULL`, sql`${cases.updatedAt}::date <= ${cases.targetDate}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.targetDate} IS NOT NULL`)),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
@@ -650,31 +668,31 @@ export class DatabaseStorage implements IStorage {
     if (aTotal > 0) progressParts.push(Number(actAvgProgress?.avg) || 0);
     if (cTotal > 0) progressParts.push(Number(caseAvgProgress?.avg) || 0);
     if (tTotal > 0) progressParts.push(Number(taskAvgProgress?.avg) || 0);
-    const avgProgress = progressParts.length > 0 ? Math.round(progressParts.reduce((a, b) => a + b, 0) / progressParts.length) : 0;
+    const avgProgress = progressParts.length > 0 ? clampScore(progressParts.reduce((a, b) => a + b, 0) / progressParts.length) : 0;
 
-    const penyelesaianTugas = tTotal > 0 ? Math.round((tCompleted / tTotal) * 100) : 0;
-    const penyelesaianKasus = cTotal > 0 ? Math.round((cCompleted / cTotal) * 100) : 0;
-    const penyelesaianAktivitas = aTotal > 0 ? Math.round((aCompleted / aTotal) * 100) : 0;
+    const penyelesaianTugas = tTotal > 0 ? clampScore((tCompleted / tTotal) * 100) : 0;
+    const penyelesaianKasus = cTotal > 0 ? clampScore((cCompleted / cTotal) * 100) : 0;
+    const penyelesaianAktivitas = aTotal > 0 ? clampScore((aCompleted / aTotal) * 100) : 0;
 
     const totalWithDeadline = (taskWithDeadline?.count || 0) + (actWithTarget?.count || 0) + (caseWithTarget?.count || 0);
     const totalOnTime = (taskOnTime?.count || 0) + (actOnTime?.count || 0) + (caseOnTime?.count || 0);
-    const ketepatanWaktu = totalWithDeadline > 0 ? Math.round((totalOnTime / totalWithDeadline) * 100) : 0;
+    const ketepatanWaktu = totalWithDeadline > 0 ? clampScore((totalOnTime / totalWithDeadline) * 100) : 0;
 
     const totalOverdue = (taskOverdue?.count || 0) + (caseOverdue?.count || 0) + (actOverdue?.count || 0);
     const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
-    const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
+    const responsivitas = totalActive > 0 ? clampScore(100 - (totalOverdue / totalActive) * 100) : 100;
 
     const peerTotals = peerItemRows.map(r => Number(r.total) || 0).filter(t => t > 0);
     const peerAvgItems = peerTotals.length > 0 ? peerTotals.reduce((a, b) => a + b, 0) / peerTotals.length : Math.max(totalItems, 1);
-    const bebanKerja = Math.min(100, Math.round((totalItems / Math.max(1, peerAvgItems)) * 70));
+    const bebanKerja = clampScore((totalItems / Math.max(1, peerAvgItems)) * 70);
 
     const completedTotal = aCompleted + cCompleted + tCompleted;
-    const konsistensi = totalItems > 0 ? Math.round(Math.min(100, (completedTotal / totalItems) * 100)) : 0;
+    const konsistensi = totalItems > 0 ? clampScore((completedTotal / totalItems) * 100) : 0;
 
     const userContribRaw = (userComments?.count || 0) + (userCaseUpdates?.count || 0) + (highRiskComments?.count || 0) + (highRiskUpdates?.count || 0);
     const peerContribs = peerContribRows.map(r => Number(r.contrib) || 0).sort((a, b) => a - b);
     const peerMedianContrib = peerContribs.length > 0 ? peerContribs[Math.floor(peerContribs.length / 2)] : 1;
-    const kontribusiAktif = Math.min(100, Math.round((userContribRaw / Math.max(1, peerMedianContrib)) * 70));
+    const kontribusiAktif = clampScore((userContribRaw / Math.max(1, peerMedianContrib)) * 70);
 
     const scores = {
       penyelesaianTugas, penyelesaianKasus, penyelesaianAktivitas,
@@ -682,7 +700,7 @@ export class DatabaseStorage implements IStorage {
       bebanKerja, konsistensi, kontribusiAktif,
     };
 
-    const totalScore = Math.round(
+    const totalScore = clampScore(
       (penyelesaianTugas * 0.10) + (penyelesaianKasus * 0.15) + (penyelesaianAktivitas * 0.10) +
       (ketepatanWaktu * 0.15) + (avgProgress * 0.10) + (responsivitas * 0.10) +
       (bebanKerja * 0.15) + (konsistensi * 0.05) + (kontribusiAktif * 0.10)
@@ -739,11 +757,11 @@ export class DatabaseStorage implements IStorage {
       db.select({ avg: sql<number>`COALESCE(AVG(${activities.progress}), 0)` }).from(activities).where(actBase),
       db.select({ avg: sql<number>`COALESCE(AVG(${cases.progress}), 0)` }).from(cases).where(caseBase),
       db.select({ avg: sql<number>`COALESCE(AVG(${tasks.progress}), 0)` }).from(tasks).where(taskBase),
-      db.select({ count: count() }).from(tasks).where(and(taskBase, eq(tasks.status, "Selesai"), sql`${tasks.updatedAt}::date <= ${tasks.deadline}::date`)),
+      db.select({ count: count() }).from(tasks).where(and(taskBase, eq(tasks.status, "Selesai"), sql`${tasks.deadline} IS NOT NULL`, sql`${tasks.updatedAt}::date <= ${tasks.deadline}::date`)),
       db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.deadline} IS NOT NULL`)),
-      db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"), sql`${activities.updatedAt}::date <= COALESCE(${activities.targetDate}::date, ${activities.updatedAt}::date)`)),
+      db.select({ count: count() }).from(activities).where(and(actBase, eq(activities.status, "Selesai"), sql`${activities.targetDate} IS NOT NULL`, sql`${activities.updatedAt}::date <= ${activities.targetDate}::date`)),
       db.select({ count: count() }).from(activities).where(and(actBase, sql`${activities.targetDate} IS NOT NULL`)),
-      db.select({ count: count() }).from(cases).where(and(caseBase, eq(cases.status, "Closed"), sql`${cases.updatedAt}::date <= COALESCE(${cases.targetDate}::date, ${cases.updatedAt}::date)`)),
+      db.select({ count: count() }).from(cases).where(and(caseBase, eq(cases.status, "Closed"), sql`${cases.targetDate} IS NOT NULL`, sql`${cases.updatedAt}::date <= ${cases.targetDate}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.targetDate} IS NOT NULL`)),
       db.select({ count: count() }).from(tasks).where(and(taskBase, sql`${tasks.status} != 'Selesai'`, sql`${tasks.deadline}::date < ${today}::date`)),
       db.select({ count: count() }).from(cases).where(and(caseBase, sql`${cases.status} != 'Closed'`, sql`${cases.targetDate}::date < ${today}::date`)),
@@ -816,37 +834,37 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    const penyelesaianTugas = tTotal > 0 ? Math.round((tCompleted / tTotal) * 100) : 0;
-    const penyelesaianKasus = cTotal > 0 ? Math.round((cCompleted / cTotal) * 100) : 0;
-    const penyelesaianAktivitas = aTotal > 0 ? Math.round((aCompleted / aTotal) * 100) : 0;
+    const penyelesaianTugas = tTotal > 0 ? clampScore((tCompleted / tTotal) * 100) : 0;
+    const penyelesaianKasus = cTotal > 0 ? clampScore((cCompleted / cTotal) * 100) : 0;
+    const penyelesaianAktivitas = aTotal > 0 ? clampScore((aCompleted / aTotal) * 100) : 0;
 
     const totalWithDeadline = (taskWithDeadline?.count || 0) + (actWithTarget?.count || 0) + (caseWithTarget?.count || 0);
     const totalOnTime = (taskOnTime?.count || 0) + (actOnTime?.count || 0) + (caseOnTime?.count || 0);
-    const ketepatanWaktu = totalWithDeadline > 0 ? Math.round((totalOnTime / totalWithDeadline) * 100) : 0;
+    const ketepatanWaktu = totalWithDeadline > 0 ? clampScore((totalOnTime / totalWithDeadline) * 100) : 0;
 
     const progressParts: number[] = [];
     if (aTotal > 0) progressParts.push(Number(actAvg?.avg) || 0);
     if (cTotal > 0) progressParts.push(Number(caseAvg?.avg) || 0);
     if (tTotal > 0) progressParts.push(Number(taskAvg?.avg) || 0);
-    const avgProgress = progressParts.length > 0 ? Math.round(progressParts.reduce((a, b) => a + b, 0) / progressParts.length) : 0;
+    const avgProgress = progressParts.length > 0 ? clampScore(progressParts.reduce((a, b) => a + b, 0) / progressParts.length) : 0;
 
     const totalOverdue = (taskOverdue?.count || 0) + (caseOverdue?.count || 0) + (actOverdue?.count || 0);
     const totalActive = (tTotal - tCompleted) + (cTotal - cCompleted) + (aTotal - aCompleted);
-    const responsivitas = totalActive > 0 ? Math.round(Math.max(0, 100 - (totalOverdue / totalActive) * 100)) : 100;
+    const responsivitas = totalActive > 0 ? clampScore(100 - (totalOverdue / totalActive) * 100) : 100;
 
     const peerTotals = peerItemRows.map(r => Number(r.total) || 0).filter(t => t > 0);
     const peerAvgItems = peerTotals.length > 0 ? peerTotals.reduce((a, b) => a + b, 0) / peerTotals.length : totalItems;
-    const bebanKerja = Math.min(100, Math.round((totalItems / Math.max(1, peerAvgItems)) * 70));
+    const bebanKerja = clampScore((totalItems / Math.max(1, peerAvgItems)) * 70);
 
     const completedTotal = aCompleted + cCompleted + tCompleted;
-    const konsistensi = Math.round(Math.min(100, (completedTotal / totalItems) * 100));
+    const konsistensi = clampScore((completedTotal / totalItems) * 100);
 
     const userContribRaw = (userComments?.count || 0) + (userCaseUpdates?.count || 0) + (highRiskComments?.count || 0) + (highRiskUpdates?.count || 0);
     const peerContribs = peerContribRows.map(r => Number(r.contrib) || 0).sort((a, b) => a - b);
     const peerMedianContrib = peerContribs.length > 0
       ? peerContribs[Math.floor(peerContribs.length / 2)]
       : 1;
-    const kontribusiAktif = Math.min(100, Math.round((userContribRaw / Math.max(1, peerMedianContrib)) * 70));
+    const kontribusiAktif = clampScore((userContribRaw / Math.max(1, peerMedianContrib)) * 70);
 
     const scores = {
       penyelesaianTugas,
@@ -860,7 +878,7 @@ export class DatabaseStorage implements IStorage {
       kontribusiAktif,
     };
 
-    const totalScore = Math.round(
+    const totalScore = clampScore(
       (penyelesaianTugas * 0.10) +
       (penyelesaianKasus * 0.15) +
       (penyelesaianAktivitas * 0.10) +

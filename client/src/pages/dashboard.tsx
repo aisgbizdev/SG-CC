@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import {
   Activity, FileWarning, ListTodo, Megaphone, AlertTriangle,
   TrendingUp, Clock, Plus, ArrowRight, ShieldAlert, CheckCircle2, Bot, ExternalLink, Bell,
+  Building2, Database, ClipboardCheck,
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { QueryError } from "@/components/query-error";
@@ -75,8 +76,236 @@ export default function DashboardPage() {
   const canAddActivity = ["du", "dk", "cbo", "ceo", "apuppt"].includes(user?.role || "");
   const canAddCase = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
   const isKepatuhanCabang = user?.role === "kepatuhan_cabang";
+  const isGlobalAdmin = ["owner", "superadmin"].includes(user?.role || "");
 
   const getCompanyName = (id: number) => companiesData?.find((c: any) => c.id === id)?.code || "-";
+  const totalSystemData = (stats?.totalActivities || 0) + (stats?.totalCases || 0) + (stats?.totalTasks || 0) + (stats?.totalAnnouncements || 0);
+  const completionRate = stats?.totalCases ? Math.round(((stats?.closedCases || 0) / stats.totalCases) * 100) : 0;
+
+  if (isGlobalAdmin) {
+    const attentionItems = [
+      {
+        title: "Kasus melewati target",
+        value: stats?.overdueCases || 0,
+        note: "Perlu diprioritaskan",
+        href: "/kasus",
+        icon: AlertTriangle,
+        tone: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/10 dark:text-red-300 dark:border-red-900/50",
+      },
+      {
+        title: "Menunggu keputusan",
+        value: stats?.waitingCases || 0,
+        note: `${stats?.longWaitingCases || 0} sudah lebih dari 30 hari`,
+        href: "/kasus?stage=waiting",
+        icon: Clock,
+        tone: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/10 dark:text-amber-300 dark:border-amber-900/50",
+      },
+      {
+        title: "Risiko tinggi aktif",
+        value: stats?.highRiskCasesCount || 0,
+        note: "Kasus aktif dengan risiko tinggi",
+        href: "/kasus",
+        icon: ShieldAlert,
+        tone: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/10 dark:text-rose-300 dark:border-rose-900/50",
+      },
+    ];
+
+    return (
+      <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">Ringkasan Data SG</h1>
+            <p className="text-sm text-muted-foreground">
+              Gambaran cepat seluruh data yang tercatat di sistem.
+            </p>
+          </div>
+          <Badge variant="secondary" className="w-fit">
+            {getRoleLabel(user?.role || "")}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatCard title="Semua Data" value={totalSystemData} icon={Database} color="bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300" subtitle="aktivitas, kasus, tugas, pengumuman" />
+          <StatCard title="Perusahaan" value={companiesData?.length || 0} icon={Building2} color="bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300" subtitle="PT aktif" href="/companies" />
+          <StatCard title="Kasus Pengaduan" value={stats?.totalCases || 0} icon={FileWarning} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" subtitle={`${stats?.activeCases || 0} masih aktif`} href="/kasus" />
+          <StatCard title="Aktivitas" value={stats?.totalActivities || 0} icon={Activity} color="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300" subtitle={`${stats?.completedActivities || 0} selesai`} href="/aktivitas" />
+          <StatCard title="Tugas" value={stats?.totalTasks || 0} icon={ListTodo} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" subtitle={`${stats?.pendingTasks || 0} masih aktif`} href="/tugas" />
+        </div>
+
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-6">
+          <Card data-testid="card-owner-case-health">
+            <CardHeader className="px-4 pt-4 pb-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <ClipboardCheck className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm">Kondisi Kasus Pengaduan</h3>
+                </div>
+                <Badge variant="secondary">{completionRate}% selesai</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <Link href="/kasus">
+                  <div className="rounded-md border p-3 hover-elevate">
+                    <p className="text-xs text-muted-foreground">Aktif</p>
+                    <p className="text-2xl font-bold">{stats?.activeCases || 0}</p>
+                  </div>
+                </Link>
+                <Link href="/kasus?stage=waiting">
+                  <div className="rounded-md border p-3 hover-elevate">
+                    <p className="text-xs text-muted-foreground">Menunggu</p>
+                    <p className="text-2xl font-bold">{stats?.waitingCases || 0}</p>
+                  </div>
+                </Link>
+                <Link href="/kasus?view=closed">
+                  <div className="rounded-md border p-3 hover-elevate">
+                    <p className="text-xs text-muted-foreground">Selesai</p>
+                    <p className="text-2xl font-bold">{stats?.closedCases || 0}</p>
+                  </div>
+                </Link>
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>Perbandingan kasus selesai</span>
+                  <span>{stats?.closedCases || 0} dari {stats?.totalCases || 0}</span>
+                </div>
+                <Progress value={completionRate} className="h-2" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-owner-attention">
+            <CardHeader className="px-4 pt-4 pb-2">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm">Yang Perlu Dilihat</h3>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-2">
+              {attentionItems.map((item) => (
+                <Link key={item.title} href={item.href}>
+                  <div className={`flex items-center gap-3 rounded-md border p-3 hover-elevate ${item.tone}`}>
+                    <div className="w-9 h-9 rounded-md bg-background/70 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-xs opacity-80">{item.note}</p>
+                    </div>
+                    <p className="text-xl font-bold">{item.value}</p>
+                  </div>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card data-testid="card-owner-company-summary">
+          <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-semibold text-sm">Kasus per PT</h3>
+            </div>
+            <Link href="/kasus">
+              <Button variant="ghost" size="sm">Lihat Kasus <ArrowRight className="w-3 h-3 ml-1" /></Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {(stats?.casesByCompany || []).map((row: any) => (
+                <Link key={row.companyId} href="/kasus">
+                  <div className="rounded-md border p-3 hover-elevate space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-sm">{getCompanyName(row.companyId)}</p>
+                      <Badge variant="secondary">{row.total} kasus</Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                      <span>Aktif <b className="text-foreground">{row.active}</b></span>
+                      <span>Tunggu <b className="text-foreground">{row.waiting}</b></span>
+                      <span>Risiko <b className="text-foreground">{row.highRisk}</b></span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+              <div className="flex items-center gap-2">
+                <FileWarning className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm">Kasus Terbaru</h3>
+              </div>
+              <Link href="/kasus">
+                <Button variant="ghost" size="sm">Semua <ArrowRight className="w-3 h-3 ml-1" /></Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {stats?.recentCases?.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.recentCases.map((c: Case) => (
+                    <Link key={c.id} href={`/kasus/${c.id}`}>
+                      <div className="p-3 rounded-md bg-muted/50 hover-elevate cursor-pointer space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-primary truncate">No. Akun: {c.accountNumber || "-"}</p>
+                            <p className="text-xs text-muted-foreground truncate">{c.customerName} - {c.caseCode}</p>
+                          </div>
+                          <RiskBadge level={c.riskLevel} />
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{getCompanyName(c.companyId)}</span>
+                          <StatusBadge status={c.status} />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">Belum ada kasus</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-3 px-4 pt-4">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm">Aktivitas Terbaru</h3>
+              </div>
+              <Link href="/aktivitas">
+                <Button variant="ghost" size="sm">Semua <ArrowRight className="w-3 h-3 ml-1" /></Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {stats?.recentActivities?.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.recentActivities.map((a: ActivityType) => (
+                    <Link key={a.id} href={`/aktivitas/${a.id}`}>
+                      <div className="p-3 rounded-md bg-muted/50 hover-elevate cursor-pointer space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-medium line-clamp-1">{a.title}</p>
+                          <StatusBadge status={a.status} />
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{getCompanyName(a.companyId)}</span>
+                          <span>{a.date}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">Belum ada aktivitas</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isKepatuhanCabang) {
     const caseActionItems = [
