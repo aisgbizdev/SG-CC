@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, apiUrl } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRoute, Link } from "wouter";
 import { useState, type Dispatch, type SetStateAction } from "react";
@@ -19,7 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ArrowLeft, MessageSquare, Send, User, Clock, FileText, Trash2, CalendarDays, MapPin, Users, Paperclip, Download, X, Plus, Eye } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
+import type { Branch, Case, CaseUpdate, Comment, CaseMeeting } from "@shared/schema";
 
 const WORKFLOW_STAGES = ["Pemeriksaan Internal", "Review", "Negosiasi", "Proses Regulator", "Settlement / Deadlock", "Closed"];
 const normalizeWorkflowStage = (value?: string | null) => value && value !== "Open" ? value : "Pemeriksaan Internal";
@@ -158,8 +158,27 @@ export default function KasusDetailPage() {
   const { data: meetingsData } = useQuery<CaseMeeting[]>({ queryKey: ["/api/cases", id, "meetings"] });
   const { data: usersData } = useQuery<any[]>({ queryKey: ["/api/users"] });
   const { data: companiesData } = useQuery<any[]>({ queryKey: ["/api/companies"] });
+  const isDuDk = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
+  const isAdmin = ["superadmin", "owner"].includes(user?.role || "");
+  const { data: myBranches } = useQuery<Branch[]>({
+    queryKey: ["/api/branches/my-company"],
+    enabled: isDuDk,
+  });
+  const { data: caseCompanyBranches } = useQuery<Branch[]>({
+    queryKey: ["/api/companies", caseData?.companyId, "branches"],
+    queryFn: async () => {
+      const res = await fetch(apiUrl(`/api/companies/${caseData?.companyId}/branches`), { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAdmin && !!caseData?.companyId,
+  });
+  const branchOptions = (isDuDk ? myBranches : caseCompanyBranches) || [];
 
   const [editForm, setEditForm] = useState<Partial<Case>>({});
+  const branchNames = editForm.branch && !branchOptions.some(branch => branch.name === editForm.branch)
+    ? [...branchOptions.map(branch => branch.name), editForm.branch]
+    : branchOptions.map(branch => branch.name);
   const compactValue = (value: unknown) => {
     if (value === null || value === undefined || value === "") return "-";
     const text = String(value).replace(/\s+/g, " ").trim();
@@ -620,7 +639,14 @@ export default function KasusDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
-                <Input data-testid="input-edit-branch" value={editForm.branch || ""} onChange={e => setEditForm({...editForm, branch: e.target.value})} />
+                <Select value={editForm.branch || undefined} onValueChange={v => setEditForm({...editForm, branch: v})}>
+                  <SelectTrigger data-testid="select-edit-branch">
+                    <SelectValue placeholder={branchOptions.length ? "Pilih cabang" : "Belum ada cabang"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branchNames.map(branch => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>PIC Utama / Marketing</Label>

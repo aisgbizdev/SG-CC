@@ -252,6 +252,20 @@ export default function KasusPage() {
   const [complaintAttachments, setComplaintAttachments] = useState<CaseDocumentItem[]>([]);
   const [caseDocumentMeta, setCaseDocumentMeta] = useState<Record<string, DocumentMeta>>({});
   const [complaintDocumentMeta, setComplaintDocumentMeta] = useState<Record<string, DocumentMeta>>({});
+  const selectedFormCompanyId = form.companyId || user?.companyId?.toString() || "";
+  const { data: formCompanyBranches } = useQuery<Branch[]>({
+    queryKey: ["/api/companies", selectedFormCompanyId, "branches"],
+    queryFn: async () => {
+      const res = await fetch(apiUrl(`/api/companies/${selectedFormCompanyId}/branches`), { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAdmin && selectedFormCompanyId !== "",
+  });
+  const formBranchOptions = (isDuDk ? myBranches : formCompanyBranches) || [];
+  const formBranchNames = form.branch && !formBranchOptions.some(branch => branch.name === form.branch)
+    ? [...formBranchOptions.map(branch => branch.name), form.branch]
+    : formBranchOptions.map(branch => branch.name);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -764,7 +778,7 @@ export default function KasusPage() {
                 {["superadmin", "owner"].includes(user?.role || "") && (
                   <div className="space-y-1.5">
                     <Label>PT</Label>
-                    <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v})}>
+                    <Select value={form.companyId} onValueChange={v => setForm({...form, companyId: v, branch: ""})}>
                       <SelectTrigger className="text-muted-foreground/70"><SelectValue placeholder="Pilih PT" /></SelectTrigger>
                       <SelectContent>{companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}</SelectContent>
                     </Select>
@@ -793,7 +807,14 @@ export default function KasusPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Cabang</Label>
-                    <Input data-testid="input-case-branch" placeholder="Cabang" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
+                    <Select value={form.branch || undefined} onValueChange={v => setForm({...form, branch: v})}>
+                      <SelectTrigger data-testid="select-case-branch" className="text-muted-foreground/70">
+                        <SelectValue placeholder={formBranchOptions.length ? "Pilih cabang" : "Belum ada cabang"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formBranchNames.map(branch => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Marketing</Label>
@@ -1319,7 +1340,14 @@ export default function KasusPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
-                <Input data-testid="input-edit-case-branch" value={form.branch} onChange={e => setForm({...form, branch: e.target.value})} />
+                <Select value={form.branch || undefined} onValueChange={v => setForm({...form, branch: v})}>
+                  <SelectTrigger data-testid="select-edit-case-branch">
+                    <SelectValue placeholder={formBranchOptions.length ? "Pilih cabang" : "Belum ada cabang"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formBranchNames.map(branch => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Marketing</Label>
