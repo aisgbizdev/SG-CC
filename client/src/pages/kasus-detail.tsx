@@ -222,6 +222,7 @@ export default function KasusDetailPage() {
     const fieldLabels: Array<[keyof Case, string]> = [
       ["customerName", "Nama Nasabah"],
       ["accountNumber", "No. Akun"],
+      ["relatedAccounts", "Akun Terkait"],
       ["branch", "Cabang"],
       ["picMain", "Marketing"],
       ["branchHead", "Kepala Cabang"],
@@ -360,6 +361,7 @@ export default function KasusDetailPage() {
     setEditForm({
       customerName: caseData.customerName,
       accountNumber: caseData.accountNumber,
+      relatedAccounts: caseData.relatedAccounts,
       branch: caseData.branch,
       picMain: caseData.picMain,
       branchHead: caseData.branchHead,
@@ -606,6 +608,14 @@ export default function KasusDetailPage() {
                 <Label>No. Akun</Label>
                 <Input data-testid="input-edit-account-number" value={editForm.accountNumber || ""} onChange={e => setEditForm({...editForm, accountNumber: e.target.value})} />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Akun Terkait</Label>
+              <Textarea
+                data-testid="input-edit-related-accounts"
+                value={editForm.relatedAccounts || ""}
+                onChange={e => setEditForm({...editForm, relatedAccounts: e.target.value})}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -910,6 +920,10 @@ export default function KasusDetailPage() {
                     <div>
                       <p className="text-xs text-muted-foreground">No. Akun</p>
                       <p className="text-sm">{caseData.accountNumber || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Akun Terkait</p>
+                      <p className="text-sm whitespace-pre-wrap" data-testid="text-related-accounts">{caseData.relatedAccounts || "-"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">WPB</p>

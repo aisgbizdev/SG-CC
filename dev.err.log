@@ -13,20 +13,3 @@ ValidationError: The Express 'trust proxy' setting is true, which allows anyone 
   code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
   help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
 }
-ValidationError: The Express 'trust proxy' setting is true, which allows anyone to trivially bypass IP-based rate limiting. See https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/ for more information.
-    at Object.trustProxy (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:324:13)
-    at wrappedValidations.<computed> [as trustProxy] (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:656:22)
-    at Object.keyGenerator (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:758:20)
-    at file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:820:32
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:801:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-}
-Error running reminders: Error: Connection terminated unexpectedly
-    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
-    at async getAdminsAndOwners (C:\laragon\www\SG-CC\server\reminders.ts:54:20)
-    at async checkStaleCases (C:\laragon\www\SG-CC\server\reminders.ts:109:20)
-    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:201:5)

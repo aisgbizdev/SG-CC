@@ -242,7 +242,7 @@ export default function KasusPage() {
 
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
-    customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
+    customerName: "", accountNumber: "", relatedAccounts: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Pemeriksaan Internal", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
@@ -281,6 +281,7 @@ export default function KasusPage() {
       progress: Number(form.progress),
       targetDate: form.targetDate || null,
       accountNumber: form.accountNumber || null,
+      relatedAccounts: form.relatedAccounts || null,
       branch: form.branch || null,
       picMain: form.picMain || null,
       branchHead: form.branchHead || null,
@@ -378,7 +379,8 @@ export default function KasusPage() {
     const matchSearch = c.caseCode.toLowerCase().includes(s) ||
       c.customerName.toLowerCase().includes(s) ||
       (c.summary || "").toLowerCase().includes(s) ||
-      (c.accountNumber || "").toLowerCase().includes(s);
+      (c.accountNumber || "").toLowerCase().includes(s) ||
+      (c.relatedAccounts || "").toLowerCase().includes(s);
     const matchRisk = riskFilter === "all" || c.riskLevel === riskFilter;
     const matchCompany = companyFilter === "all" || c.companyId?.toString() === companyFilter;
     const matchBucket = bucketFilter === "all" || c.bucket === bucketFilter;
@@ -389,7 +391,7 @@ export default function KasusPage() {
     const matchUncommented = !uncommentedFilter || (uncommentedIds || []).includes(c.id);
     let matchView = true;
     if (viewFilter === "active") {
-      matchView = c.status !== "Closed" && !waitingStages.includes(c.workflowStage);
+      matchView = c.status !== "Closed";
     } else if (viewFilter === "closed") {
       matchView = c.status === "Closed";
     }
@@ -411,6 +413,25 @@ export default function KasusPage() {
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
   const canDeleteCase = (c: Case) => ["superadmin", "owner", "du", "dk", "apuppt"].includes(user?.role || "") || c.createdBy === user?.id;
+  const hasSummaryFilters = riskFilter !== "all" || companyFilter !== "all" || bucketFilter !== "all" || resolutionFilter !== "all";
+  const resetSummaryFilters = () => {
+    setRiskFilter("all");
+    setCompanyFilter("all");
+    setBranchFilter("all");
+    setBucketFilter("all");
+    setResolutionFilter("all");
+    setCurrentPage(1);
+  };
+  const toggleSummaryFilter = (type: "risk" | "company" | "bucket" | "resolution", value: string) => {
+    if (type === "risk") setRiskFilter(prev => prev === value ? "all" : value);
+    if (type === "company") {
+      setCompanyFilter(prev => prev === value ? "all" : value);
+      setBranchFilter("all");
+    }
+    if (type === "bucket") setBucketFilter(prev => prev === value ? "all" : value);
+    if (type === "resolution") setResolutionFilter(prev => prev === value ? "all" : value);
+    setCurrentPage(1);
+  };
   const updateDocumentMeta = (
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
     stage: string,
@@ -572,7 +593,7 @@ export default function KasusPage() {
 
   const resetForm = () => setForm({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
-    customerName: "", accountNumber: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
+    customerName: "", accountNumber: "", relatedAccounts: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Pemeriksaan Internal", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
@@ -595,6 +616,7 @@ export default function KasusPage() {
       dateReceived: c.dateReceived,
       customerName: c.customerName,
       accountNumber: c.accountNumber || "",
+      relatedAccounts: c.relatedAccounts || "",
       picMain: c.picMain || "",
       branchHead: c.branchHead || "",
       bucket: c.bucket,
@@ -632,6 +654,7 @@ export default function KasusPage() {
         branch: form.branch || null,
         dateReceived: form.dateReceived,
         accountNumber: form.accountNumber || null,
+        relatedAccounts: form.relatedAccounts || null,
         picMain: form.picMain || null,
         branchHead: form.branchHead || null,
         bucket: form.bucket,
@@ -755,6 +778,16 @@ export default function KasusPage() {
                     <Label>No. Akun</Label>
                     <Input data-testid="input-case-account" placeholder="Nomor akun" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Akun Terkait</Label>
+                  <Textarea
+                    data-testid="input-case-related-accounts"
+                    placeholder="Contoh: RUAB1228 - akun utama; RXYZ1234 - akun pasangan"
+                    value={form.relatedAccounts}
+                    onChange={e => setForm({...form, relatedAccounts: e.target.value})}
+                    className={SOFT_PLACEHOLDER_CLASS}
+                  />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -967,75 +1000,6 @@ export default function KasusPage() {
           </Select>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-          <Select value={riskFilter} onValueChange={v => { setRiskFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-risk" className="w-full sm:w-40">
-              <Filter className="w-4 h-4 mr-1 shrink-0" /><SelectValue placeholder="Semua Risk" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Risk</SelectItem>
-              {RISK_LEVELS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          {isAdmin && (
-            <Select value={companyFilter} onValueChange={v => { setCompanyFilter(v); setBranchFilter("all"); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-company-case" className="w-full sm:w-40">
-                <SelectValue placeholder="Semua PT" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua PT</SelectItem>
-                {companiesData?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-          {availableBranches && availableBranches.length > 0 && (
-            <Select value={branchFilter} onValueChange={v => { setBranchFilter(v); setCurrentPage(1); }}>
-              <SelectTrigger data-testid="select-filter-branch-case" className="w-full sm:w-44">
-                <SelectValue placeholder="Semua Cabang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Cabang</SelectItem>
-                {availableBranches.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-          <Select value={bucketFilter} onValueChange={v => { setBucketFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-bucket" className="w-full sm:w-52">
-              <SelectValue placeholder="Semua Bucket" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bucket</SelectItem>
-              {BUCKETS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select
-            value={stageFilter}
-            onValueChange={v => {
-              if (viewFilter) {
-                setViewFilter(null);
-                setLocation("/kasus");
-              }
-              setStageFilter(v);
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger data-testid="select-filter-stage" className="w-full sm:w-44">
-              <SelectValue placeholder="Semua Stage" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Stage</SelectItem>
-              <SelectItem value="waiting">Menunggu Keputusan</SelectItem>
-              {WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={resolutionFilter} onValueChange={v => { setResolutionFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger data-testid="select-filter-resolution" className="w-full sm:w-48">
-              <SelectValue placeholder="Semua Jalur" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Jalur</SelectItem>
-              {RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
           <Button
             variant={uncommentedFilter ? "default" : "outline"}
             size="sm"
@@ -1053,16 +1017,35 @@ export default function KasusPage() {
       </div>
 
       {!isLoading && !isError && cases && cases.length > 0 && (() => {
-        const src = filtered;
-        const total = src.length;
+        const summarySource = cases.filter(c => {
+          const s = search.toLowerCase();
+          const matchSearch = c.caseCode.toLowerCase().includes(s) ||
+            c.customerName.toLowerCase().includes(s) ||
+            (c.summary || "").toLowerCase().includes(s) ||
+            (c.accountNumber || "").toLowerCase().includes(s) ||
+            (c.relatedAccounts || "").toLowerCase().includes(s);
+          const matchCompany = companyFilter === "all" || c.companyId?.toString() === companyFilter;
+          const matchStage = stageFilter === "all" || (stageFilter === "waiting" ? waitingStages.includes(c.workflowStage) && c.status !== "Closed" : c.workflowStage === stageFilter);
+          const matchBranch = branchFilter === "all" || c.branch === branchFilter;
+          const matchUncommented = !uncommentedFilter || (uncommentedIds || []).includes(c.id);
+          let matchView = true;
+          if (viewFilter === "active") {
+            matchView = c.status !== "Closed";
+          } else if (viewFilter === "closed") {
+            matchView = c.status === "Closed";
+          }
+          return matchSearch && matchCompany && matchStage && matchBranch && matchView && matchUncommented;
+        });
+        const total = filtered.length;
         const byRisk = { High: 0, Medium: 0, Low: 0 } as Record<string, number>;
+        const byCompany: Record<string, number> = {};
         const byBucket: Record<string, number> = {};
-        const byStage: Record<string, number> = {};
         const byResolution: Record<string, number> = {};
-        src.forEach(c => {
+        summarySource.forEach(c => {
           byRisk[c.riskLevel] = (byRisk[c.riskLevel] || 0) + 1;
+          const companyKey = c.companyId?.toString() || "";
+          byCompany[companyKey] = (byCompany[companyKey] || 0) + 1;
           byBucket[c.bucket] = (byBucket[c.bucket] || 0) + 1;
-          byStage[c.workflowStage] = (byStage[c.workflowStage] || 0) + 1;
           const resolutionPath = normalizeResolutionPath(c.resolutionPath);
           byResolution[resolutionPath] = (byResolution[resolutionPath] || 0) + 1;
         });
@@ -1072,50 +1055,78 @@ export default function KasusPage() {
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <BarChart3 className="w-4 h-4 text-primary" />
                 <span>Ringkasan</span>
-                <Badge variant="secondary" className="ml-1" data-testid="text-total-cases">{total} kasus</Badge>
+                <button type="button" onClick={resetSummaryFilters} disabled={!hasSummaryFilters} className="ml-1 disabled:cursor-default" data-testid="button-reset-summary-filters">
+                  <Badge variant={hasSummaryFilters ? "default" : "secondary"} data-testid="text-total-cases">{total} kasus</Badge>
+                </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+              <div className={`grid grid-cols-1 ${isAdmin ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-4 text-xs`}>
                 <div>
                   <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Risk Level</p>
                   <div className="space-y-1">
                     {["High", "Medium", "Low"].map(r => (
-                      <div key={r} className="flex items-center justify-between">
-                        <span className={r === "High" ? "text-red-600 dark:text-red-400 font-medium" : r === "Medium" ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}>{r}</span>
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => toggleSummaryFilter("risk", r)}
+                        className={`flex w-full items-center justify-between rounded px-1 py-0.5 text-left transition hover:bg-muted ${riskFilter === r ? "bg-primary/10 text-primary" : ""}`}
+                        data-testid={`button-summary-risk-${r.toLowerCase()}`}
+                      >
+                        <span className={riskFilter === r ? "font-semibold" : r === "High" ? "text-red-600 dark:text-red-400 font-medium" : r === "Medium" ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}>{r}</span>
                         <span className="font-medium">{byRisk[r] || 0}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
+                {isAdmin && (
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> PT</p>
+                    <div className="space-y-1">
+                      {Object.entries(byCompany).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+                        <button
+                          key={k || "unknown-company"}
+                          type="button"
+                          onClick={() => k && toggleSummaryFilter("company", k)}
+                          className={`flex w-full items-center justify-between gap-2 rounded px-1 py-0.5 text-left transition hover:bg-muted ${companyFilter === k ? "bg-primary/10 text-primary" : ""}`}
+                          data-testid={`button-summary-company-${k || "unknown"}`}
+                        >
+                          <span className="truncate">{k ? getCompanyName(Number(k)) : "-"}</span>
+                          <span className="font-medium flex-shrink-0">{v}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><FileWarning className="w-3 h-3" /> Bucket</p>
-                  <div className="space-y-1 max-h-28 overflow-y-auto">
+                  <div className="space-y-1">
                     {Object.entries(byBucket).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-                      <div key={k} className="flex items-center justify-between gap-2">
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => toggleSummaryFilter("bucket", k)}
+                        className={`flex w-full items-center justify-between gap-2 rounded px-1 py-0.5 text-left transition hover:bg-muted ${bucketFilter === k ? "bg-primary/10 text-primary" : ""}`}
+                        data-testid={`button-summary-bucket-${k.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                      >
                         <span className="truncate">{k}</span>
                         <span className="font-medium flex-shrink-0">{v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> Stage</p>
-                  <div className="space-y-1 max-h-28 overflow-y-auto">
-                    {Object.entries(byStage).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-                      <div key={k} className="flex items-center justify-between gap-2">
-                        <span className="truncate">{k}</span>
-                        <span className="font-medium flex-shrink-0">{v}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
                 <div>
                   <p className="font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><Shield className="w-3 h-3" /> Jalur</p>
-                  <div className="space-y-1 max-h-28 overflow-y-auto">
+                  <div className="space-y-1">
                     {Object.entries(byResolution).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-                      <div key={k} className="flex items-center justify-between gap-2">
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => toggleSummaryFilter("resolution", k)}
+                        className={`flex w-full items-center justify-between gap-2 rounded px-1 py-0.5 text-left transition hover:bg-muted ${resolutionFilter === k ? "bg-primary/10 text-primary" : ""}`}
+                        data-testid={`button-summary-resolution-${k.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                      >
                         <span className="truncate">{k}</span>
                         <span className="font-medium flex-shrink-0">{v}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1151,6 +1162,11 @@ export default function KasusPage() {
                       <StatusBadge status={c.status} />
                     </div>
                     <p className="text-sm">{c.customerName}</p>
+                    {c.relatedAccounts && (
+                      <p className="text-xs text-muted-foreground line-clamp-1" data-testid={`text-related-accounts-${c.id}`}>
+                        Akun terkait: {c.relatedAccounts}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground line-clamp-1">{c.summary}</p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                       <span>{getCompanyName(c.companyId)}</span>
@@ -1285,6 +1301,14 @@ export default function KasusPage() {
                 <Label>No. Akun</Label>
                 <Input data-testid="input-edit-case-account" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Akun Terkait</Label>
+              <Textarea
+                data-testid="input-edit-case-related-accounts"
+                value={form.relatedAccounts}
+                onChange={e => setForm({...form, relatedAccounts: e.target.value})}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">

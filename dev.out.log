@@ -6,48 +6,14 @@ Migrasi schema selesai.
 === VERIFIKASI DATA ===
 Users aktif: 20
 Perusahaan aktif: 5
-Kasus aktif: 122
-Aktivitas aktif: 550
+Kasus aktif: 125
+Aktivitas aktif: 557
 Tugas aktif: 6
 Pengumuman aktif: 2
-✓ Data kasus lengkap (122/105)
+✓ Data kasus lengkap (125/105)
 === VERIFIKASI SELESAI ===
-10:03:00 AM [express] serving on port 5000
+11:03:50 AM [express] serving on port 5000
 Sistem pengingat otomatis aktif (interval: 1 jam)
-10:03:16 AM [express] GET /api/auth/me 200 in 765ms
-10:03:17 AM [express] GET /api/notifications/unread-count 304 in 1055ms
-10:03:17 AM [express] GET /api/companies 304 in 1112ms
-10:03:22 AM [express] GET /api/users 304 in 5579ms
-10:03:50 AM [express] GET /api/notifications/unread-count 304 in 2704ms
-10:03:52 AM [express] POST /api/auth/logout 200 in 1311ms
-10:03:52 AM [express] GET /api/auth/me 401 in 274ms
-10:04:01 AM [express] POST /api/auth/login 200 in 1644ms
-10:04:02 AM [express] GET /api/notifications/unread-count 200 in 1033ms
-10:04:04 AM [express] GET /api/companies 304 in 2726ms
-10:04:07 AM [express] GET /api/dashboard 200 in 5744ms
-10:04:09 AM [express] GET /api/cases 200 in 1079ms
-10:04:09 AM [express] GET /api/branches/my-company 200 in 1096ms
-10:04:10 AM [express] GET /api/uncommented-cases 304 in 1652ms
-10:04:23 AM [express] POST /api/auth/logout 200 in 3070ms
-10:04:24 AM [express] GET /api/auth/me 401 in 270ms
-10:04:25 AM [express] POST /api/auth/logout 200 in 2944ms
-10:04:25 AM [express] GET /api/auth/me 401 in 359ms
-Auto-cleanup: 18 notifikasi lama (>7 hari) dihapus
-11:49:30 AM [express] GET /api/auth/me 401 in 277ms
-11:52:35 AM [express] POST /api/auth/login 200 in 4146ms
-11:52:39 AM [express] GET /api/notifications/unread-count 200 in 3381ms
-11:52:39 AM [express] GET /api/companies 304 in 3272ms
-11:52:41 AM [express] GET /api/action-items 304 in 5128ms
-11:52:53 AM [express] GET /api/dashboard 200 in 17611ms
-11:53:12 AM [express] GET /api/notifications/unread-count 304 in 3054ms
-11:53:45 AM [express] GET /api/notifications/unread-count 304 in 3435ms
-11:54:19 AM [express] GET /api/notifications/unread-count 304 in 3041ms
-11:54:52 AM [express] GET /api/notifications/unread-count 304 in 3359ms
-11:55:14 AM [express] GET /api/uncommented-cases 200 in 4305ms
-11:55:15 AM [express] GET /api/cases 200 in 5357ms
-11:55:23 AM [express] GET /api/notifications/unread-count 304 in 1075ms
-2:10:37 PM [express] GET /api/auth/me 304 in 762ms
-2:10:38 PM [express] GET /api/notifications/unread-count 200 in 1123ms
-2:10:38 PM [express] GET /api/companies 304 in 1120ms
-2:10:39 PM [express] GET /api/uncommented-cases 304 in 1694ms
-2:10:46 PM [express] GET /api/cases 304 in 8852ms
+11:04:15 AM [express] GET /api/auth/me 304 in 1366ms
+11:04:17 AM [express] GET /api/companies 304 in 1765ms
+11:04:17 AM [express] GET /api/notifications/unread-count 304 in 1772ms

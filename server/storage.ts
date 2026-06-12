@@ -21,6 +21,13 @@ import {
 import * as schema from "@shared/schema";
 
 type TxOrDb = NodePgDatabase<typeof schema>;
+type DashboardUserScope = {
+  id: number;
+  role: string;
+  companyId: number | null;
+};
+
+const DU_DK_LIKE_ROLES = ["du", "cbo", "ceo", "dk", "kepatuhan_cabang", "apuppt"];
 
 function normalizeBranchName(branch?: string | null): string {
   return (branch || "").trim().toLowerCase();
@@ -109,7 +116,7 @@ export interface IStorage {
 
   createAuditLog(data: InsertAuditLog, tx?: TxOrDb): Promise<AuditLog>;
 
-  getDashboardStats(companyId?: number, branch?: string | null): Promise<any>;
+  getDashboardStats(companyId?: number, branch?: string | null, user?: DashboardUserScope): Promise<any>;
 
   getKpiAssessments(userId?: number): Promise<KpiAssessment[]>;
   getKpiAssessment(id: number): Promise<KpiAssessment | undefined>;
@@ -428,22 +435,47 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  async getDashboardStats(companyId?: number, branch?: string | null): Promise<any> {
+  async getDashboardStats(companyId?: number, branch?: string | null, user?: DashboardUserScope): Promise<any> {
     const today = new Date().toISOString().split("T")[0];
     const actConditions = companyId
       ? and(eq(activities.isArchived, false), eq(activities.companyId, companyId))
       : eq(activities.isArchived, false);
+
     const caseFilterConditions = [eq(cases.isArchived, false)];
     if (companyId) caseFilterConditions.push(eq(cases.companyId, companyId));
     if (branch === null) caseFilterConditions.push(sql`false`);
     if (branch) caseFilterConditions.push(branchCaseCondition(branch));
     const caseConditions = and(...caseFilterConditions);
-    const taskConditions = eq(tasks.isArchived, false);
+
+    const taskFilterConditions = [eq(tasks.isArchived, false)];
+    if (companyId) taskFilterConditions.push(eq(tasks.companyId, companyId));
+    if (user && DU_DK_LIKE_ROLES.includes(user.role)) taskFilterConditions.push(eq(tasks.assignedTo, user.id));
+    const taskConditions = and(...taskFilterConditions);
+
+    const announcementFilterConditions = [eq(announcements.isArchived, false)];
+    if (user && !["superadmin", "owner"].includes(user.role)) {
+      const companyTarget = user.companyId ? String(user.companyId) : "";
+      announcementFilterConditions.push(or(
+        eq(announcements.targetType, "all"),
+        and(eq(announcements.targetType, "company"), eq(announcements.targetValue, companyTarget)),
+        and(eq(announcements.targetType, "role"), eq(announcements.targetValue, user.role)),
+        and(eq(announcements.targetType, "user"), eq(announcements.targetValue, String(user.id))),
+        and(eq(announcements.targetType, "users"), sql`concat(',', coalesce(${announcements.targetValue}, ''), ',') like ${`%,${user.id},%`}`),
+      )!);
+    }
+    const announcementConditions = and(...announcementFilterConditions);
+
+    const nonClosedCaseCondition = sql`${cases.status} != 'Closed'`;
+    const waitingStageCondition = sql`${cases.workflowStage} IN ('Proses Regulator', 'Settlement / Deadlock')`;
+    const activeCaseCondition = and(
+      caseConditions,
+      nonClosedCaseCondition,
+    );
 
     const waitingCondition = and(
       caseConditions,
-      sql`${cases.status} != 'Closed'`,
-      sql`${cases.workflowStage} IN ('Proses Regulator', 'Settlement / Deadlock')`
+      nonClosedCaseCondition,
+      waitingStageCondition
     );
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -467,19 +499,19 @@ export class DatabaseStorage implements IStorage {
     ] = await Promise.all([
       db.select({ count: count() }).from(activities).where(actConditions),
       db.select({ count: count() }).from(cases).where(caseConditions),
-      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.status} != 'Closed'`, sql`${cases.workflowStage} NOT IN ('Proses Regulator', 'Settlement / Deadlock')`)),
-      db.select({ count: count() }).from(cases).where(and(caseConditions, sql`${cases.targetDate} < ${today}`, sql`${cases.status} != 'Closed'`)),
+      db.select({ count: count() }).from(cases).where(activeCaseCondition),
+      db.select({ count: count() }).from(cases).where(and(activeCaseCondition, sql`${cases.targetDate} < ${today}`)),
       db.select({ count: count() }).from(activities).where(and(actConditions, eq(activities.status, "Selesai"))),
       db.select({ count: count() }).from(cases).where(and(caseConditions, eq(cases.status, "Closed"))),
       db.select({ count: count() }).from(cases).where(waitingCondition),
-      db.select({ count: count() }).from(cases).where(and(waitingCondition, sql`${cases.updatedAt} < ${thirtyDaysAgo}`)),
+      db.select({ count: count() }).from(cases).where(and(waitingCondition, sql`${cases.dateReceived} < ${thirtyDaysAgo.toISOString().split("T")[0]}`)),
       db.select({ count: count() }).from(tasks).where(taskConditions),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, sql`${tasks.status} != 'Selesai'`)),
       db.select({ count: count() }).from(tasks).where(and(taskConditions, eq(tasks.status, "Selesai"))),
-      db.select({ count: count() }).from(announcements).where(eq(announcements.isArchived, false)),
+      db.select({ count: count() }).from(announcements).where(announcementConditions),
       db.select().from(activities).where(actConditions).orderBy(desc(activities.createdAt)).limit(5),
       db.select().from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5),
-      db.select().from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), sql`${cases.status} != 'Closed'`)).orderBy(desc(cases.createdAt)).limit(5),
+      db.select().from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), nonClosedCaseCondition)).orderBy(desc(cases.createdAt)).limit(5),
     ]);
 
     return {

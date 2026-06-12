@@ -243,6 +243,7 @@ const caseBodySchema = z.object({
   dateReceived: z.string().min(1, "Tanggal terima wajib diisi"),
   customerName: z.string().min(1, "Nama nasabah wajib diisi"),
   accountNumber: z.string().optional().nullable(),
+  relatedAccounts: z.string().optional().nullable(),
   picMain: z.string().optional().nullable(),
   branchHead: z.string().optional().nullable(),
   bucket: z.string().optional(),
@@ -620,7 +621,11 @@ export async function registerRoutes(
     try {
       const user = req.user as any;
       const companyId = ["superadmin", "owner"].includes(user.role) ? undefined : user.companyId;
-      const stats = await storage.getDashboardStats(companyId, branchScopeForUser(user));
+      const stats = await storage.getDashboardStats(companyId, branchScopeForUser(user), {
+        id: user.id,
+        role: user.role,
+        companyId: user.companyId,
+      });
       res.json(stats);
     } catch (err: any) {
       res.status(500).json({ message: err.message || "Gagal mengambil data dashboard" });
@@ -839,6 +844,7 @@ export async function registerRoutes(
       const timelineLabels: Record<string, string> = {
         customerName: "Nama Nasabah",
         accountNumber: "No. Akun",
+        relatedAccounts: "Akun Terkait",
         branch: "Cabang",
         picMain: "Marketing",
         branchHead: "Kepala Cabang",

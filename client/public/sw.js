@@ -1,6 +1,5 @@
-const CACHE_NAME = 'sgcc-v1';
+const CACHE_NAME = 'sgcc-v2';
 const STATIC_ASSETS = [
-  '/',
   '/SGCC_logo.png',
   '/favicon.png'
 ];
@@ -44,6 +43,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (
+    event.request.mode === 'navigate' ||
+    ['script', 'style', 'document'].includes(event.request.destination) ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/assets/')
+  ) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -57,7 +66,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         return caches.match(event.request).then((cachedResponse) => {
-          return cachedResponse || caches.match('/');
+          return cachedResponse || Response.error();
         });
       })
   );
