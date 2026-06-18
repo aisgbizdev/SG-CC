@@ -126,6 +126,207 @@ function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
   }
 }
 
+type RelatedAccountItem = {
+  accountNumber: string;
+  customerName: string;
+  branch?: string;
+  picMain?: string;
+  branchHead?: string;
+  wpbName?: string;
+  managerName?: string;
+  summary?: string;
+  complaintChronology?: string;
+  resolutionPath?: string;
+  status?: string;
+  riskLevel?: string;
+  bucket?: string;
+  workflowStage?: string;
+  progress?: number;
+  targetDate?: string;
+  customerRequest?: string;
+  companyOffer?: string;
+  findings?: string;
+  rootCause?: string;
+  latestAction?: string;
+  nextAction?: string;
+};
+
+function parseRelatedAccounts(value?: string | null, fallbackName = ""): RelatedAccountItem[] {
+  const raw = (value || "").trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map(item => ({
+          ...item,
+          accountNumber: String(item?.accountNumber || "").trim(),
+          customerName: String(item?.customerName || fallbackName).trim(),
+        }))
+        .filter(item => item.accountNumber)
+        .filter((item, index, all) => all.findIndex(other => other.accountNumber.toLowerCase() === item.accountNumber.toLowerCase()) === index);
+    }
+  } catch {
+    // Legacy text format below.
+  }
+  return raw
+    .split(/[\n;]+/)
+    .flatMap(line => line.split(","))
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map(item => {
+      const [accountNumber, customerName] = item.split("|").map(part => part.trim());
+      return { accountNumber, customerName: customerName || fallbackName };
+    })
+    .filter(item => item.accountNumber)
+    .filter((item, index, all) => all.findIndex(other => other.accountNumber.toLowerCase() === item.accountNumber.toLowerCase()) === index);
+}
+
+function serializeRelatedAccounts(accounts: RelatedAccountItem[]) {
+  const cleaned = accounts
+    .map(item => ({ ...item, accountNumber: item.accountNumber.trim(), customerName: item.customerName.trim() }))
+    .filter(item => item.accountNumber)
+    .map(item => Object.fromEntries(Object.entries(item).filter(([, value]) => value !== "" && value !== null && value !== undefined)));
+  return JSON.stringify(cleaned);
+}
+
+function RelatedAccountsInput({
+  value,
+  onChange,
+  primaryAccount,
+  primaryCustomerName,
+  branchNames = [],
+  fullEdit = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  primaryAccount?: string | null;
+  primaryCustomerName?: string | null;
+  branchNames?: string[];
+  fullEdit?: boolean;
+}) {
+  const [draft, setDraft] = useState("");
+  const [hint, setHint] = useState("");
+  const accounts = parseRelatedAccounts(value, primaryCustomerName || "");
+  const addAccount = () => {
+    const candidates = parseRelatedAccounts(draft, primaryCustomerName || "");
+    if (candidates.length === 0) return;
+    const primary = primaryAccount?.trim().toLowerCase();
+    const nextAccounts = [...accounts];
+    let added = 0;
+    let skipped = 0;
+    candidates.forEach(candidate => {
+      const key = candidate.accountNumber.toLowerCase();
+      const exists = nextAccounts.some(account => account.accountNumber.toLowerCase() === key) || (primary && primary === key);
+      if (exists) {
+        skipped += 1;
+        return;
+      }
+      nextAccounts.push(candidate);
+      added += 1;
+    });
+    if (added > 0) onChange(serializeRelatedAccounts(nextAccounts));
+    setHint(skipped > 0 ? `${skipped} akun dilewati karena sudah ada/akun utama` : "");
+    setDraft("");
+  };
+  const updateAccount = (index: number, patch: Partial<RelatedAccountItem>) => {
+    const nextAccounts = accounts.map((account, idx) => idx === index ? { ...account, ...patch } : account);
+    onChange(serializeRelatedAccounts(nextAccounts));
+  };
+  const removeAccount = (target: string) => {
+    setHint("");
+    onChange(serializeRelatedAccounts(accounts.filter(account => account.accountNumber !== target)));
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Input
+          data-testid="input-edit-related-account-draft"
+          placeholder="Masukkan nomor akun terkait"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addAccount();
+            }
+          }}
+          className="placeholder:text-muted-foreground/45"
+        />
+        <Button type="button" variant="outline" onClick={addAccount} data-testid="button-add-related-account">
+          <Plus className="w-4 h-4" />
+          Tambah
+        </Button>
+      </div>
+      {hint && <p className="text-xs text-amber-600">{hint}</p>}
+      {accounts.length > 0 && (
+        <div className="space-y-2">
+          {accounts.map((account, index) => (
+            <div key={`${account.accountNumber}-${index}`} className="rounded-md border p-3 space-y-3" data-testid="row-edit-related-account">
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                <Input value={account.accountNumber} onChange={e => updateAccount(index, { accountNumber: e.target.value })} placeholder="No. akun" className="placeholder:text-muted-foreground/45" />
+                <Input value={account.customerName} onChange={e => updateAccount(index, { customerName: e.target.value })} placeholder="Nama nasabah" className="placeholder:text-muted-foreground/45" />
+                <Button type="button" variant="ghost" size="icon" onClick={() => removeAccount(account.accountNumber)} aria-label={`Hapus ${account.accountNumber}`}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              {fullEdit && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Select value={account.branch || undefined} onValueChange={v => updateAccount(index, { branch: v })}>
+                      <SelectTrigger><SelectValue placeholder="Cabang" /></SelectTrigger>
+                      <SelectContent>{branchNames.map(branch => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input value={account.picMain || ""} onChange={e => updateAccount(index, { picMain: e.target.value })} placeholder="Marketing" className="placeholder:text-muted-foreground/45" />
+                    <Input value={account.branchHead || ""} onChange={e => updateAccount(index, { branchHead: e.target.value })} placeholder="Kepala Cabang" className="placeholder:text-muted-foreground/45" />
+                    <Input value={account.wpbName || ""} onChange={e => updateAccount(index, { wpbName: e.target.value })} placeholder="WPB" className="placeholder:text-muted-foreground/45" />
+                    <Input value={account.managerName || ""} onChange={e => updateAccount(index, { managerName: e.target.value })} placeholder="Manager" className="placeholder:text-muted-foreground/45" />
+                    <Input type="date" value={account.targetDate || ""} onChange={e => updateAccount(index, { targetDate: e.target.value })} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <Select value={account.status || undefined} onValueChange={v => updateAccount(index, { status: v })}>
+                      <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectContent>{["Open", "In Progress", "Closed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value={account.riskLevel || undefined} onValueChange={v => updateAccount(index, { riskLevel: v })}>
+                      <SelectTrigger><SelectValue placeholder="Risk" /></SelectTrigger>
+                      <SelectContent>{["Low", "Medium", "High"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value={account.workflowStage || undefined} onValueChange={v => updateAccount(index, { workflowStage: v })}>
+                      <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
+                      <SelectContent>{WORKFLOW_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input type="number" min={0} max={100} value={account.progress ?? ""} onChange={e => updateAccount(index, { progress: e.target.value === "" ? undefined : Math.max(0, Math.min(100, Number(e.target.value))) })} placeholder="Progress" className="placeholder:text-muted-foreground/45" />
+                  </div>
+                  <Select value={account.bucket || undefined} onValueChange={v => updateAccount(index, { bucket: v })}>
+                    <SelectTrigger><SelectValue placeholder="Bucket" /></SelectTrigger>
+                    <SelectContent>{["Pemeriksaan Pengaduan Baru", "Disetujui untuk Perdamaian", "Tidak Disetujui untuk Perdamaian", "Menunggu Pemeriksaan", "Proses Negosiasi / Mediasi", "Proses Regulator", "Deadlock", "Closed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Select value={account.resolutionPath || undefined} onValueChange={v => updateAccount(index, { resolutionPath: v })}>
+                    <SelectTrigger><SelectValue placeholder="Jalur Penyelesaian" /></SelectTrigger>
+                    <SelectContent>{RESOLUTION_PATHS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Textarea value={account.summary || ""} onChange={e => updateAccount(index, { summary: e.target.value })} placeholder="Inti pengaduan akun ini" className="placeholder:text-muted-foreground/45" />
+                  <Textarea value={account.complaintChronology || ""} onChange={e => updateAccount(index, { complaintChronology: e.target.value })} placeholder="Kronologi pengaduan akun ini" className="placeholder:text-muted-foreground/45" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Textarea value={account.customerRequest || ""} onChange={e => updateAccount(index, { customerRequest: e.target.value })} placeholder="Permintaan nasabah" className="placeholder:text-muted-foreground/45" />
+                    <Textarea value={account.companyOffer || ""} onChange={e => updateAccount(index, { companyOffer: e.target.value })} placeholder="Penawaran perusahaan" className="placeholder:text-muted-foreground/45" />
+                    <Textarea value={account.findings || ""} onChange={e => updateAccount(index, { findings: e.target.value })} placeholder="Temuan" className="placeholder:text-muted-foreground/45" />
+                    <Textarea value={account.rootCause || ""} onChange={e => updateAccount(index, { rootCause: e.target.value })} placeholder="Root cause" className="placeholder:text-muted-foreground/45" />
+                    <Textarea value={account.latestAction || ""} onChange={e => updateAccount(index, { latestAction: e.target.value })} placeholder="Tindakan terakhir" className="placeholder:text-muted-foreground/45" />
+                    <Textarea value={account.nextAction || ""} onChange={e => updateAccount(index, { nextAction: e.target.value })} placeholder="Tindak lanjut" className="placeholder:text-muted-foreground/45" />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function KasusDetailPage() {
   const [, params] = useRoute("/kasus/:id");
   const id = parseInt(params?.id || "0");
@@ -136,6 +337,8 @@ export default function KasusDetailPage() {
   const [newStatus, setNewStatus] = useState("");
   const [newStage, setNewStage] = useState("");
   const [newProgress, setNewProgress] = useState<number | undefined>(undefined);
+  const [selectedRelatedAccount, setSelectedRelatedAccount] = useState("");
+  const [editAccountKey, setEditAccountKey] = useState("__main__");
   const [editing, setEditing] = useState(false);
   const [caseDocumentsEdit, setCaseDocumentsEdit] = useState<CaseDocumentItem[]>([]);
   const [complaintAttachmentsEdit, setComplaintAttachmentsEdit] = useState<CaseDocumentItem[]>([]);
@@ -183,6 +386,47 @@ export default function KasusDetailPage() {
     if (value === null || value === undefined || value === "") return "-";
     const text = String(value).replace(/\s+/g, " ").trim();
     return text.length > 90 ? `${text.slice(0, 87)}...` : text;
+  };
+  const summarizeRelatedAccountsForTimeline = (value: string) => {
+    const afterValue = value.includes("->") ? value.split("->").pop() || value : value;
+    const accounts = parseRelatedAccounts(afterValue, caseData?.customerName || "");
+    if (accounts.length === 0) return compactValue(afterValue);
+    return accounts
+      .map(account => `  - ${account.accountNumber}${account.customerName ? ` | Nasabah: ${account.customerName}` : ""}`)
+      .join("\n");
+  };
+  const formatTimelineContent = (content: string) => {
+    const lines = (content || "").split("\n");
+    const formatted: string[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed === "Update data kasus:") {
+        formatted.push("Perubahan data kasus:");
+        continue;
+      }
+      if (trimmed.startsWith("- Akun Terkait:") || trimmed.startsWith("Akun Terkait:")) {
+        const rawValue = trimmed.replace(/^-?\s*Akun Terkait:\s*/, "");
+        formatted.push(`Daftar akun terkait diperbarui:\n${summarizeRelatedAccountsForTimeline(rawValue)}`);
+        continue;
+      }
+      if (trimmed.startsWith("Update data akun terkait ")) {
+        const raw = trimmed.replace("Update data akun terkait ", "").trim();
+        const [accountNumber, customerName] = raw.split(":").map(part => part.trim());
+        formatted.push(`Perubahan akun terkait:\n  - Akun: ${accountNumber}${customerName ? ` | Nasabah: ${customerName}` : ""}`);
+        continue;
+      }
+      if (trimmed.startsWith("- ")) {
+        const withoutBullet = trimmed.slice(2);
+        const [label, ...rest] = withoutBullet.split(":");
+        const detail = rest.join(":").trim();
+        formatted.push(`  - ${label.trim()}: ${detail}`);
+        continue;
+      }
+      formatted.push(line);
+    }
+
+    return formatted.join("\n").replace(/\n{3,}/g, "\n\n").trim();
   };
   const documentSummary = (docs: CaseDocumentItem[]) =>
     docs.length ? `${docs.length} file: ${docs.map((doc) => doc.fileName).join(", ")}` : "0 file";
@@ -376,7 +620,17 @@ export default function KasusDetailPage() {
   if (isLoading) return <div className="p-6"><Skeleton className="h-96" /></div>;
   if (!caseData) return <div className="p-6"><p className="text-muted-foreground">Kasus tidak ditemukan</p></div>;
 
-  const startEdit = () => {
+  const relatedAccountOptions = parseRelatedAccounts(caseData.relatedAccounts, caseData.customerName)
+    .filter(account => account.accountNumber.toLowerCase() !== (caseData.accountNumber || "").toLowerCase());
+  const selectedRelatedAccountItem = relatedAccountOptions.find(account => account.accountNumber === selectedRelatedAccount);
+  const accountField = <K extends keyof RelatedAccountItem>(key: K, fallback: unknown = "-") => {
+    const value = selectedRelatedAccountItem?.[key];
+    if (value !== undefined && value !== null && value !== "") return value;
+    if (fallback !== undefined && fallback !== null && fallback !== "") return fallback;
+    return "-";
+  };
+
+  const setMainAccountEditForm = () => {
     setEditForm({
       customerName: caseData.customerName,
       accountNumber: caseData.accountNumber,
@@ -402,9 +656,93 @@ export default function KasusDetailPage() {
       nextAction: caseData.nextAction,
       resolutionPath: normalizeResolutionPath(caseData.resolutionPath),
     });
+  };
+
+  const setRelatedAccountEditForm = (account: RelatedAccountItem) => {
+    setEditForm({
+      customerName: account.customerName || caseData.customerName,
+      accountNumber: account.accountNumber,
+      relatedAccounts: caseData.relatedAccounts,
+      branch: account.branch || caseData.branch,
+      picMain: account.picMain || caseData.picMain,
+      branchHead: account.branchHead || caseData.branchHead,
+      wpbName: account.wpbName || caseData.wpbName,
+      managerName: account.managerName || caseData.managerName,
+      summary: account.summary || caseData.summary,
+      complaintChronology: account.complaintChronology || caseData.complaintChronology,
+      workflowStage: normalizeWorkflowStage(account.workflowStage || caseData.workflowStage),
+      progress: account.progress ?? caseData.progress,
+      targetDate: account.targetDate || caseData.targetDate,
+      customerRequest: account.customerRequest || caseData.customerRequest,
+      companyOffer: account.companyOffer || caseData.companyOffer,
+      status: account.status || caseData.status,
+      riskLevel: account.riskLevel || caseData.riskLevel,
+      bucket: account.bucket || caseData.bucket,
+      findings: account.findings || caseData.findings,
+      rootCause: account.rootCause || caseData.rootCause,
+      latestAction: account.latestAction || caseData.latestAction,
+      nextAction: account.nextAction || caseData.nextAction,
+      resolutionPath: normalizeResolutionPath(account.resolutionPath || caseData.resolutionPath),
+    });
+  };
+
+  const startEdit = () => {
+    setEditAccountKey("__main__");
+    setMainAccountEditForm();
     setCaseDocumentsEdit(parseCaseDocuments(caseData.caseDocuments));
     setComplaintAttachmentsEdit(parseCaseDocuments(caseData.complaintAttachments));
     setEditing(true);
+  };
+
+  const handleEditAccountChange = (value: string) => {
+    setEditAccountKey(value);
+    if (value === "__main__") {
+      setMainAccountEditForm();
+      return;
+    }
+    const account = relatedAccountOptions.find(item => item.accountNumber === value);
+    if (account) setRelatedAccountEditForm(account);
+  };
+
+  const buildRelatedAccountFromEditForm = (base: RelatedAccountItem): RelatedAccountItem => ({
+    ...base,
+    accountNumber: String(editForm.accountNumber || "").trim(),
+    customerName: String(editForm.customerName || caseData.customerName || "").trim(),
+    branch: editForm.branch || undefined,
+    picMain: editForm.picMain || undefined,
+    branchHead: editForm.branchHead || undefined,
+    wpbName: editForm.wpbName || undefined,
+    managerName: editForm.managerName || undefined,
+    summary: editForm.summary || undefined,
+    complaintChronology: editForm.complaintChronology || undefined,
+    resolutionPath: editForm.resolutionPath || undefined,
+    status: editForm.status || undefined,
+    riskLevel: editForm.riskLevel || undefined,
+    bucket: editForm.bucket || undefined,
+    workflowStage: editForm.workflowStage || undefined,
+    progress: typeof editForm.progress === "number" ? editForm.progress : undefined,
+    targetDate: editForm.targetDate || undefined,
+    customerRequest: editForm.customerRequest || undefined,
+    companyOffer: editForm.companyOffer || undefined,
+    findings: editForm.findings || undefined,
+    rootCause: editForm.rootCause || undefined,
+    latestAction: editForm.latestAction || undefined,
+    nextAction: editForm.nextAction || undefined,
+  });
+
+  const handleSaveEdit = () => {
+    if (editAccountKey === "__main__") {
+      updateMutation.mutate({ ...editForm, complaintAttachments: complaintAttachmentsEdit, caseDocuments: caseDocumentsEdit, timelineNote: buildDocumentMetaTimelineNote() || null });
+      return;
+    }
+    const relatedAccounts = parseRelatedAccounts(caseData.relatedAccounts, caseData.customerName);
+    const updatedRelatedAccounts = relatedAccounts.map(account =>
+      account.accountNumber === editAccountKey ? buildRelatedAccountFromEditForm(account) : account
+    );
+    updateMutation.mutate({
+      relatedAccounts: serializeRelatedAccounts(updatedRelatedAccounts),
+      timelineNote: `Update data akun terkait ${editAccountKey}: ${String(editForm.customerName || caseData.customerName || "-")}`,
+    });
   };
 
   const meetingCountByType = (meetingsData || []).reduce((acc: Record<string, number>, m) => {
@@ -618,6 +956,22 @@ export default function KasusDetailPage() {
       {editing ? (
         <Card>
           <CardContent className="p-4 space-y-4">
+            <div className="space-y-1.5">
+              <Label>Data yang diedit</Label>
+              <Select value={editAccountKey} onValueChange={handleEditAccountChange}>
+                <SelectTrigger data-testid="select-edit-account">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__main__">{caseData.accountNumber || "Akun Utama"} - Akun Utama</SelectItem>
+                  {relatedAccountOptions.map(account => (
+                    <SelectItem key={account.accountNumber} value={account.accountNumber}>
+                      {account.accountNumber}{account.customerName ? ` - ${account.customerName}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Nama Nasabah</Label>
@@ -628,14 +982,17 @@ export default function KasusDetailPage() {
                 <Input data-testid="input-edit-account-number" value={editForm.accountNumber || ""} onChange={e => setEditForm({...editForm, accountNumber: e.target.value})} />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Akun Terkait</Label>
-              <Textarea
-                data-testid="input-edit-related-accounts"
-                value={editForm.relatedAccounts || ""}
-                onChange={e => setEditForm({...editForm, relatedAccounts: e.target.value})}
-              />
-            </div>
+            {editAccountKey === "__main__" && (
+              <div className="space-y-1.5">
+                <Label>Akun Terkait</Label>
+                <RelatedAccountsInput
+                  value={editForm.relatedAccounts || ""}
+                  primaryAccount={editForm.accountNumber}
+                  primaryCustomerName={editForm.customerName}
+                  onChange={relatedAccounts => setEditForm(prev => ({...prev, relatedAccounts}))}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Cabang</Label>
@@ -874,7 +1231,7 @@ export default function KasusDetailPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => updateMutation.mutate({ ...editForm, complaintAttachments: complaintAttachmentsEdit, caseDocuments: caseDocumentsEdit, timelineNote: buildDocumentMetaTimelineNote() || null })} disabled={updateMutation.isPending} data-testid="button-save-edit">
+              <Button onClick={handleSaveEdit} disabled={updateMutation.isPending} data-testid="button-save-edit">
                 {updateMutation.isPending ? "Menyimpan..." : "Simpan Update"}
               </Button>
               <Button variant="secondary" onClick={() => { setEditing(false); setCaseDocumentsEdit([]); setComplaintAttachmentsEdit([]); }} data-testid="button-cancel-edit">Batal</Button>
@@ -883,12 +1240,28 @@ export default function KasusDetailPage() {
         </Card>
       ) : (
         <Tabs defaultValue="detail" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="detail" data-testid="tab-detail">Detail</TabsTrigger>
-            <TabsTrigger value="timeline" data-testid="tab-timeline">Timeline ({caseUpdates?.length || 0})</TabsTrigger>
-            <TabsTrigger value="comments" data-testid="tab-comments">Komentar ({commentsData?.length || 0})</TabsTrigger>
-            <TabsTrigger value="meetings" data-testid="tab-meetings">Pertemuan ({meetingsData?.length || 0})</TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <TabsList>
+              <TabsTrigger value="detail" data-testid="tab-detail">Detail</TabsTrigger>
+              <TabsTrigger value="timeline" data-testid="tab-timeline">Timeline ({caseUpdates?.length || 0})</TabsTrigger>
+              <TabsTrigger value="comments" data-testid="tab-comments">Komentar ({commentsData?.length || 0})</TabsTrigger>
+              <TabsTrigger value="meetings" data-testid="tab-meetings">Pertemuan ({meetingsData?.length || 0})</TabsTrigger>
+            </TabsList>
+            {relatedAccountOptions.length > 0 && (
+              <Select value={selectedRelatedAccountItem?.accountNumber || undefined} onValueChange={setSelectedRelatedAccount}>
+                <SelectTrigger className="w-full sm:w-52" data-testid="select-related-account">
+                  <SelectValue placeholder="Pilih akun terkait" />
+                </SelectTrigger>
+                <SelectContent>
+                  {relatedAccountOptions.map(account => (
+                    <SelectItem key={account.accountNumber} value={account.accountNumber}>
+                      {account.accountNumber}{account.customerName ? ` - ${account.customerName}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
 
           <TabsContent value="detail">
             <div className="grid md:grid-cols-3 gap-4">
@@ -896,12 +1269,12 @@ export default function KasusDetailPage() {
                 <CardContent className="p-4 space-y-4">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Inti Pengaduan</p>
-                    <p className="text-sm">{caseData.summary}</p>
+                    <p className="text-sm">{String(accountField("summary", caseData.summary))}</p>
                   </div>
-                  {caseData.complaintChronology && (
+                  {accountField("complaintChronology", caseData.complaintChronology) !== "-" && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Kronologi Pengaduan Nasabah</p>
-                      <p className="text-sm whitespace-pre-wrap">{caseData.complaintChronology}</p>
+                      <p className="text-sm whitespace-pre-wrap">{String(accountField("complaintChronology", caseData.complaintChronology))}</p>
                     </div>
                   )}
                   {complaintAttachments.length > 0 && (
@@ -933,46 +1306,67 @@ export default function KasusDetailPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Workflow Stage</p>
-                      <p className="text-sm font-medium">{caseData.workflowStage}</p>
+                      <p className="text-sm font-medium">{String(accountField("workflowStage", caseData.workflowStage))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Bucket</p>
-                      <p className="text-sm font-medium">{caseData.bucket}</p>
+                      <p className="text-sm font-medium">{String(accountField("bucket", caseData.bucket))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Cabang</p>
-                      <p className="text-sm">{caseData.branch || "-"}</p>
+                      <p className="text-sm">{String(accountField("branch", caseData.branch || "-"))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">No. Akun</p>
                       <p className="text-sm">{caseData.accountNumber || "-"}</p>
                     </div>
                     <div>
+                      <p className="text-xs text-muted-foreground">Akun Terkait Dipilih</p>
+                      {selectedRelatedAccountItem ? (
+                        <div className="mt-0.5 flex flex-col gap-1">
+                          <Badge variant="outline" className="w-fit text-xs">{selectedRelatedAccountItem.accountNumber}</Badge>
+                          <p className="text-sm">{selectedRelatedAccountItem.customerName || "-"}</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm">-</p>
+                      )}
+                    </div>
+                    <div>
                       <p className="text-xs text-muted-foreground">Akun Terkait</p>
-                      <p className="text-sm whitespace-pre-wrap" data-testid="text-related-accounts">{caseData.relatedAccounts || "-"}</p>
+                      {caseData.relatedAccounts ? (
+                        <div className="mt-1 flex flex-wrap gap-1.5" data-testid="text-related-accounts">
+                          {parseRelatedAccounts(caseData.relatedAccounts, caseData.customerName).map(account => (
+                            <Badge key={account.accountNumber} variant="secondary" className="text-xs">
+                              {account.accountNumber}{account.customerName ? ` - ${account.customerName}` : ""}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm">-</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">WPB</p>
-                      <p className="text-sm" data-testid="text-wpb">{caseData.wpbName || "-"}</p>
+                      <p className="text-sm" data-testid="text-wpb">{String(accountField("wpbName", caseData.wpbName || "-"))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Manager</p>
-                      <p className="text-sm" data-testid="text-manager">{caseData.managerName || "-"}</p>
+                      <p className="text-sm" data-testid="text-manager">{String(accountField("managerName", caseData.managerName || "-"))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Kepala Cabang</p>
-                      <p className="text-sm" data-testid="text-branch-head">{caseData.branchHead || "-"}</p>
+                      <p className="text-sm" data-testid="text-branch-head">{String(accountField("branchHead", caseData.branchHead || "-"))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Jalur Penyelesaian</p>
-                      <Badge variant={normalizeResolutionPath(caseData.resolutionPath) === "Belum Ditentukan" ? "secondary" : "default"} className="mt-0.5" data-testid="text-resolution-path">{normalizeResolutionPath(caseData.resolutionPath)}</Badge>
+                      <Badge variant={normalizeResolutionPath(String(accountField("resolutionPath", caseData.resolutionPath))) === "Belum Ditentukan" ? "secondary" : "default"} className="mt-0.5" data-testid="text-resolution-path">{normalizeResolutionPath(String(accountField("resolutionPath", caseData.resolutionPath)))}</Badge>
                     </div>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Progress</p>
                     <div className="flex items-center gap-3">
-                      <Progress value={caseData.progress} className="h-2 flex-1" />
-                      <span className="text-sm font-medium">{caseData.progress}%</span>
+                      <Progress value={Number(accountField("progress", caseData.progress))} className="h-2 flex-1" />
+                      <span className="text-sm font-medium">{Number(accountField("progress", caseData.progress))}%</span>
                     </div>
                   </div>
                   {meetingCountSummary && (
@@ -981,12 +1375,12 @@ export default function KasusDetailPage() {
                       <p className="text-sm" data-testid="text-meeting-summary">{meetingCountSummary}</p>
                     </div>
                   )}
-                  {caseData.findings && <div><p className="text-xs text-muted-foreground mb-1">Temuan</p><p className="text-sm">{caseData.findings}</p></div>}
-                  {caseData.rootCause && <div><p className="text-xs text-muted-foreground mb-1">Root Cause</p><p className="text-sm">{caseData.rootCause}</p></div>}
-                  {caseData.customerRequest && <div><p className="text-xs text-muted-foreground mb-1">Permintaan Nasabah</p><p className="text-sm">{caseData.customerRequest}</p></div>}
-                  {caseData.companyOffer && <div><p className="text-xs text-muted-foreground mb-1">Penawaran Perusahaan</p><p className="text-sm">{caseData.companyOffer}</p></div>}
-                  {caseData.latestAction && <div><p className="text-xs text-muted-foreground mb-1">Tindakan Terakhir</p><p className="text-sm">{caseData.latestAction}</p></div>}
-                  {caseData.nextAction && <div><p className="text-xs text-muted-foreground mb-1">Tindak Lanjut</p><p className="text-sm">{caseData.nextAction}</p></div>}
+                  {accountField("findings", caseData.findings) !== "-" && <div><p className="text-xs text-muted-foreground mb-1">Temuan</p><p className="text-sm">{String(accountField("findings", caseData.findings))}</p></div>}
+                  {accountField("rootCause", caseData.rootCause) !== "-" && <div><p className="text-xs text-muted-foreground mb-1">Root Cause</p><p className="text-sm">{String(accountField("rootCause", caseData.rootCause))}</p></div>}
+                  {accountField("customerRequest", caseData.customerRequest) !== "-" && <div><p className="text-xs text-muted-foreground mb-1">Permintaan Nasabah</p><p className="text-sm">{String(accountField("customerRequest", caseData.customerRequest))}</p></div>}
+                  {accountField("companyOffer", caseData.companyOffer) !== "-" && <div><p className="text-xs text-muted-foreground mb-1">Penawaran Perusahaan</p><p className="text-sm">{String(accountField("companyOffer", caseData.companyOffer))}</p></div>}
+                  {accountField("latestAction", caseData.latestAction) !== "-" && <div><p className="text-xs text-muted-foreground mb-1">Tindakan Terakhir</p><p className="text-sm">{String(accountField("latestAction", caseData.latestAction))}</p></div>}
+                  {accountField("nextAction", caseData.nextAction) !== "-" && <div><p className="text-xs text-muted-foreground mb-1">Tindak Lanjut</p><p className="text-sm">{String(accountField("nextAction", caseData.nextAction))}</p></div>}
                   {caseDocuments.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1.5 mb-2">
@@ -1020,10 +1414,10 @@ export default function KasusDetailPage() {
               </Card>
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  <div><p className="text-xs text-muted-foreground">PIC Utama</p><p className="text-sm font-medium">{caseData.picMain || "-"}</p></div>
+                  <div><p className="text-xs text-muted-foreground">PIC Utama</p><p className="text-sm font-medium">{String(accountField("picMain", caseData.picMain || "-"))}</p></div>
                   <div><p className="text-xs text-muted-foreground">Dibuat oleh</p><p className="text-sm">{getUserName(caseData.createdBy)}</p></div>
                   <div><p className="text-xs text-muted-foreground">Tanggal Masuk</p><p className="text-sm">{caseData.dateReceived}</p></div>
-                  <div><p className="text-xs text-muted-foreground">Target Penyelesaian</p><p className="text-sm">{caseData.targetDate || "-"}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Target Penyelesaian</p><p className="text-sm">{String(accountField("targetDate", caseData.targetDate || "-"))}</p></div>
                   <div><p className="text-xs text-muted-foreground">Terakhir Diupdate</p><p className="text-sm">{new Date(caseData.updatedAt).toLocaleDateString("id-ID")}</p></div>
                 </CardContent>
               </Card>
@@ -1063,7 +1457,7 @@ export default function KasusDetailPage() {
                         <span>{new Date(u.createdAt).toLocaleString("id-ID")}</span>
                         <span className="font-medium">{getUserName(u.createdBy)}</span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">{u.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">{formatTimelineContent(u.content)}</p>
                       {u.newStatus && <p className="text-xs text-purple-600 dark:text-purple-400">Status: {u.newStatus}</p>}
                       {u.newStage && <p className="text-xs text-blue-600 dark:text-blue-400">Stage: {u.newStage}</p>}
                       {u.newProgress !== null && <p className="text-xs text-emerald-600 dark:text-emerald-400">Progress: {u.newProgress}%</p>}

@@ -164,6 +164,154 @@ function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
   }
 }
 
+type RelatedAccountItem = {
+  accountNumber: string;
+  customerName: string;
+  branch?: string;
+  picMain?: string;
+  branchHead?: string;
+  wpbName?: string;
+  managerName?: string;
+  summary?: string;
+  complaintChronology?: string;
+  resolutionPath?: string;
+  status?: string;
+  riskLevel?: string;
+  bucket?: string;
+  workflowStage?: string;
+  progress?: number;
+  targetDate?: string;
+  customerRequest?: string;
+  companyOffer?: string;
+  findings?: string;
+  rootCause?: string;
+  latestAction?: string;
+  nextAction?: string;
+};
+
+function parseRelatedAccounts(value?: string | null, fallbackName = ""): RelatedAccountItem[] {
+  const raw = (value || "").trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map(item => ({
+          ...item,
+          accountNumber: String(item?.accountNumber || "").trim(),
+          customerName: String(item?.customerName || fallbackName).trim(),
+        }))
+        .filter(item => item.accountNumber)
+        .filter((item, index, all) => all.findIndex(other => other.accountNumber.toLowerCase() === item.accountNumber.toLowerCase()) === index);
+    }
+  } catch {
+    // Legacy text format below.
+  }
+  return raw
+    .split(/[\n;]+/)
+    .flatMap(line => line.split(","))
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map(item => {
+      const [accountNumber, customerName] = item.split("|").map(part => part.trim());
+      return { accountNumber, customerName: customerName || fallbackName };
+    })
+    .filter(item => item.accountNumber)
+    .filter((item, index, all) => all.findIndex(other => other.accountNumber.toLowerCase() === item.accountNumber.toLowerCase()) === index);
+}
+
+function serializeRelatedAccounts(accounts: RelatedAccountItem[]) {
+  const cleaned = accounts
+    .map(item => ({ ...item, accountNumber: item.accountNumber.trim(), customerName: item.customerName.trim() }))
+    .filter(item => item.accountNumber);
+  return JSON.stringify(cleaned);
+}
+
+function RelatedAccountsInput({
+  value,
+  onChange,
+  primaryAccount,
+  primaryCustomerName,
+  testIdPrefix,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  primaryAccount?: string;
+  primaryCustomerName?: string;
+  testIdPrefix: string;
+}) {
+  const [draft, setDraft] = useState("");
+  const [hint, setHint] = useState("");
+  const accounts = parseRelatedAccounts(value, primaryCustomerName);
+  const addAccount = () => {
+    const candidates = parseRelatedAccounts(draft, primaryCustomerName);
+    if (candidates.length === 0) return;
+    const primary = primaryAccount?.trim().toLowerCase();
+    const nextAccounts = [...accounts];
+    let added = 0;
+    let skipped = 0;
+    candidates.forEach(candidate => {
+      const key = candidate.accountNumber.toLowerCase();
+      const exists = nextAccounts.some(account => account.accountNumber.toLowerCase() === key) || (primary && primary === key);
+      if (exists) {
+        skipped += 1;
+        return;
+      }
+      nextAccounts.push(candidate);
+      added += 1;
+    });
+    if (added > 0) onChange(serializeRelatedAccounts(nextAccounts));
+    setHint(skipped > 0 ? `${skipped} akun dilewati karena sudah ada/akun utama` : "");
+    setDraft("");
+  };
+  const updateAccount = (index: number, patch: Partial<RelatedAccountItem>) => {
+    const nextAccounts = accounts.map((account, idx) => idx === index ? { ...account, ...patch } : account);
+    onChange(serializeRelatedAccounts(nextAccounts));
+  };
+  const removeAccount = (target: string) => {
+    setHint("");
+    onChange(serializeRelatedAccounts(accounts.filter(account => account.accountNumber !== target)));
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Input
+          data-testid={`${testIdPrefix}-related-account-draft`}
+          placeholder="Masukkan nomor akun terkait"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addAccount();
+            }
+          }}
+          className={SOFT_PLACEHOLDER_CLASS}
+        />
+        <Button type="button" variant="outline" onClick={addAccount} data-testid={`${testIdPrefix}-add-related-account`}>
+          <Plus className="w-4 h-4" />
+          Tambah
+        </Button>
+      </div>
+      {hint && <p className="text-xs text-amber-600">{hint}</p>}
+      {accounts.length > 0 && (
+        <div className="space-y-2">
+          {accounts.map((account, index) => (
+            <div key={`${account.accountNumber}-${index}`} className="grid grid-cols-[1fr_1fr_auto] gap-2" data-testid={`${testIdPrefix}-related-account-row`}>
+              <Input value={account.accountNumber} onChange={e => updateAccount(index, { accountNumber: e.target.value })} placeholder="No. akun" className={SOFT_PLACEHOLDER_CLASS} />
+              <Input value={account.customerName} onChange={e => updateAccount(index, { customerName: e.target.value })} placeholder="Nama nasabah" className={SOFT_PLACEHOLDER_CLASS} />
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeAccount(account.accountNumber)} aria-label={`Hapus ${account.accountNumber}`}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function KasusPage() {
   usePageTitle("Kasus Pengaduan");
   const { user } = useAuth();
@@ -796,12 +944,12 @@ export default function KasusPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Akun Terkait</Label>
-                  <Textarea
-                    data-testid="input-case-related-accounts"
-                    placeholder="Contoh: RUAB1228 - akun utama; RXYZ1234 - akun pasangan"
+                  <RelatedAccountsInput
                     value={form.relatedAccounts}
-                    onChange={e => setForm({...form, relatedAccounts: e.target.value})}
-                    className={SOFT_PLACEHOLDER_CLASS}
+                    primaryAccount={form.accountNumber}
+                    primaryCustomerName={form.customerName}
+                    onChange={relatedAccounts => setForm(prev => ({...prev, relatedAccounts}))}
+                    testIdPrefix="input-case"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1185,9 +1333,16 @@ export default function KasusPage() {
                     </div>
                     <p className="text-sm">{c.customerName}</p>
                     {c.relatedAccounts && (
-                      <p className="text-xs text-muted-foreground line-clamp-1" data-testid={`text-related-accounts-${c.id}`}>
-                        Akun terkait: {c.relatedAccounts}
-                      </p>
+                      <div className="flex flex-wrap gap-1" data-testid={`text-related-accounts-${c.id}`}>
+                        {parseRelatedAccounts(c.relatedAccounts, c.customerName).slice(0, 4).map(account => (
+                          <Badge key={account.accountNumber} variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {account.accountNumber}{account.customerName ? ` - ${account.customerName}` : ""}
+                          </Badge>
+                        ))}
+                        {parseRelatedAccounts(c.relatedAccounts, c.customerName).length > 4 && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">+{parseRelatedAccounts(c.relatedAccounts, c.customerName).length - 4}</Badge>
+                        )}
+                      </div>
                     )}
                     <p className="text-xs text-muted-foreground line-clamp-1">{c.summary}</p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
@@ -1331,10 +1486,12 @@ export default function KasusPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Akun Terkait</Label>
-              <Textarea
-                data-testid="input-edit-case-related-accounts"
+              <RelatedAccountsInput
                 value={form.relatedAccounts}
-                onChange={e => setForm({...form, relatedAccounts: e.target.value})}
+                primaryAccount={form.accountNumber}
+                primaryCustomerName={form.customerName}
+                onChange={relatedAccounts => setForm(prev => ({...prev, relatedAccounts}))}
+                testIdPrefix="input-edit-case"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
