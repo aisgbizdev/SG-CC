@@ -33,7 +33,7 @@ const LEGACY_RESOLUTION_LABELS: Record<string, string> = {
   "Mediasi Internal": "Pialang (Musyawarah)",
   "Mediasi BBJ": "BBJ (Mediasi)",
   "Sidang Bappebti": "Bappebti",
-};
+};  
 const normalizeMeetingType = (value?: string | null) =>
   value ? LEGACY_MEETING_LABELS[value] || value : "";
 const normalizeResolutionPath = (value?: string | null) =>
