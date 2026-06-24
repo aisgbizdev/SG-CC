@@ -264,7 +264,7 @@ async function seedBranchesFromMaster() {
   const masterBranches: Record<string, string[]> = {
     SGB: ["BALI", "MAKASSAR", "PALEMBANG", "SEMARANG", "TCC"],
     RFB: ["AXA", "AXA 2", "AXA 3", "BALIKPAPAN", "BANDUNG", "DBS", "JOGYA", "MEDAN", "PALEMBANG", "PEKANBARU", "SEMARANG", "SOLO", "SURABAYA", "SURABAYA 7"],
-    BPF: ["BANDUNG", "BANJARMASIN", "ET", "JAMBI", "LAMPUNG", "MEDAN", "MLNG", "PEKANBARU", "PONTK", "SEMARANG", "SURABAYA"],
+    BPF: ["BANDUNG", "BANJARMASIN", "ET", "JAMBI", "LAMPUNG", "MEDAN", "MLNG", "PEKANBARU", "PONTK", "SEMARANG", "SURABAYA", "PP Jakarta"],
     KPF: ["BALI", "BANDUNG", "JOGYA", "MAKASSAR", "MAREIN", "SEMARANG", "SURABAYA"],
     EWF: ["CIREBON", "CYBER", "MEDAN", "MNDO", "SBY2", "SMG3", "SSC", "SURABAYA 6 (ALBET)", "SURABAYA 6 (M NAIM)"],
   };

@@ -3,3 +3,86 @@ Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
 
 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+Error running reminders: Error: Connection terminated unexpectedly
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
+    at async getAdminsAndOwners (C:\laragon\www\SG-CC\server\reminders.ts:54:20)
+    at async checkStaleCases (C:\laragon\www\SG-CC\server\reminders.ts:109:20)
+    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:201:5)
+ValidationError: The Express 'trust proxy' setting is true, which allows anyone to trivially bypass IP-based rate limiting. See https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/ for more information.
+    at Object.trustProxy (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:324:13)
+    at wrappedValidations.<computed> [as trustProxy] (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:656:22)
+    at Object.keyGenerator (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:758:20)
+    at file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:820:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:801:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+Error running reminders: Error: Connection terminated unexpectedly
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
+    at async hasSimilarNotification (C:\laragon\www\SG-CC\server\reminders.ts:35:20)
+    at async createReminderNotification (C:\laragon\www\SG-CC\server\reminders.ts:65:18)
+    at async checkStaleCases (C:\laragon\www\SG-CC\server\reminders.ts:111:7)
+    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:201:5)
+Error running reminders: Error: getaddrinfo ENOTFOUND ep-odd-rice-a4u9fho9.us-east-1.aws.neon.tech
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
+    at async DatabaseStorage.deleteOldNotifications (C:\laragon\www\SG-CC\server\storage.ts:412:20)
+    at async cleanupOldNotifications (C:\laragon\www\SG-CC\server\reminders.ts:191:19)
+    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:199:5) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'ep-odd-rice-a4u9fho9.us-east-1.aws.neon.tech'
+}
+Error running reminders: Error: Connection terminated unexpectedly
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
+    at async hasSimilarNotification (C:\laragon\www\SG-CC\server\reminders.ts:35:20)
+    at async createReminderNotification (C:\laragon\www\SG-CC\server\reminders.ts:65:18)
+    at async checkStaleCases (C:\laragon\www\SG-CC\server\reminders.ts:111:7)
+    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:201:5)
+ValidationError: The Express 'trust proxy' setting is true, which allows anyone to trivially bypass IP-based rate limiting. See https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/ for more information.
+    at Object.trustProxy (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:324:13)
+    at wrappedValidations.<computed> [as trustProxy] (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:656:22)
+    at Object.keyGenerator (file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:758:20)
+    at file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:820:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///C:/laragon/www/SG-CC/node_modules/express-rate-limit/dist/index.mjs:801:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+Error running reminders: Error: Connection terminated unexpectedly
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
+    at async getAdminsAndOwners (C:\laragon\www\SG-CC\server\reminders.ts:54:20)
+    at async checkStaleCases (C:\laragon\www\SG-CC\server\reminders.ts:109:20)
+    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:201:5)
+Failed to prune sessions: Error: getaddrinfo ENOTFOUND ep-odd-rice-a4u9fho9.us-east-1.aws.neon.tech
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PGStore._asyncQuery (C:\laragon\www\SG-CC\node_modules\connect-pg-simple\index.js:322:21) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'ep-odd-rice-a4u9fho9.us-east-1.aws.neon.tech'
+}
+Error running reminders: Error: getaddrinfo ENOTFOUND ep-odd-rice-a4u9fho9.us-east-1.aws.neon.tech
+    at C:\laragon\www\SG-CC\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\laragon\www\SG-CC\node_modules\src\node-postgres\session.ts:104:19)
+    at async DatabaseStorage.deleteOldNotifications (C:\laragon\www\SG-CC\server\storage.ts:412:20)
+    at async cleanupOldNotifications (C:\laragon\www\SG-CC\server\reminders.ts:191:19)
+    at async runAllReminders (C:\laragon\www\SG-CC\server\reminders.ts:199:5) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'ep-odd-rice-a4u9fho9.us-east-1.aws.neon.tech'
+}

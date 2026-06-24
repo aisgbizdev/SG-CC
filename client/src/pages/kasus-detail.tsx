@@ -149,6 +149,7 @@ type RelatedAccountItem = {
   rootCause?: string;
   latestAction?: string;
   nextAction?: string;
+  complaintAttachments?: string;
 };
 
 function parseRelatedAccounts(value?: string | null, fallbackName = ""): RelatedAccountItem[] {
@@ -342,6 +343,7 @@ export default function KasusDetailPage() {
   const [editing, setEditing] = useState(false);
   const [caseDocumentsEdit, setCaseDocumentsEdit] = useState<CaseDocumentItem[]>([]);
   const [complaintAttachmentsEdit, setComplaintAttachmentsEdit] = useState<CaseDocumentItem[]>([]);
+  const [relatedComplaintAttachmentsEdit, setRelatedComplaintAttachmentsEdit] = useState<CaseDocumentItem[]>([]);
   const [caseDocumentMeta, setCaseDocumentMeta] = useState<Record<string, DocumentMeta>>({});
   const [complaintDocumentMeta, setComplaintDocumentMeta] = useState<Record<string, DocumentMeta>>({});
 
@@ -691,6 +693,7 @@ export default function KasusDetailPage() {
     setMainAccountEditForm();
     setCaseDocumentsEdit(parseCaseDocuments(caseData.caseDocuments));
     setComplaintAttachmentsEdit(parseCaseDocuments(caseData.complaintAttachments));
+    setRelatedComplaintAttachmentsEdit([]);
     setEditing(true);
   };
 
@@ -698,10 +701,14 @@ export default function KasusDetailPage() {
     setEditAccountKey(value);
     if (value === "__main__") {
       setMainAccountEditForm();
+      setRelatedComplaintAttachmentsEdit([]);
       return;
     }
     const account = relatedAccountOptions.find(item => item.accountNumber === value);
-    if (account) setRelatedAccountEditForm(account);
+    if (account) {
+      setRelatedAccountEditForm(account);
+      setRelatedComplaintAttachmentsEdit(parseCaseDocuments(account.complaintAttachments));
+    }
   };
 
   const buildRelatedAccountFromEditForm = (base: RelatedAccountItem): RelatedAccountItem => ({
@@ -728,6 +735,7 @@ export default function KasusDetailPage() {
     rootCause: editForm.rootCause || undefined,
     latestAction: editForm.latestAction || undefined,
     nextAction: editForm.nextAction || undefined,
+    complaintAttachments: relatedComplaintAttachmentsEdit.length > 0 ? JSON.stringify(relatedComplaintAttachmentsEdit) : base.complaintAttachments,
   });
 
   const handleSaveEdit = () => {
@@ -843,6 +851,40 @@ export default function KasusDetailPage() {
 
   const removeComplaintAttachmentEdit = (index: number) => {
     setComplaintAttachmentsEdit(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRelatedComplaintAttachmentUploadEdit = async (stage: string, files: FileList | null, meta: DocumentMeta = {}) => {
+    if (!files || files.length === 0) return;
+    const pending = Array.from(files);
+    const invalid = pending.find(f => !ALLOWED_CASE_DOCUMENT_MIME_TYPES.has(f.type));
+    if (invalid) {
+      toast({ title: "Format tidak didukung", description: `${invalid.name} tidak didukung`, variant: "destructive" });
+      return;
+    }
+    const oversize = pending.find(f => f.size > MAX_CASE_DOCUMENT_SIZE);
+    if (oversize) {
+      toast({ title: "Ukuran terlalu besar", description: `${oversize.name} melebihi 20MB`, variant: "destructive" });
+      return;
+    }
+    try {
+      const encoded = await Promise.all(pending.map(async (file) => ({
+        stage,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        dataUrl: await fileToDataUrl(file),
+        uploadedAt: new Date().toISOString(),
+        ...meta,
+      })));
+      setRelatedComplaintAttachmentsEdit(prev => [...prev, ...encoded]);
+      toast({ title: "Berhasil", description: `${encoded.length} lampiran ditambahkan` });
+    } catch {
+      toast({ title: "Gagal", description: "Gagal membaca lampiran", variant: "destructive" });
+    }
+  };
+
+  const removeRelatedComplaintAttachmentEdit = (index: number) => {
+    setRelatedComplaintAttachmentsEdit(prev => prev.filter((_, i) => i !== index));
   };
   const updateDocumentMeta = (
     setter: Dispatch<SetStateAction<Record<string, DocumentMeta>>>,
@@ -1053,9 +1095,11 @@ export default function KasusDetailPage() {
               </p>
               <div className="space-y-3">
                 {COMPLAINT_DOCUMENT_SECTIONS.map((section) => {
+                  const isMainAcc = editAccountKey === "__main__";
+                  const activeComplaintDocs = isMainAcc ? complaintAttachmentsEdit : relatedComplaintAttachmentsEdit;
                   const currentMeta = complaintDocumentMeta[section.stage] || {};
                   const uploadStage = currentMeta.subStage ? `${section.stage} - ${currentMeta.subStage}` : section.stage;
-                  const docs = complaintAttachmentsEdit.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage || doc.stage.startsWith(`${section.stage} - `));
+                  const docs = activeComplaintDocs.map((doc, idx) => ({ ...doc, idx })).filter((doc) => doc.stage === section.stage || doc.stage.startsWith(`${section.stage} - `));
                   const logs = getDocumentTimelineLogs(section.stage);
                   return (
                     <div key={`detail-complaint-${section.stage}`} className="rounded-md border p-2 space-y-2">
@@ -1064,7 +1108,11 @@ export default function KasusDetailPage() {
                       {renderDocumentMetaFields(section, complaintDocumentMeta, setComplaintDocumentMeta)}
                       <Input type="file" multiple accept={CASE_DOCUMENT_ACCEPT} onChange={async (e) => {
                         const input = e.currentTarget;
-                        await handleComplaintAttachmentUploadEdit(uploadStage, input.files, currentMeta);
+                        if (isMainAcc) {
+                          await handleComplaintAttachmentUploadEdit(uploadStage, input.files, currentMeta);
+                        } else {
+                          await handleRelatedComplaintAttachmentUploadEdit(uploadStage, input.files, currentMeta);
+                        }
                         input.value = "";
                       }} />
                       {docs.map((doc) => (
@@ -1074,7 +1122,7 @@ export default function KasusDetailPage() {
                             <p className="truncate text-muted-foreground">{doc.stage}</p>
                             {documentMetaSummary(doc) && <p className="text-muted-foreground">{documentMetaSummary(doc)}</p>}
                           </div>
-                          <DocumentFileActions doc={doc} onRemove={() => removeComplaintAttachmentEdit(doc.idx)} />
+                          <DocumentFileActions doc={doc} onRemove={() => isMainAcc ? removeComplaintAttachmentEdit(doc.idx) : removeRelatedComplaintAttachmentEdit(doc.idx)} />
                         </div>
                       ))}
                       {logs.length > 0 && (
@@ -1277,32 +1325,37 @@ export default function KasusDetailPage() {
                       <p className="text-sm whitespace-pre-wrap">{String(accountField("complaintChronology", caseData.complaintChronology))}</p>
                     </div>
                   )}
-                  {complaintAttachments.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">Lampiran / Dokumen Pengaduan ({complaintAttachments.length})</p>
-                      </div>
-                      <div className="space-y-2">
-                        {complaintAttachments.map((doc, idx) => (
-                          <div
-                            key={`complaint-download-${doc.fileName}-${idx}`}
-                            className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
-                          >
-                            <p className="truncate font-medium">{doc.fileName}</p>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(doc.dataUrl, "_blank", "noopener,noreferrer")}>
-                                <Eye className="w-4 h-4 text-muted-foreground" />
-                              </Button>
-                              <a href={doc.dataUrl} download={doc.fileName} className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted" title="Download">
-                                <Download className="w-4 h-4 text-muted-foreground" />
-                              </a>
+                  {(() => {
+                    const viewDocs = selectedRelatedAccountItem
+                      ? parseCaseDocuments(selectedRelatedAccountItem.complaintAttachments)
+                      : complaintAttachments;
+                    return viewDocs.length > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">Lampiran / Dokumen Pengaduan ({viewDocs.length})</p>
+                        </div>
+                        <div className="space-y-2">
+                          {viewDocs.map((doc, idx) => (
+                            <div
+                              key={`complaint-download-${doc.fileName}-${idx}`}
+                              className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
+                            >
+                              <p className="truncate font-medium">{doc.fileName}</p>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(doc.dataUrl, "_blank", "noopener,noreferrer")}>
+                                  <Eye className="w-4 h-4 text-muted-foreground" />
+                                </Button>
+                                <a href={doc.dataUrl} download={doc.fileName} className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted" title="Download">
+                                  <Download className="w-4 h-4 text-muted-foreground" />
+                                </a>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null;
+                  })()}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Workflow Stage</p>

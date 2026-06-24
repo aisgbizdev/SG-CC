@@ -14,3 +14,25 @@ Pengumuman aktif: 2
 === VERIFIKASI SELESAI ===
 8:35:34 AM [express] serving on port 5000
 Sistem pengingat otomatis aktif (interval: 1 jam)
+[2m8:54:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
+[2m8:54:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
+[2m9:08:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
+[2m9:08:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
+9:08:13 AM [express] GET /api/auth/me 401 in 6ms
+11:45:25 AM [express] GET /api/auth/me 401 in 3ms
+Auto-cleanup: 21 notifikasi lama (>7 hari) dihapus
+2:39:49 PM [express] GET /api/auth/me 401 in 70ms
+2:40:04 PM [express] POST /api/auth/login 200 in 3865ms
+2:40:07 PM [express] GET /api/action-items 304 in 2511ms
+2:40:08 PM [express] GET /api/companies 304 in 3182ms
+2:40:08 PM [express] GET /api/notifications/unread-count 200 in 3297ms
+2:40:22 PM [express] GET /api/dashboard 200 in 17130ms
+2:40:24 PM [express] GET /api/uncommented-cases 200 in 1638ms
+2:40:31 PM [express] GET /api/cases 200 in 7859ms
+2:40:39 PM [express] GET /api/cases/136/updates 200 in 1880ms
+2:40:41 PM [express] GET /api/cases/136 200 in 3097ms
+2:40:41 PM [express] GET /api/cases/136/meetings 304 in 3345ms
+2:40:41 PM [express] GET /api/comments/case/136 304 in 3368ms
+2:40:41 PM [express] GET /api/notifications/unread-count 304 in 3230ms
+2:40:42 PM [express] GET /api/companies/2/branches 304 in 1121ms
+2:40:50 PM [express] GET /api/users 200 in 12850ms
