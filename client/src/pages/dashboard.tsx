@@ -213,7 +213,7 @@ export default function DashboardPage() {
           <CardContent className="px-4 pb-4">
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
               {(stats?.casesByCompany || []).map((row: any) => (
-                <Link key={row.companyId} href="/kasus">
+                <Link key={row.companyId} href={`/kasus?company=${row.companyId}`}>
                   <div className="rounded-md border p-3 hover-elevate space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-semibold text-sm">{getCompanyName(row.companyId)}</p>

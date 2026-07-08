@@ -321,9 +321,11 @@ export default function KasusPage() {
   const urlParams = new URLSearchParams(searchString);
   const stageParam = urlParams.get("stage");
   const viewParam = urlParams.get("view");
+  const companyParam = urlParams.get("company");
+  const initialCompanyFilter = companyParam && /^\d+$/.test(companyParam) ? companyParam : "all";
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
-  const [companyFilter, setCompanyFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState(initialCompanyFilter);
   const [bucketFilter, setBucketFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState(stageParam === "waiting" ? "waiting" : "all");
   const [viewFilter, setViewFilter] = useState<string | null>(viewParam === "active" ? "active" : viewParam === "closed" ? "closed" : null);
@@ -354,6 +356,10 @@ export default function KasusPage() {
     const params = new URLSearchParams(searchString);
     const stage = params.get("stage");
     const view = params.get("view");
+    const company = params.get("company");
+    setCompanyFilter(company && /^\d+$/.test(company) ? company : "all");
+    setBranchFilter("all");
+    setCurrentPage(1);
     if (stage === "waiting") {
       setStageFilter("waiting");
       setViewFilter(null);
@@ -576,6 +582,13 @@ export default function KasusPage() {
   const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
   const canDeleteCase = (c: Case) => ["superadmin", "owner", "du", "dk", "apuppt"].includes(user?.role || "") || c.createdBy === user?.id;
   const hasSummaryFilters = riskFilter !== "all" || companyFilter !== "all" || bucketFilter !== "all" || resolutionFilter !== "all";
+  const clearCompanyUrlParam = () => {
+    const params = new URLSearchParams(searchString);
+    if (!params.has("company")) return;
+    params.delete("company");
+    const nextSearch = params.toString();
+    setLocation(nextSearch ? `/kasus?${nextSearch}` : "/kasus");
+  };
   const resetSummaryFilters = () => {
     setRiskFilter("all");
     setCompanyFilter("all");
@@ -583,12 +596,15 @@ export default function KasusPage() {
     setBucketFilter("all");
     setResolutionFilter("all");
     setCurrentPage(1);
+    clearCompanyUrlParam();
   };
   const toggleSummaryFilter = (type: "risk" | "company" | "bucket" | "resolution", value: string) => {
     if (type === "risk") setRiskFilter(prev => prev === value ? "all" : value);
     if (type === "company") {
-      setCompanyFilter(prev => prev === value ? "all" : value);
+      const nextCompanyFilter = companyFilter === value ? "all" : value;
+      setCompanyFilter(nextCompanyFilter);
       setBranchFilter("all");
+      if (nextCompanyFilter === "all") clearCompanyUrlParam();
     }
     if (type === "bucket") setBucketFilter(prev => prev === value ? "all" : value);
     if (type === "resolution") setResolutionFilter(prev => prev === value ? "all" : value);

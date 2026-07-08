@@ -6,33 +6,65 @@ Migrasi schema selesai.
 === VERIFIKASI DATA ===
 Users aktif: 20
 Perusahaan aktif: 5
-Kasus aktif: 125
-Aktivitas aktif: 587
+Kasus aktif: 131
+Aktivitas aktif: 725
 Tugas aktif: 6
 Pengumuman aktif: 2
-✓ Data kasus lengkap (125/105)
+✓ Data kasus lengkap (131/105)
 === VERIFIKASI SELESAI ===
-8:35:34 AM [express] serving on port 5000
+7:58:51 AM [express] serving on port 5000
 Sistem pengingat otomatis aktif (interval: 1 jam)
-[2m8:54:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
-[2m8:54:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
-[2m9:08:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
-[2m9:08:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/kasus-detail.tsx, /src/index.css[22m
-9:08:13 AM [express] GET /api/auth/me 401 in 6ms
-11:45:25 AM [express] GET /api/auth/me 401 in 3ms
-Auto-cleanup: 21 notifikasi lama (>7 hari) dihapus
-2:39:49 PM [express] GET /api/auth/me 401 in 70ms
-2:40:04 PM [express] POST /api/auth/login 200 in 3865ms
-2:40:07 PM [express] GET /api/action-items 304 in 2511ms
-2:40:08 PM [express] GET /api/companies 304 in 3182ms
-2:40:08 PM [express] GET /api/notifications/unread-count 200 in 3297ms
-2:40:22 PM [express] GET /api/dashboard 200 in 17130ms
-2:40:24 PM [express] GET /api/uncommented-cases 200 in 1638ms
-2:40:31 PM [express] GET /api/cases 200 in 7859ms
-2:40:39 PM [express] GET /api/cases/136/updates 200 in 1880ms
-2:40:41 PM [express] GET /api/cases/136 200 in 3097ms
-2:40:41 PM [express] GET /api/cases/136/meetings 304 in 3345ms
-2:40:41 PM [express] GET /api/comments/case/136 304 in 3368ms
-2:40:41 PM [express] GET /api/notifications/unread-count 304 in 3230ms
-2:40:42 PM [express] GET /api/companies/2/branches 304 in 1121ms
-2:40:50 PM [express] GET /api/users 200 in 12850ms
+7:59:05 AM [express] GET /api/auth/me 401 in 10ms
+7:59:41 AM [express] GET /api/auth/me 401 in 7ms
+8:00:07 AM [express] POST /api/auth/login 200 in 3586ms
+8:00:08 AM [express] GET /api/notifications/unread-count 200 in 1181ms
+8:00:10 AM [express] GET /api/companies 304 in 3387ms
+8:00:11 AM [express] GET /api/dashboard 200 in 4662ms
+8:00:13 AM [express] GET /api/branches/my-company 200 in 1091ms
+8:00:14 AM [express] GET /api/uncommented-cases 200 in 1676ms
+8:00:14 AM [express] GET /api/cases 200 in 1737ms
+8:00:34 AM [express] GET /api/users 200 in 4068ms
+8:00:35 AM [express] GET /api/cases/134 304 in 4331ms
+8:00:35 AM [express] GET /api/cases/134/meetings 304 in 4491ms
+8:00:35 AM [express] GET /api/comments/case/134 304 in 4596ms
+8:00:35 AM [express] GET /api/cases/134/updates 304 in 4650ms
+8:00:39 AM [express] GET /api/notifications/unread-count 304 in 1120ms
+8:00:46 AM [express] POST /api/auth/logout 200 in 1420ms
+8:00:47 AM [express] GET /api/auth/me 401 in 284ms
+8:01:05 AM [express] POST /api/auth/login 200 in 3429ms
+8:01:06 AM [express] GET /api/notifications/unread-count 200 in 1103ms
+8:01:09 AM [express] GET /api/companies 304 in 3590ms
+8:01:10 AM [express] GET /api/dashboard 200 in 4464ms
+8:01:10 AM [express] GET /api/action-items 304 in 5235ms
+8:01:14 AM [express] GET /api/branches/my-company 200 in 1114ms
+8:01:15 AM [express] GET /api/cases 200 in 1389ms
+8:01:15 AM [express] GET /api/uncommented-cases 200 in 1675ms
+8:01:18 AM [express] GET /api/cases/108 304 in 1095ms
+8:01:18 AM [express] GET /api/cases/108/updates 304 in 1330ms
+8:01:18 AM [express] GET /api/comments/case/108 304 in 1338ms
+8:01:18 AM [express] GET /api/cases/108/meetings 304 in 1365ms
+8:01:19 AM [express] GET /api/users 200 in 2153ms
+8:01:37 AM [express] POST /api/auth/logout 200 in 3023ms
+8:01:37 AM [express] GET /api/auth/me 401 in 285ms
+8:01:38 AM [express] GET /api/notifications/unread-count 304 in 2481ms
+8:01:46 AM [express] POST /api/auth/login 200 in 1701ms
+8:01:47 AM [express] GET /api/notifications/unread-count 200 in 1074ms
+8:01:49 AM [express] GET /api/companies 304 in 2948ms
+8:01:50 AM [express] GET /api/uncommented-cases 200 in 2289ms
+8:01:50 AM [express] GET /api/dashboard 200 in 4290ms
+8:01:50 AM [express] GET /api/action-items 304 in 4312ms
+8:02:01 AM [express] GET /api/cases 200 in 13368ms
+8:02:07 AM [express] GET /api/cases/142 200 in 2880ms
+8:02:08 AM [express] GET /api/companies/4/branches 200 in 1127ms
+8:02:09 AM [express] GET /api/cases/142/updates 200 in 5008ms
+8:02:09 AM [express] GET /api/comments/case/142 200 in 5331ms
+8:02:10 AM [express] GET /api/cases/142/meetings 200 in 5717ms
+8:02:17 AM [express] GET /api/users 200 in 12803ms
+8:02:18 AM [express] GET /api/notifications/unread-count 304 in 1064ms
+8:02:51 AM [express] GET /api/notifications/unread-count 304 in 2643ms
+8:03:24 AM [express] GET /api/notifications/unread-count 304 in 3046ms
+8:03:57 AM [express] GET /api/notifications/unread-count 304 in 2859ms
+8:26:27 AM [express] GET /api/notifications/unread-count 304 in 3334ms
+8:34:22 AM [express] GET /api/notifications/unread-count 200 in 4334ms
+8:35:28 AM [express] GET /api/notifications/unread-count 304 in 4879ms
+8:45:18 AM [express] GET /api/notifications/unread-count 500 in 3726ms
