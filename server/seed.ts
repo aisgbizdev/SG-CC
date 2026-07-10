@@ -29,6 +29,7 @@ async function runMigrations() {
     await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS branch text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS wpb_name text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS manager_name text`);
+    await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS customer_join_date date`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS case_documents text`);
     await db.execute(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS related_accounts text`);
     await db.execute(`
@@ -232,6 +233,7 @@ async function seedCasesFromJson() {
       createdBy: createdBy,
       branch: c.branch || null,
       customerName: c.customer_name || null,
+      customerJoinDate: c.customer_join_date || null,
       accountNumber: c.account_number || null,
       dateReceived: c.date_received || null,
       picMain: c.pic_main || null,

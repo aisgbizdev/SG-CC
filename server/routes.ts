@@ -242,6 +242,7 @@ const caseBodySchema = z.object({
   branch: z.string().optional().nullable(),
   dateReceived: z.string().min(1, "Tanggal terima wajib diisi"),
   customerName: z.string().min(1, "Nama nasabah wajib diisi"),
+  customerJoinDate: z.string().optional().nullable(),
   accountNumber: z.string().optional().nullable(),
   relatedAccounts: z.string().optional().nullable(),
   picMain: z.string().optional().nullable(),
@@ -843,6 +844,7 @@ export async function registerRoutes(
       };
       const timelineLabels: Record<string, string> = {
         customerName: "Nama Nasabah",
+        customerJoinDate: "Tanggal Bergabung Nasabah",
         accountNumber: "No. Akun",
         relatedAccounts: "Akun Terkait",
         branch: "Cabang",

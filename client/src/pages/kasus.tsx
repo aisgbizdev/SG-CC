@@ -396,7 +396,7 @@ export default function KasusPage() {
 
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
-    customerName: "", accountNumber: "", relatedAccounts: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
+    customerName: "", customerJoinDate: "", accountNumber: "", relatedAccounts: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Pemeriksaan Internal", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
@@ -449,6 +449,7 @@ export default function KasusPage() {
       progress: Number(form.progress),
       targetDate: form.targetDate || null,
       accountNumber: form.accountNumber || null,
+      customerJoinDate: form.customerJoinDate || null,
       relatedAccounts: form.relatedAccounts || null,
       branch: form.branch || null,
       picMain: form.picMain || null,
@@ -771,7 +772,7 @@ export default function KasusPage() {
 
   const resetForm = () => setForm({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
-    customerName: "", accountNumber: "", relatedAccounts: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
+    customerName: "", customerJoinDate: "", accountNumber: "", relatedAccounts: "", picMain: "", bucket: "Pemeriksaan Pengaduan Baru",
     status: "Open", summary: "", complaintChronology: "", riskLevel: "Medium", priority: "Medium",
     workflowStage: "Pemeriksaan Internal", progress: 0, targetDate: "",
     companyId: user?.companyId?.toString() || "",
@@ -793,6 +794,7 @@ export default function KasusPage() {
       branch: c.branch || "",
       dateReceived: c.dateReceived,
       customerName: c.customerName,
+      customerJoinDate: c.customerJoinDate || "",
       accountNumber: c.accountNumber || "",
       relatedAccounts: c.relatedAccounts || "",
       picMain: c.picMain || "",
@@ -827,6 +829,7 @@ export default function KasusPage() {
       data: {
         caseCode: form.caseCode,
         customerName: form.customerName,
+        customerJoinDate: form.customerJoinDate || null,
         summary: form.summary,
         complaintChronology: form.complaintChronology || null,
         branch: form.branch || null,
@@ -905,6 +908,7 @@ export default function KasusPage() {
             columns={[
               { header: "Kode Kasus", key: "caseCode", width: 15 },
               { header: "Nasabah", key: "customerName", width: 20 },
+              { header: "Tanggal Bergabung Nasabah", key: "customerJoinDate", width: 18 },
               { header: "PT", key: "_company", width: 10 },
               { header: "Cabang", key: "branch", width: 15 },
               { header: "Risk", key: "riskLevel", width: 8 },
@@ -953,6 +957,12 @@ export default function KasusPage() {
                     <Label>Nama Nasabah *</Label>
                     <Input data-testid="input-case-customer" placeholder="Nama nasabah" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
                   </div>
+                  <div className="space-y-1.5">
+                    <Label>Tanggal Bergabung Nasabah</Label>
+                    <Input data-testid="input-case-customer-join-date" type="date" value={form.customerJoinDate} onChange={e => setForm({...form, customerJoinDate: e.target.value})} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>No. Akun</Label>
                     <Input data-testid="input-case-account" placeholder="Nomor akun" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className={SOFT_PLACEHOLDER_CLASS} />
@@ -1348,6 +1358,9 @@ export default function KasusPage() {
                       <StatusBadge status={c.status} />
                     </div>
                     <p className="text-sm">{c.customerName}</p>
+                    {c.customerJoinDate && (
+                      <p className="text-xs text-muted-foreground">Bergabung: {c.customerJoinDate}</p>
+                    )}
                     {c.relatedAccounts && (
                       <div className="flex flex-wrap gap-1" data-testid={`text-related-accounts-${c.id}`}>
                         {parseRelatedAccounts(c.relatedAccounts, c.customerName).slice(0, 4).map(account => (
@@ -1495,6 +1508,12 @@ export default function KasusPage() {
                 <Label>Nama Nasabah *</Label>
                 <Input data-testid="input-edit-case-customer" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} />
               </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal Bergabung Nasabah</Label>
+                <Input data-testid="input-edit-case-customer-join-date" type="date" value={form.customerJoinDate} onChange={e => setForm({...form, customerJoinDate: e.target.value})} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>No. Akun</Label>
                 <Input data-testid="input-edit-case-account" value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} />

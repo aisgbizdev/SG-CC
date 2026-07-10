@@ -129,6 +129,7 @@ function parseCaseDocuments(raw: unknown): CaseDocumentItem[] {
 type RelatedAccountItem = {
   accountNumber: string;
   customerName: string;
+  customerJoinDate?: string;
   branch?: string;
   picMain?: string;
   branchHead?: string;
@@ -486,6 +487,7 @@ export default function KasusDetailPage() {
     if (!caseData) return "";
     const fieldLabels: Array<[keyof Case, string]> = [
       ["customerName", "Nama Nasabah"],
+      ["customerJoinDate", "Tanggal Bergabung Nasabah"],
       ["accountNumber", "No. Akun"],
       ["relatedAccounts", "Akun Terkait"],
       ["branch", "Cabang"],
@@ -635,6 +637,7 @@ export default function KasusDetailPage() {
   const setMainAccountEditForm = () => {
     setEditForm({
       customerName: caseData.customerName,
+      customerJoinDate: caseData.customerJoinDate,
       accountNumber: caseData.accountNumber,
       relatedAccounts: caseData.relatedAccounts,
       branch: caseData.branch,
@@ -663,6 +666,7 @@ export default function KasusDetailPage() {
   const setRelatedAccountEditForm = (account: RelatedAccountItem) => {
     setEditForm({
       customerName: account.customerName || caseData.customerName,
+      customerJoinDate: account.customerJoinDate || caseData.customerJoinDate,
       accountNumber: account.accountNumber,
       relatedAccounts: caseData.relatedAccounts,
       branch: account.branch || caseData.branch,
@@ -715,6 +719,7 @@ export default function KasusDetailPage() {
     ...base,
     accountNumber: String(editForm.accountNumber || "").trim(),
     customerName: String(editForm.customerName || caseData.customerName || "").trim(),
+    customerJoinDate: editForm.customerJoinDate || undefined,
     branch: editForm.branch || undefined,
     picMain: editForm.picMain || undefined,
     branchHead: editForm.branchHead || undefined,
@@ -740,7 +745,13 @@ export default function KasusDetailPage() {
 
   const handleSaveEdit = () => {
     if (editAccountKey === "__main__") {
-      updateMutation.mutate({ ...editForm, complaintAttachments: complaintAttachmentsEdit, caseDocuments: caseDocumentsEdit, timelineNote: buildDocumentMetaTimelineNote() || null });
+      updateMutation.mutate({
+        ...editForm,
+        customerJoinDate: editForm.customerJoinDate || null,
+        complaintAttachments: complaintAttachmentsEdit,
+        caseDocuments: caseDocumentsEdit,
+        timelineNote: buildDocumentMetaTimelineNote() || null,
+      });
       return;
     }
     const relatedAccounts = parseRelatedAccounts(caseData.relatedAccounts, caseData.customerName);
@@ -1019,6 +1030,12 @@ export default function KasusDetailPage() {
                 <Label>Nama Nasabah</Label>
                 <Input data-testid="input-edit-customer-name" value={editForm.customerName || ""} onChange={e => setEditForm({...editForm, customerName: e.target.value})} />
               </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal Bergabung Nasabah</Label>
+                <Input data-testid="input-edit-customer-join-date" type="date" value={editForm.customerJoinDate || ""} onChange={e => setEditForm({...editForm, customerJoinDate: e.target.value})} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>No. Akun</Label>
                 <Input data-testid="input-edit-account-number" value={editForm.accountNumber || ""} onChange={e => setEditForm({...editForm, accountNumber: e.target.value})} />
@@ -1372,6 +1389,10 @@ export default function KasusDetailPage() {
                     <div>
                       <p className="text-xs text-muted-foreground">No. Akun</p>
                       <p className="text-sm">{caseData.accountNumber || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tanggal Bergabung Nasabah</p>
+                      <p className="text-sm">{String(accountField("customerJoinDate", caseData.customerJoinDate || "-"))}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Akun Terkait Dipilih</p>
