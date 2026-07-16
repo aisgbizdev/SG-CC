@@ -1,4 +1,4 @@
-import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
+import { useState, useEffect, useMemo, type Dispatch, type SetStateAction } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -393,6 +393,22 @@ export default function KasusPage() {
   });
 
   const availableBranches = isDuDk ? myBranches : (companyFilter !== "all" ? companyBranches : undefined);
+  const branchFilterOptions = useMemo(() => Array.from(new Set([
+    ...((availableBranches || []).map(branch => branch.name)),
+    ...((cases || [])
+      .filter(c => companyFilter === "all" || c.companyId?.toString() === companyFilter)
+      .map(c => c.branch || "")
+      .filter(Boolean)),
+  ])).sort((a, b) => a.localeCompare(b)), [availableBranches, cases, companyFilter]);
+  const branchFilterDisabled = isAdmin && companyFilter === "all";
+
+  useEffect(() => {
+    if (branchFilter === "all") return;
+    if (branchFilterDisabled || !branchFilterOptions.includes(branchFilter)) {
+      setBranchFilter("all");
+      setCurrentPage(1);
+    }
+  }, [branchFilter, branchFilterDisabled, branchFilterOptions]);
 
   const [form, setForm] = useState({
     caseCode: "", branch: "", dateReceived: new Date().toISOString().split("T")[0],
@@ -582,7 +598,7 @@ export default function KasusPage() {
   const getCompanyName = (id: number) => companiesData?.find(c => c.id === id)?.code || "-";
   const canCreate = ["du", "dk", "cbo", "ceo", "kepatuhan_cabang", "apuppt"].includes(user?.role || "");
   const canDeleteCase = (c: Case) => ["superadmin", "owner", "du", "dk", "apuppt"].includes(user?.role || "") || c.createdBy === user?.id;
-  const hasSummaryFilters = riskFilter !== "all" || companyFilter !== "all" || bucketFilter !== "all" || resolutionFilter !== "all";
+  const hasSummaryFilters = riskFilter !== "all" || companyFilter !== "all" || branchFilter !== "all" || bucketFilter !== "all" || resolutionFilter !== "all";
   const clearCompanyUrlParam = () => {
     const params = new URLSearchParams(searchString);
     if (!params.has("company")) return;
@@ -1196,6 +1212,45 @@ export default function KasusPage() {
           </Select>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+          {isAdmin && (
+            <Select
+              value={companyFilter}
+              onValueChange={value => {
+                setCompanyFilter(value);
+                setBranchFilter("all");
+                setCurrentPage(1);
+                if (value === "all") clearCompanyUrlParam();
+              }}
+            >
+              <SelectTrigger data-testid="select-filter-company" className="h-9 col-span-2 sm:col-span-1 sm:w-44">
+                <SelectValue placeholder="Semua PT" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua PT</SelectItem>
+                {companiesData?.map(company => (
+                  <SelectItem key={company.id} value={company.id.toString()}>{company.code}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Select
+            value={branchFilter}
+            onValueChange={value => {
+              setBranchFilter(value);
+              setCurrentPage(1);
+            }}
+            disabled={branchFilterDisabled || branchFilterOptions.length === 0}
+          >
+            <SelectTrigger data-testid="select-filter-branch" className="h-9 col-span-2 sm:col-span-1 sm:w-52">
+              <SelectValue placeholder={branchFilterDisabled ? "Pilih PT dulu" : "Semua cabang"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Cabang</SelectItem>
+              {branchFilterOptions.map(branch => (
+                <SelectItem key={branch} value={branch}>{branch}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant={uncommentedFilter ? "default" : "outline"}
             size="sm"
