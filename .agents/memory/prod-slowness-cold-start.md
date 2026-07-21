@@ -15,3 +15,5 @@ Other perf decisions to keep:
 - Splash screen hides on React mount (`window.__hideSplash` from main.tsx), 5s fallback — don't reintroduce fixed delays.
 
 Known issue: `.env` with real secrets (DATABASE_URL, SESSION_SECRET, JWT_SECRET, VAPID private key) is tracked in git despite .gitignore. Needs `git rm --cached` (destructive — user/task approval) + secret rotation.
+
+Follow-up (round 2): prod dashboard still took 13s after cold start. Cause: 17 parallel queries vs pg Pool max 10 + default idleTimeoutMillis 10s dropping Neon connections constantly + Neon compute resume. Fix: dashboard counts consolidated to single-per-table `count(*) FILTER` queries (17→8 round trips), pool tuned (idleTimeoutMillis 4min, keepAlive). Remaining floor: autoscale wake + Neon resume on first hit after idle — only Reserved VM removes it.
