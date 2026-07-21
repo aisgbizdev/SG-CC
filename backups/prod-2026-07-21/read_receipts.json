@@ -1,0 +1,114 @@
+[
+ {
+  "id": 1,
+  "entity_type": "announcement",
+  "entity_id": 5,
+  "user_id": 1,
+  "read_at": "2026-04-03T17:17:36.657354"
+ },
+ {
+  "id": 2,
+  "entity_type": "announcement",
+  "entity_id": 3,
+  "user_id": 8,
+  "read_at": "2026-04-06T05:14:02.735973"
+ },
+ {
+  "id": 3,
+  "entity_type": "task",
+  "entity_id": 7,
+  "user_id": 12,
+  "read_at": "2026-04-06T08:22:28.157229"
+ },
+ {
+  "id": 4,
+  "entity_type": "announcement",
+  "entity_id": 4,
+  "user_id": 8,
+  "read_at": "2026-04-07T09:23:56.803631"
+ },
+ {
+  "id": 5,
+  "entity_type": "task",
+  "entity_id": 2,
+  "user_id": 8,
+  "read_at": "2026-04-10T02:26:39.502138"
+ },
+ {
+  "id": 6,
+  "entity_type": "task",
+  "entity_id": 8,
+  "user_id": 8,
+  "read_at": "2026-04-13T07:06:21.901925"
+ },
+ {
+  "id": 7,
+  "entity_type": "task",
+  "entity_id": 4,
+  "user_id": 14,
+  "read_at": "2026-04-14T03:38:17.957162"
+ },
+ {
+  "id": 8,
+  "entity_type": "task",
+  "entity_id": 3,
+  "user_id": 9,
+  "read_at": "2026-05-04T08:32:38.719173"
+ },
+ {
+  "id": 9,
+  "entity_type": "announcement",
+  "entity_id": 4,
+  "user_id": 11,
+  "read_at": "2026-05-26T01:00:26.251527"
+ },
+ {
+  "id": 10,
+  "entity_type": "announcement",
+  "entity_id": 3,
+  "user_id": 11,
+  "read_at": "2026-05-26T01:00:26.434841"
+ },
+ {
+  "id": 11,
+  "entity_type": "task",
+  "entity_id": 6,
+  "user_id": 11,
+  "read_at": "2026-05-27T14:20:25.33497"
+ },
+ {
+  "id": 12,
+  "entity_type": "announcement",
+  "entity_id": 4,
+  "user_id": 18,
+  "read_at": "2026-06-05T03:33:58.111408"
+ },
+ {
+  "id": 13,
+  "entity_type": "announcement",
+  "entity_id": 4,
+  "user_id": 9,
+  "read_at": "2026-06-11T09:58:53.271576"
+ },
+ {
+  "id": 14,
+  "entity_type": "announcement",
+  "entity_id": 3,
+  "user_id": 18,
+  "read_at": "2026-06-17T01:56:23.733028"
+ },
+ {
+  "id": 15,
+  "entity_type": "announcement",
+  "entity_id": 4,
+  "user_id": 16,
+  "read_at": "2026-06-17T07:26:28.860089"
+ },
+ {
+  "id": 16,
+  "entity_type": "announcement",
+  "entity_id": 4,
+  "user_id": 19,
+  "read_at": "2026-07-14T07:30:30.632221"
+ }
+]

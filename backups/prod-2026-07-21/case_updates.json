@@ -1,0 +1,1142 @@
+[
+ {
+  "id": 1,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Klarifikasi sepihak dan tanggapan tertulis oleh perusahaan kepada BBJ",
+  "new_stage": "Open",
+  "new_progress": 50,
+  "created_at": "2026-03-10T14:24:30.3639",
+  "new_status": null
+ },
+ {
+  "id": 2,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Penyampaian Klarifikasi tertulis kepada Bappebti pada tgl 29 April 2026",
+  "new_stage": "Proses Regulator",
+  "new_progress": 100,
+  "created_at": "2026-05-16T03:19:26.65171",
+  "new_status": null
+ },
+ {
+  "id": 3,
+  "case_id": 108,
+  "created_by": 10,
+  "content": "TES, MUSYAWARAH ULANG",
+  "new_stage": "Open",
+  "new_progress": 30,
+  "created_at": "2026-06-03T08:11:19.405257",
+  "new_status": null
+ },
+ {
+  "id": 4,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "testing",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T01:37:15.999118",
+  "new_status": null
+ },
+ {
+  "id": 5,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus disimpan tanpa perubahan field.",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T02:53:33.718831",
+  "new_status": null
+ },
+ {
+  "id": 6,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-06-03",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T02:58:34.99617",
+  "new_status": null
+ },
+ {
+  "id": 7,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 0 file -> 1 file: jadwal bulan juni.pdf (stage: Pialang (Musyawarah); tanggal: 2026-06-03)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-06-03",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T03:24:35.053494",
+  "new_status": null
+ },
+ {
+  "id": 8,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 1 file: jadwal bulan juni.pdf (stage: Pialang (Musyawarah); tanggal: 2026-06-03) -> 1 file: jadwal bulan juni.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; tanggal: 2026-06-02)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-06-03\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Tanggal: 2026-06-02",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T03:29:28.842267",
+  "new_status": null
+ },
+ {
+  "id": 9,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 1 file: jadwal bulan juni.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; tanggal: 2026-06-02) -> 2 file: jadwal bulan juni.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; tanggal: 2026-06-02), jadwal bulan juni.pdf (stage: Pialang (Musyawarah); tanggal: 2026-06-03, 2026-06-05; catatan: kedua)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-06-03, 2026-06-05; Catatan: kedua\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Tanggal: 2026-06-02",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T03:31:05.238367",
+  "new_status": null
+ },
+ {
+  "id": 10,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 2 file: jadwal bulan juni.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; tanggal: 2026-06-02), jadwal bulan juni.pdf (stage: Pialang (Musyawarah); tanggal: 2026-06-03, 2026-06-05; catatan: kedua) -> 0 file",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T03:42:39.251743",
+  "new_status": null
+ },
+ {
+  "id": 11,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-06-03",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-04T06:58:27.96701",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 12,
+  "case_id": 133,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Target Penyelesaian: 2026-06-05 -> 2026-06-08",
+  "new_stage": "Review",
+  "new_progress": 95,
+  "created_at": "2026-06-06T02:06:22.024957",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 13,
+  "case_id": 134,
+  "created_by": 8,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 0 file -> 2 file: Undangan Mediasi ke-2 SGB-Willem.pdf (stage: BBJ (Mediasi); tanggal: 2026-04-29; catatan: Perusahaan belum menawarkan kompensasi, meminta agar proses berjalan sampai ke pemeriksaan Bappebti sehingga tidak te...), Undangan ke 2 Bpk Willem 16 apr 2026.pdf (stage: Pialang (Musyawarah); tanggal: 2026-04-16; catatan: Belum ada penawaran dari pihak Perusahaan dan meminta klarifikasi pengaduan dari nasabah sehingga tidak terjadi kesep...)\n- Workflow Stage: Open -> Pemeriksaan Internal\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-04-16; Catatan: Belum ada penawaran dari pihak Perusahaan dan meminta klarifikasi pengaduan dari nasaba...\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-04-29; Catatan: Perusahaan belum menawarkan kompensasi, meminta agar proses berjalan sampai ke pemeriks...",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 30,
+  "created_at": "2026-06-08T08:41:30.999137",
+  "new_status": "Open"
+ },
+ {
+  "id": 14,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Penyampaian Klarifikasi kepada Bappebti pada tanggal 28 April 2026",
+  "new_stage": "Proses Regulator",
+  "new_progress": null,
+  "created_at": "2026-06-08T08:50:54.51855",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 15,
+  "case_id": 132,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Target Penyelesaian: 2026-06-05 -> 2026-06-12",
+  "new_stage": "Negosiasi",
+  "new_progress": 95,
+  "created_at": "2026-06-08T08:57:08.497136",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 16,
+  "case_id": 133,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Target Penyelesaian: 2026-06-08 -> 2026-06-12",
+  "new_stage": "Review",
+  "new_progress": 95,
+  "created_at": "2026-06-08T08:57:34.927893",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 17,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update metadata dokumen:\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-06-08",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-08T09:19:07.30943",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 18,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update metadata dokumen:\n- Dokumen Pengaduan Nasabah / Kepolisian: Tanggal: 2026-06-02",
+  "new_stage": "Review",
+  "new_progress": 20,
+  "created_at": "2026-06-08T09:19:58.276235",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 19,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus:\n- Progress: 20% -> 30%",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-08T09:27:44.07961",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 20,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update metadata dokumen:\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-06-02",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-08T09:55:09.147072",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 21,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pengadilan: Proses: Putusan Pengadilan; Tanggal: 2026-06-11; Catatan: selesai",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-11T09:54:13.891513",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 22,
+  "case_id": 137,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Dugaan ada beberapa transaksi dilakukan WPB, atas keterangan nasabah dan WPB\n- Root Cause: - -> Nasabah transaksi dilakukan oleh anaknya sendiri dan WPB\n- Permintaan Nasabah: - -> Pengembalian keseluruhan dana\n- Penawaran Perusahaan: - -> Tidak ada\n- Tindakan Terakhir: - -> Setelah Mediasi di BBJ, Permintaan Klarifikasi tertulis oleh Bappebti\n- Tindak Lanjut: - -> Menanggapi tertulis atas permintaan klarifikasi Bappebti\n- Jalur Penyelesaian: Pialang (Musyawarah) -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T03:50:16.907352",
+  "new_status": "Open"
+ },
+ {
+  "id": 23,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Kepala Cabang: - -> Andi\n- Jalur Penyelesaian: Mediasi BBJ -> BBJ (Mediasi)",
+  "new_stage": "Proses Regulator",
+  "new_progress": 100,
+  "created_at": "2026-06-12T03:53:53.064252",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 24,
+  "case_id": 139,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Cabang: Marein Jakarta -> MAREIN",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 0,
+  "created_at": "2026-06-12T03:55:15.282057",
+  "new_status": "Open"
+ },
+ {
+  "id": 25,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Cabang: Semarang -> SEMARANG",
+  "new_stage": "Proses Regulator",
+  "new_progress": 100,
+  "created_at": "2026-06-12T06:32:47.16974",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 26,
+  "case_id": 137,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Cabang: Marein Jakarta -> MAREIN",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T06:34:09.662084",
+  "new_status": "Open"
+ },
+ {
+  "id": 27,
+  "case_id": 138,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Cabang: Marein Jakarta -> MAREIN",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 0,
+  "created_at": "2026-06-12T06:36:32.990587",
+  "new_status": "Open"
+ },
+ {
+  "id": 28,
+  "case_id": 137,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T07:03:10.036149",
+  "new_status": "Closed"
+ },
+ {
+  "id": 29,
+  "case_id": 139,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Inti Pengaduan: Mengaku Loss 800 juta di 5 akun atas arahan transaksi marketing. dan merasa awam dalam trading, tidak ada pelatihan. -> Mengaku Loss 800 juta di 5 akun atas arahan transaksi marketing, dan merasa awam dalam trading, tidak ada pelatihan.\n- Workflow Stage: Pemeriksaan Internal -> Closed",
+  "new_stage": "Closed",
+  "new_progress": 0,
+  "created_at": "2026-06-12T07:06:07.43755",
+  "new_status": "Closed"
+ },
+ {
+  "id": 30,
+  "case_id": 139,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Progress: 0% -> 100%",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T07:11:23.706397",
+  "new_status": "Closed"
+ },
+ {
+  "id": 31,
+  "case_id": 138,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Transaksi oleh Maketing\n- Root Cause: - -> Transaksi dibantu pihak marketing yang merupakan teman nasabah, dan mengalami kerugian\n- Permintaan Nasabah: - -> Pengembalian 80 Persen dari Netmargin\n- Penawaran Perusahaan: - -> Sekitar 30 persen\n- Tindakan Terakhir: - -> Putusan Pengadilan Banding\n- Tindak Lanjut: - -> Atas hasil putusan tingkat banding, menguatkan putusan pengadilan tingkat pertama",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T08:58:31.313285",
+  "new_status": "Closed"
+ },
+ {
+  "id": 32,
+  "case_id": 132,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Bucket: Proses Negosiasi / Mediasi -> Closed\n- Status: In Progress -> Closed\n- Kronologi Pengaduan Nasabah: - -> Terlampir Kronologi by attachment\n- Dokumen Pengaduan Nasabah: 0 file -> 2 file: Kronologi atas nama brigita.pdf (stage: Kronologi Pengaduan Nasabah), Kronologi Cabang.pdf (stage: Kronologi Pengaduan Nasabah)\n- Workflow Stage: Negosiasi -> Closed\n- Progress: 95% -> 100%\n- Penawaran Perusahaan: Kompensasi pada RJ di Kepolisian Polda Jateng sekitar $15.000 -> Kompensasi pada RJ dengan kesepakatan perdamaian di Kepolisian Polda Jateng sekitar $15.000\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Perkembangan Laporan Polisi; Tanggal: 2026-06-12; Catatan: Perkara Nasabah setuju Restorative Justice, dengan kesepakatan perdamaian",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T09:46:45.431715",
+  "new_status": "Closed"
+ },
+ {
+  "id": 33,
+  "case_id": 133,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Kepala Cabang: - -> Andi\n- Bucket: Tidak Disetujui untuk Perdamaian -> Closed\n- Kronologi Pengaduan Nasabah: - -> Kronologi terlampir\n- Dokumen Pengaduan Nasabah: 0 file -> 1 file: Kronologi Rizky.pdf (stage: Kronologi Pengaduan Nasabah)\n- Workflow Stage: Review -> Closed\n- Progress: 95% -> 100%\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Hasil LP; Catatan: Hasil Laporan Polisi Sp2lid",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T09:50:59.252523",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 34,
+  "case_id": 133,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: In Progress -> Closed\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Hasil LP; Catatan: Hasil Laporan Polisi Sp2lid",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T09:51:20.619674",
+  "new_status": "Closed"
+ },
+ {
+  "id": 35,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Target Penyelesaian: 2025-03-23 -> 2025-06-30",
+  "new_stage": "Proses Regulator",
+  "new_progress": 100,
+  "created_at": "2026-06-12T10:53:44.465455",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 36,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Bucket: Pemeriksaan Pengaduan Baru -> Proses Regulator",
+  "new_stage": "Proses Regulator",
+  "new_progress": 100,
+  "created_at": "2026-06-12T10:55:46.287679",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 37,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Target Penyelesaian: 2025-06-30 -> 2026-06-30",
+  "new_stage": "Proses Regulator",
+  "new_progress": 100,
+  "created_at": "2026-06-12T10:58:02.221566",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 38,
+  "case_id": 139,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Pialang (Musyawarah) -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T11:01:00.052441",
+  "new_status": "Closed"
+ },
+ {
+  "id": 39,
+  "case_id": 138,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Pialang (Musyawarah) -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-12T11:02:35.861855",
+  "new_status": "Closed"
+ },
+ {
+  "id": 40,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Akun Terkait: - -> dx000001111",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-17T02:59:45.45537",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 41,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: DUMMY -> DUMMYyyy",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-17T09:27:08.771308",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 42,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus disimpan tanpa perubahan field.",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-18T03:04:04.600338",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 43,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Akun Terkait: dx000001111 -> dx000001111 1234567890",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-18T03:04:25.072251",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 44,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Akun Terkait: dx000001111 1234567890 -> [{\"accountNumber\":\"dx000001111\",\"customerName\":\"DUMMY\",\"branch\":\"YOGYA\",\"picMain\":\"DUMMY\",\"branchHead\":\"DUMMY\",\"wpbNa...\n\nUpdate data akun terkait dx000001111",
+  "new_stage": null,
+  "new_progress": null,
+  "created_at": "2026-06-18T03:23:37.575296",
+  "new_status": null
+ },
+ {
+  "id": 45,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Akun Terkait: [{\"accountNumber\":\"dx000001111\",\"customerName\":\"DUMMY\",\"branch\":\"YOGYA\",\"picMain\":\"DUMMY\",\"branchHead\":\"DUMMY\",\"wpbNa... -> [{\"accountNumber\":\"1234567890\",\"customerName\":\"DUMMY\"}]",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-18T03:41:48.624036",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 46,
+  "case_id": 140,
+  "created_by": 15,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Target Penyelesaian: - -> 2025-09-18\n- Permintaan Nasabah: - -> Permintaan 50 persen dari margin\n- Penawaran Perusahaan: - -> penawaran 15 persen dari margin\n- Tindakan Terakhir: - -> Sudah dilaksanakan perdamaian dengan pihak nasabah\n- Tindak Lanjut: - -> sudah dilaksanakan perdamaian dengan pihak nasabah\n- Dokumen Nasabah: 0 file -> 1 file: PERDAMAIAN INA MARTINI.pdf (stage: Pertemuan Calon Nasabah)",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-19T01:28:27.483514",
+  "new_status": "Closed"
+ },
+ {
+  "id": 47,
+  "case_id": 140,
+  "created_by": 15,
+  "content": "Update data kasus:\n- Dokumen Nasabah: 1 file: PERDAMAIAN INA MARTINI.pdf (stage: Pertemuan Calon Nasabah) -> 2 file: PERDAMAIAN INA MARTINI.pdf (stage: Pertemuan Calon Nasabah), Dokumentasi Perdamaian Ina Martini.docx (stage: Pertemuan Calon Nasabah)",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-19T01:29:35.932749",
+  "new_status": "Closed"
+ },
+ {
+  "id": 48,
+  "case_id": 141,
+  "created_by": 15,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Permintaan Nasabah: - -> Permintaan nasabah 50 persen dari margin\n- Penawaran Perusahaan: - -> Penawaran telah di negosiasikan sebesar 20 persen dari margin\n- Dokumen Nasabah: 0 file -> 1 file: FOTO PERDAMAIAN.jpeg (stage: Pertemuan Calon Nasabah)",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-19T01:41:59.399208",
+  "new_status": "Closed"
+ },
+ {
+  "id": 49,
+  "case_id": 136,
+  "created_by": 1,
+  "content": "Update data kasus disimpan tanpa perubahan field.",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-19T04:00:36.093719",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 50,
+  "case_id": 122,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Status: Open -> In Progress\n- Kronologi Pengaduan Nasabah: - -> Nasabah tidak mendapatkan informasi terkait mekanisme transaksi dan biaya-biaya transaksi (biaya inap).\n- Dokumen Pengaduan Nasabah: 0 file -> 2 file: Kronologi Pitry Agustin.pdf (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah Pitry Agustin.pdf (stage: Pialang (Musyawarah); tanggal: 2026-01-26; catatan: Tidak mencapai kesepakatan)\n- Workflow Stage: Open -> Pemeriksaan Internal\n- Permintaan Nasabah: - -> pengembalian dana 100%\n- Penawaran Perusahaan: - -> tidak ada\n- Manager: - -> Riana Ayu Ningsih\n- Jalur Penyelesaian: Sidang Bappebti -> Bappebti\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-01-26; Catatan: Tidak mencapai kesepakatan\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-04-07; Catatan: Tidak mencapai kesepakatan",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 50,
+  "created_at": "2026-06-19T09:31:45.289719",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 51,
+  "case_id": 51,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Kronologi Pengaduan Nasabah: - -> Nurmawati sudah memaksa dan membujuk Nasabah Ritawati Saragih untuk bergabung menjadi nasabah dengan iming-iming prof...\n- Dokumen Pengaduan Nasabah: 0 file -> 2 file: Pengaduan Ritawati Saragih.pdf (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah an Ritawati Saragih.pdf (stage: Pialang (Musyawarah); tanggal: 2025-12-19; catatan: tidak mencapai kesepakatan)\n- Tindakan Terakhir: Belum mediasi BBJ -> Mediasi BBJ\n- Jalur Penyelesaian: Mediasi BBJ -> Bappebti\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2025-12-19; Catatan: tidak mencapai kesepakatan\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-03-03; Catatan: tidak mencapai kesepakatan",
+  "new_stage": "Proses Regulator",
+  "new_progress": 50,
+  "created_at": "2026-06-19T09:53:16.998899",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 52,
+  "case_id": 7,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Bucket: Proses Negosiasi / Mediasi -> Closed\n- Status: In Progress -> Closed\n- Workflow Stage: Negosiasi -> Closed\n- Progress: 75% -> 100%\n- Tindak Lanjut: Budget disetujui Kacab maksimal 50 Juta, sudah ditawarkan sampai 50 Jt (masih nego), Nasabah meminta 50 % = Rp 250 Jt -> Budget disetujui Kacab maksimal 50 Juta, sudah ditawarkan sampai 50 Jt (masih nego), Nasabah meminta 50 % = Rp 250 Jt...\n- Jalur Penyelesaian: Sidang Bappebti -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-22T10:11:59.108832",
+  "new_status": "Closed"
+ },
+ {
+  "id": 53,
+  "case_id": 5,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Bucket: Proses Negosiasi / Mediasi -> Closed\n- Status: In Progress -> Closed\n- Workflow Stage: Negosiasi -> Closed\n- Progress: 70% -> 100%\n- Jalur Penyelesaian: Sidang Bappebti -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-22T10:13:58.229144",
+  "new_status": "Closed"
+ },
+ {
+  "id": 54,
+  "case_id": 136,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Akun Terkait: [{\"accountNumber\":\"1234567890\",\"customerName\":\"DUMMY\"}] -> [{\"accountNumber\":\"12345678910\",\"customerName\":\"DUMMY\"}]",
+  "new_stage": "Review",
+  "new_progress": 30,
+  "created_at": "2026-06-23T02:09:19.888766",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 55,
+  "case_id": 142,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T03:06:33.152252",
+  "new_status": "Open"
+ },
+ {
+  "id": 56,
+  "case_id": 142,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T03:07:35.565157",
+  "new_status": "Closed"
+ },
+ {
+  "id": 57,
+  "case_id": 143,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Regol dan transaksi dilakukan marketing a.n Riki Ferdinanta (resign) dan Imam Santoso (suami Nasabah sebagai marketing)\n- Root Cause: - -> Regol dan Transaksi dilakukan oleh Marketing, Nasabah tidak mengerti risiko transaksi\n- Permintaan Nasabah: - -> Pengembalian seluruh Dana\n- Penawaran Perusahaan: - -> Tidak ada penawaran\n- Tindakan Terakhir: - -> Negosiasi untuk musyawarah, namun nasabah menolak, kecuali ada penawaran dana yang akan dikembalikan.\n- Tindak Lanjut: - -> Tindak Lanjut disampaikan ke Bappebti pada tgl 23 Juni 2023 atas Surat Peringatan Bappebti yang diterima tgl 16 Mei 2...",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T03:30:53.315122",
+  "new_status": "Closed"
+ },
+ {
+  "id": 58,
+  "case_id": 142,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Temuan: - -> Regol dan simulasi oleh marketing. Transaksi dilakukan oleh Marketing (sebagian besar) dan Nasabah\n- Root Cause: - -> Regol dan transaksi oleh Marketing, Reward Nasabah berupa mobil yang tidak terealisasi\n- Permintaan Nasabah: - -> Pengembalian sekitar 80% dari Dana nasabah yang masuk\n- Penawaran Perusahaan: - -> Pengembalian Komisi Nasabah\n- Tindakan Terakhir: - -> Negosiasi dan pertemuan terakhir dengan Nasabah oleh Dirut KPF pada tgl 28 Oktober 2022, Nasabah tetap meminta 80% pe...\n- Tindak Lanjut: - -> Melaporkan tindak lanjut dan perkembangan kepada Bappebti pada tgl 24 Juni 2022 Takedown Pengaduan online",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T03:53:57.11176",
+  "new_status": "Closed"
+ },
+ {
+  "id": 59,
+  "case_id": 144,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Regol dibantu Marketing. Transaksi dilakukan Nasabah secara mandiri.\n- Root Cause: - -> Tidak ada bukti dokumentasi penjelasan di awal oleh WPB kepada caon Nasabah, dan regol dibantu oleh marketing\n- Permintaan Nasabah: - -> Pengembalian seluruh dana naasabah\n- Penawaran Perusahaan: - -> Tidak ada penawaran\n- Tindakan Terakhir: - -> setelah menerima surat peringatan dari bappebti, menghubungi nasabah pada tanggal 6 Juni 2024, untuk negosiasi musyaw...\n- Tindak Lanjut: - -> Menyampaikan Laporan tindaklanjut ke Bappebti pada tanggal 12 Juni 2024 atas dikenakannya surat peringatan tanggal 29...",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T04:10:55.623565",
+  "new_status": "Closed"
+ },
+ {
+  "id": 60,
+  "case_id": 145,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Transaksi dilakukan oleh nasabah, suami dan anaknya Nasabah yang bukan marketing di KPF Jogja. Regol dibantu marketin...\n- Root Cause: - -> Meminta konpensasi dikarenakan Nasabah merasa tidak ada penjelasan risiko transaksi di awal sebelum bergabung dan imi...\n- Permintaan Nasabah: - -> Pengembalian keseluruhan dana\n- Penawaran Perusahaan: - -> Tidak ada penawaran\n- Tindakan Terakhir: - -> Pelaksanaan Mediasi lanjutan Nasabah di kantor KPF Yogya pada tgl 2 Februari 2025 Jam 16.00 WIB yg dihadiri Nasabah d...\n- Tindak Lanjut: - -> Melaporkan hasil pelaksanaan mediasi lanjutan kepada Bappebti melalui surat tgl 4 Februari 2025. Take Down Pengaduan ...",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T04:45:25.240911",
+  "new_status": "Closed"
+ },
+ {
+  "id": 61,
+  "case_id": 146,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Transaksi dilakukan oleh Marketing yang merupakan anak Nasabah\n- Root Cause: - -> Nasabah tidak ada penjelasan edukasi di awal sebelum bergabung, dan tidak mengetahui jika dana nasabah telah habis. n...\n- Permintaan Nasabah: - -> Pengembalian keseluruhan dana\n- Penawaran Perusahaan: - -> tidak ada penawaran\n- Tindakan Terakhir: - -> Musyawarah tgl 5 Mei 2023 yang dihadiri Nasabah dan kuasa hukumnya tidak tercapai kesepakatan dan tidak bersedia tand...\n- Tindak Lanjut: - -> DISPOSISI PENGADUAN DI BBJ (info dari BBJ, Nasabah tidak merespon/menanggapi agenda Mediasi). Takedown pengaduan onli...",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T05:02:57.992878",
+  "new_status": "Closed"
+ },
+ {
+  "id": 62,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%\n- Temuan: - -> Arahan transaksi dari marketing, WPB (Agi Bismantara) sesuai bukti chat WA. Dugaan adanya dana pinjaman (atas laporan...\n- Root Cause: - -> Arahan transaksi kepada nasabah, nasabah berprofesi guru dengan sumber dananya yang digunakan berasal dari tabungan p...\n- Permintaan Nasabah: - -> Keseluruhan dana Nasabah sekitar Net $23.415\n- Penawaran Perusahaan: - -> Rp.30 Juta\n- Tindakan Terakhir: - -> Kesepakatan Perdamaian pada tanggal 3 Oktober 2025\n- Tindak Lanjut: - -> Melaporkan Hasil kesepakatan Perdamaian ke Bappebti tertanggal 6 Oktober 2025",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:46:57.800754",
+  "new_status": "Closed"
+ },
+ {
+  "id": 63,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Akun Terkait: [{\"accountNumber\":\"RSNA8049\",\"customerName\":\"DESAK GEDE SUMASTINI.ST\"}] -> [{\"accountNumber\":\"RSNA8049\",\"customerName\":\"DESAK GEDE SUMASTINI.ST\",\"branch\":\"BALI\",\"picMain\":\"Ni Ketut Suryani\",\"b...\n\nUpdate data akun terkait RSNA8049: DESAK GEDE SUMASTINI.ST",
+  "new_stage": null,
+  "new_progress": null,
+  "created_at": "2026-06-24T07:50:10.13086",
+  "new_status": null
+ },
+ {
+  "id": 64,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data akun terkait RSNA8049: DESAK GEDE SUMASTINI.ST",
+  "new_stage": null,
+  "new_progress": null,
+  "created_at": "2026-06-24T07:51:08.050921",
+  "new_status": null
+ },
+ {
+  "id": 65,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:54:13.102534",
+  "new_status": "Closed"
+ },
+ {
+  "id": 66,
+  "case_id": 146,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:54:52.333086",
+  "new_status": "Closed"
+ },
+ {
+  "id": 67,
+  "case_id": 146,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Bappebti -> BBJ (Mediasi)",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:55:41.617977",
+  "new_status": "Closed"
+ },
+ {
+  "id": 68,
+  "case_id": 145,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:56:18.979592",
+  "new_status": "Closed"
+ },
+ {
+  "id": 69,
+  "case_id": 144,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:56:46.664398",
+  "new_status": "Closed"
+ },
+ {
+  "id": 70,
+  "case_id": 143,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:57:17.638462",
+  "new_status": "Closed"
+ },
+ {
+  "id": 71,
+  "case_id": 142,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-24T07:58:20.06602",
+  "new_status": "Closed"
+ },
+ {
+  "id": 72,
+  "case_id": 149,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Bucket: Pemeriksaan Pengaduan Baru -> Proses Regulator\n- Progress: 0% -> 50%",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 50,
+  "created_at": "2026-06-25T10:42:21.386141",
+  "new_status": "Open"
+ },
+ {
+  "id": 73,
+  "case_id": 150,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Progress: 0% -> 50%",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 50,
+  "created_at": "2026-06-25T10:50:25.278143",
+  "new_status": "Open"
+ },
+ {
+  "id": 74,
+  "case_id": 148,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Closed\n- Progress: 0% -> 100%",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-25T10:53:04.988804",
+  "new_status": "Closed"
+ },
+ {
+  "id": 75,
+  "case_id": 151,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 50%",
+  "new_stage": "Proses Regulator",
+  "new_progress": 50,
+  "created_at": "2026-06-25T10:57:03.392924",
+  "new_status": "Open"
+ },
+ {
+  "id": 97,
+  "case_id": 107,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Tindakan Terakhir: KLARIFIKASI DENGAN KUASA HUKUM NASABAH -> KLARIFIKASI DENGAN KUASA HUKUM NASABAH TERKAIT SOMASI\n- Tindak Lanjut: MUSYAWARAH KEMBALI SECARA LANGSUNG DENGAN NASABAH -> MUSYAWARAH PIALANG KEMBALI SECARA LANGSUNG DENGAN NASABAH\n- Jalur Penyelesaian: Pialang (Musyawarah) -> Bappebti",
+  "new_stage": "Negosiasi",
+  "new_progress": 76,
+  "created_at": "2026-07-17T04:32:48.052075",
+  "new_status": "Open"
+ },
+ {
+  "id": 76,
+  "case_id": 116,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Kepala Cabang: - -> Ani Sofiarni\n- Bucket: Proses Regulator -> Closed\n- Status: In Progress -> Closed\n- Dokumen Pengaduan Nasabah: 0 file -> 1 file: SP 244  PT BPF (Kasno).pdf (stage: Bappebti; tanggal: 2026-05-18; catatan: Bahwa Marketing PT Bestprofit Futures atas nama Sdr. Wevie Sarah dan Sdr. Yogi Dermawan telah berhubungan langsung de...)\n- Workflow Stage: Open -> Closed\n- Progress: 50% -> 90%\n- Temuan: - -> SP Bappebti = Bahwa Marketing PT Bestprofit Futures atas nama Sdr. Wevie Sarah dan Sdr. Yogi Dermawan telah berhubung...\n- Manager: - -> Yogi Dermawan\n- Jalur Penyelesaian: Sidang Bappebti -> Bappebti\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Bappebti: Tanggal: 2026-05-18; Catatan: Bahwa Marketing PT Bestprofit Futures atas nama Sdr. Wevie Sarah dan Sdr. Yogi Dermawan...",
+  "new_stage": "Closed",
+  "new_progress": 90,
+  "created_at": "2026-06-25T11:03:17.904116",
+  "new_status": "Closed"
+ },
+ {
+  "id": 77,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 1 file: Kronologi Pengaduan Nasabah.pdf (stage: Kronologi Pengaduan Nasabah) -> 7 file: Kronologi Pengaduan Nasabah.pdf (stage: Kronologi Pengaduan Nasabah), 0925-155-Surat Tanggapan Pengaduan Nasabah pelapor a.n Desak Gede Sumastini_Rev1.pdf (stage: BBJ (Mediasi); tanggal: 2025-09-12, 2025-09-25; catatan: Klarifikasi tgl 12 Sept 2025 di BBJ Mediasi 25 Sept 2025 di kantor cabang Bali), Permintaan Tanggapan Desak Gede.pdf (stage: BBJ (Mediasi); tanggal: 2025-09-12, 2025-09-25; catatan: Klarifikasi tgl 12 Sept 2025 di BBJ Mediasi 25 Sept 2025 di kantor cabang Bali), Undangan Mediasi KPF-Desak Gede.pdf (stage: BBJ (Mediasi); tanggal: 2025-09-12, 2025-09-25; catatan: Klarifikasi tgl 12 Sept 2025 di BBJ Mediasi 25 Sept 2025 di kantor cabang Bali), Berita Acara Musyawarah.pdf (stage: Pialang (Musyawarah); tanggal: 2025-08-04; catatan: Tidak Sepakat), Dokumen Perdamaian RSNA8048 & RSNA8049 (Desak Gede Sumastini)-1.pdf (stage: Pialang (Musyawarah); tanggal: 2025-08-04; catatan: 8 April 2025 Tidak ada kesepakatan para pihak), Poto.jpeg (stage: Pialang (Musyawarah); tanggal: 2025-08-04; catatan: 8 April 2025 Tidak ada kesepakatan para pihak)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2025-08-04; Catatan: 8 April 2025 Tidak ada kesepakatan para pihak 3 Oktober 2025, Kesepakan perdamaian\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2025-09-12, 2025-09-25; Catatan: Klarifikasi tgl 12 Sept 2025 di BBJ Mediasi 25 Sept 2025 di kantor cabang Bali",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-26T07:49:47.750072",
+  "new_status": "Closed"
+ },
+ {
+  "id": 78,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: Bappebti -> BBJ (Mediasi)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2025-08-04; Catatan: 8 April 2025 Tidak ada kesepakatan para pihak 3 Oktober 2025, Kesepakan perdamaian\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2025-09-12, 2025-09-25; Catatan: Klarifikasi tgl 12 Sept 2025 di BBJ Mediasi 25 Sept 2025 di kantor cabang Bali",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-06-26T07:52:19.456271",
+  "new_status": "Closed"
+ },
+ {
+  "id": 79,
+  "case_id": 147,
+  "created_by": 13,
+  "content": "Update data akun terkait RSNA8049: DESAK GEDE SUMASTINI.ST",
+  "new_stage": null,
+  "new_progress": null,
+  "created_at": "2026-06-26T07:55:45.303757",
+  "new_status": null
+ },
+ {
+  "id": 80,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Kronologi Pengaduan Nasabah: - -> kronologi terlampir\n- Dokumen Pengaduan Nasabah: 0 file -> 7 file: KRONOLOGI PENGADUAN NASABAH Moh Sulkhan.pdf (stage: Kronologi Pengaduan Nasabah), Bertia Acara Musyawarah RPNC1068.pdf (stage: Pialang (Musyawarah); tanggal: 2026-02-13; catatan: Musyawarah tidak tercapai kesepakatan), 0326-071-Surat tanggapan BBJ Moh Sulkhan.pdf (stage: BBJ (Mediasi); tanggal: 2026-03-09, 2026-03-12; catatan: Klarifikasi Sepihak tgl 09 Maret 2026 di Kantor BBJ Mediasi By Zoom tanggal 12 maret 2026, Tidak tercapai kesepakatan.), Permintaan Tanggapan Moh Sulkhan.pdf (stage: BBJ (Mediasi); tanggal: 2026-03-09, 2026-03-12; catatan: Klarifikasi Sepihak tgl 09 Maret 2026 di Kantor BBJ Mediasi By Zoom tanggal 12 maret 2026, Tidak tercapai kesepakatan.), Undangan Mediasi KPF-Moh Sulkhan.pdf (stage: BBJ (Mediasi); tanggal: 2026-03-09, 2026-03-12; catatan: Klarifikasi Sepihak tgl 09 Maret 2026 di Kantor BBJ Mediasi By Zoom tanggal 12 maret 2026, Tidak tercapai kesepakatan.), 0426-118-KLARIFIKASI BAPPEBTI PENGADUAN M SULKHAN- KPF SMRG.pdf (stage: Bappebti - Klarifikasi Pengaduan; proses: Klarifikasi Pengaduan; tanggal: 2026-04-28; catatan: Permintaan Klarifikasi Pengaduan dari Bappebti telah disampaikan tanggapan pada tgl 28 April 2026), UD.01.02 96 BAPPEBI.2 SD 4 2026 Klarifikasi atas Pengaduan Nasabah PT Kontakperkasa.pdf (stage: Bappebti - Klarifikasi Pengaduan; proses: Klarifikasi Pengaduan; tanggal: 2026-04-28; catatan: Permintaan Klarifikasi Pengaduan dari Bappebti telah disampaikan tanggapan pada tgl 28 April 2026)\n- Progress: 100% -> 80%\n- Target Penyelesaian: 2026-06-30 -> 2026-07-30\n- Temuan: - -> Perangkat Yang digunakan Nasabah untuk Regol milik Marketing (Manager), Regol dan keseluruhan transaksi oleh Nasabah.\n- Root Cause: - -> Nasabah diberikan edukasi singkat terkait penjelasan mekanisme transaksi terutama cara manajemen risiko stop loss dan...\n- Permintaan Nasabah: - -> Saat Mediasi di Bursa meminta Pengembalian keseluruhan dana\n- Penawaran Perusahaan: - -> Tidak ada penawaran dari Perusahaan\n- Tindakan Terakhir: - -> Tanggapan tertulis atas klarifikasi yang diminta oleh Bappebti\n- Tindak Lanjut: - -> Menunggu informasi selanjutnya dari Bappebti\n- Dokumen Nasabah: 0 file -> 1 file: FKN 16 Des 2025.pdf (stage: Pertemuan Calon Nasabah)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-02-13; Catatan: Musyawarah tidak tercapai kesepakatan\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-03-09, 2026-03-12; Catatan: Klarifikasi Sepihak tgl 09 Maret 2026 di Kantor BBJ Mediasi By Zoom tanggal 12 maret 20...\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Klarifikasi Pengaduan; Tanggal: 2026-04-28; Catatan: Permintaan Klarifikasi Pengaduan dari Bappebti telah disampaikan tanggapan pada tgl 28 ...\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2025-12-16",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-06-26T09:37:39.151602",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 81,
+  "case_id": 110,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Jalur Penyelesaian: BBJ (Mediasi) -> Bappebti\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-02-13; Catatan: Musyawarah tidak tercapai kesepakatan\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-03-09, 2026-03-12; Catatan: Klarifikasi Sepihak tgl 09 Maret 2026 di Kantor BBJ Mediasi By Zoom tanggal 12 maret 20...\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Klarifikasi Pengaduan; Tanggal: 2026-04-28; Catatan: Permintaan Klarifikasi Pengaduan dari Bappebti telah disampaikan tanggapan pada tgl 28 ...\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2025-12-16",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-06-26T11:23:40.848338",
+  "new_status": "In Progress"
+ },
+ {
+  "id": 82,
+  "case_id": 137,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Tindak Lanjut: Menanggapi tertulis atas permintaan klarifikasi Bappebti -> Menanggapi tertulis atas permintaan klarifikasi Bappebti. Take Dow Pegaduan Online",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-07-06T01:31:13.492185",
+  "new_status": "Closed"
+ },
+ {
+  "id": 83,
+  "case_id": 137,
+  "created_by": 13,
+  "content": "Update data kasus:\n- Tindak Lanjut: Menanggapi tertulis atas permintaan klarifikasi Bappebti. Take Dow Pegaduan Online -> Menanggapi tertulis atas permintaan klarifikasi Bappebti. Take Down Pegaduan Online",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-07-06T01:32:12.756164",
+  "new_status": "Closed"
+ },
+ {
+  "id": 84,
+  "case_id": 117,
+  "created_by": 12,
+  "content": "Update data kasus:\n- Bucket: Proses Regulator -> Closed\n- Status: In Progress -> Closed\n- Dokumen Pengaduan Nasabah: 0 file -> 1 file: SURAT PERDAMAIAN DAN TANDA TERIMA KOHARI (RABF2833).pdf (stage: Bappebti)\n- Workflow Stage: Open -> Closed\n- Progress: 50% -> 100%\n- Jalur Penyelesaian: Sidang Bappebti -> Bappebti",
+  "new_stage": "Closed",
+  "new_progress": 100,
+  "created_at": "2026-07-10T09:51:39.387205",
+  "new_status": "Closed"
+ },
+ {
+  "id": 85,
+  "case_id": 108,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Tanggal Bergabung Nasabah: - -> 2025-12-22\n- Marketing: - -> TANWINNA SHAFHANY\n- Kepala Cabang: - -> ROBEN ANTONI PURBA\n- Bucket: Pemeriksaan Pengaduan Baru -> Proses Regulator\n- Inti Pengaduan: BELUM DIPERIKSA, BELUM ADA GUGATAN. BELUM ADA PENAWARAN, BUKTI REKAMAN PRA REGOL, PENGISIAN REGOL, SIMULASI DEMO, VER... -> NASABAH TIDAK TERIMA DENGAN KERUGIAN BESAR DAN CEPAT\n- Dokumen Pengaduan Nasabah: 0 file -> 5 file: KRONOLOGIS PENGADUAN NASABAH AN ABDUL BAHUD SIAGIAN RPY94593.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara RPY94593 - ABDUL BAHUD RFB MEDAN.pdf (stage: Pialang (Musyawarah); tanggal: 2026-02-12; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENOLAK PENAWARAN FEE TRANSAKSI), 0526-tanggapan Abdul Bahud.pdf (stage: BBJ (Mediasi); tanggal: 2026-06-11; catatan: TIDAK TERJADI KESEPAKATAN), Permintaan Tanggapan BBJ - Abdul.pdf (stage: BBJ (Mediasi); tanggal: 2026-06-11; catatan: TIDAK TERJADI KESEPAKATAN), Undangan Mediasi RFB-Abdul.pdf (stage: BBJ (Mediasi); tanggal: 2026-06-11; catatan: TIDAK TERJADI KESEPAKATAN)\n- Risk Level: High -> Low\n- Workflow Stage: Open -> Proses Regulator\n- Progress: 30% -> 80%\n- Temuan: - -> TIDAK ADA, REGOL DAN TRANSAKSI DILAKUKAN OLEH NASABAH\n- Root Cause: - -> WPB KURANG TRANSPARAN MENGENAI PENJELASAN RESIKO KEPADA NASABAH\n- Permintaan Nasabah: - -> NASABAH TIDAK MEMINTA 100% NAMUN MEMINTA PENAWARAN YANG BESAR DARI PERUSAHAAN UNTUK MENUTUPI KERUGIAN DAN HUTANG\n- Penawaran Perusahaan: - -> FEE TRANSAKSI\n- Tindakan Terakhir: - -> 17 JUNI 2026 MUSYAWARAH DENGAN NASABAH, TIDAK TERJADI KESEPAKATAN\n- Tindak Lanjut: - -> MENUNGGU PROSES BAPPEBTI\n- WPB: - -> SAFITRI\n- Manager: - -> SAFITRI\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti\n- Dokumen Nasabah: 0 file -> 7 file: REKAP VIDEO PENERIMAAN NASABAH.jpeg (stage: Edukasi Pra Regol), REKAP VIDEO PENERIMAAN NASABAH.jpeg (stage: Registrasi Online), REKAP VIDEO PENERIMAAN NASABAH.jpeg (stage: Verifikasi WPB), Simulasi demo RPY94593.pdf (stage: Simulasi Transaksi), REKAP VIDEO PENERIMAAN NASABAH.jpeg (stage: Aktivasi Akun), RPY94593 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RPY94593 TRADE HISTORY.xlsx (stage: Riwayat Transaksi)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-02-12, 2026-06-17; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENOLAK PENAWARAN FEE TRANSAKSI\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-06-11; Catatan: TIDAK TERJADI KESEPAKATAN\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: BELUM ADA PERMINTAAN KLARIFIKASI\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2025-12-22\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2025-10-22 s.d 2025-12-22\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2025-12-22\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2025-12-22\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2025-12-23; Approval Kacab: 2025-12-23; Approval Kepatuhan: 2025-12-23\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2025-12-23\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2025-12-23 s.d 2026-01-02\n- Dokumen Nasabah / Topup dan WD: Catatan: 3x TU DENGAN RINCIAN SEBAGAI BERIKUT: 1. 300JT TGL 24 DESEMBER 2025 2. 100JT TGL 25 DES...",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-14T05:45:31.595685",
+  "new_status": "Open"
+ },
+ {
+  "id": 86,
+  "case_id": 107,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Tanggal Bergabung Nasabah: - -> 2025-08-08\n- Marketing: - -> LENAH LESTARI\n- Kepala Cabang: - -> LISA USFIE HARAHAP\n- Bucket: Pemeriksaan Pengaduan Baru -> Proses Negosiasi / Mediasi\n- Inti Pengaduan: BELUM DIPERIKSA, BELUM ADA GUGATAN. BELUM ADA PENAWARAN, BUKTI REKAMAN PRA REGOL, PENGISIAN REGOL, SIMULASI DEMO, VER... -> NASABAH MERASA DITIPU KARENA HASIL TRANSAKSI TIDAK SESUAI HARAPAN\n- Dokumen Pengaduan Nasabah: 0 file -> 4 file: KRONOLOGIS & PENANGANAN PENGADUAN  MARIAM (1).docx (stage: Kronologi Pengaduan Nasabah), BERITA ACARA MUSYAWARAH - MARIAM.pdf (stage: Pialang (Musyawarah); tanggal: 2026-01-26; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MEMINTA PENGEMBALIAN DANA SECARA KESELURUHAN DARI YANG SUDAH DISETORKAN), Undangan Mediasi ke-2 RFB- Mariam.pdf (stage: BBJ (Mediasi); tanggal: 2026-05-08; catatan: TIDAK TERJADI KESEPAKATAN, TUNTUTAN NASABAH MASIH SAMA SEPERTI KETIKA MUSYAWARAH), 0626-Surat Tanggapan Bappebti atas pengaduan Nasabah RFB DBS an Maryam.pdf (stage: Bappebti - Klarifikasi Pengaduan; proses: Klarifikasi Pengaduan; tanggal: 2026-05-20; catatan: SURAT SUDAH DITANGGAPI)\n- Workflow Stage: Open -> Negosiasi\n- Progress: 10% -> 76%\n- Temuan: - -> 1 TIM MARKETINFG DAN WPB MELAKUKAN TRANSAKSI TERHADAP AKUN NASABAH\n- Root Cause: - -> PENGAWASAN KANTOR CABANG DAN KEJAR TARGET OLEH TIM MARKETING\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% YANG SUDAH DISETORKAN\n- Penawaran Perusahaan: - -> FEE TRANSAKSI\n- Tindakan Terakhir: - -> KLARIFIKASI DENGAN KUASA HUKUM NASABAH\n- Tindak Lanjut: - -> MUSYAWARAH KEMBALI SECARA LANGSUNG DENGAN NASABAH\n- WPB: - -> ARY SETYAWAN ALI\n- Manager: - -> HAFIZ\n- Jalur Penyelesaian: Belum Ditentukan -> Pialang (Musyawarah)\n- Dokumen Nasabah: 0 file -> 12 file: FKN - RDNJ3353.pdf (stage: Pertemuan Calon Nasabah), SS PRA REGOL.PNG (stage: Edukasi Pra Regol), TRADE HISTORY MARIAM BBA10081.pdf (stage: Simulasi Transaksi), SS REGOL.PNG (stage: Registrasi Online), SS VERIF WPB.PNG (stage: Verifikasi WPB), OR NA ACC RDNJ3353 08082025.pdf (stage: Penyetoran Margin Awal), SS AKTIVASI KACAB.PNG (stage: Aktivasi Akun), RDNJ3353 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RDNJ3353 TRADE HISTORY.xlsx (stage: Riwayat Transaksi), OR TOPUP ACC RDNJ3353 03092025.pdf (stage: Topup dan WD), OR TOPUP ACC RDNJ3353 04092025.pdf (stage: Topup dan WD), OR TOPUP ACC RDNJ3353 20082025.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-01-26; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MEMINTA PENGEMBALIAN DANA SECARA KESELURUHAN D...\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2026-05-08; Catatan: TIDAK TERJADI KESEPAKATAN, TUNTUTAN NASABAH MASIH SAMA SEPERTI KETIKA MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Klarifikasi Pengaduan; Tanggal: 2026-05-20; Catatan: SURAT SUDAH DITANGGAPI\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2025-08-08, 2025-08-21, 2025-09-15, 2025-09-17, 2025-09-22, 2025-10-13, 2025-10-28, 2025-12-04\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2025-08-08\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2025-08-08 s.d 2025-08-08\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2025-08-08\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2025-08-08\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2025-08-08\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2025-08-08; Approval Kacab: 2025-08-08; Approval Kepatuhan: 2025-08-08\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2025-08-08\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2025-08-13 s.d 2026-01-15\n- Dokumen Nasabah / Topup dan WD: Catatan: 3x TU DENGAN RINCIAN : 1. 200JT TGL 20 AGUSTUS 2025 2. 100JT TGL 3 SEPTEMBER 2025 3. 10...",
+  "new_stage": "Negosiasi",
+  "new_progress": 76,
+  "created_at": "2026-07-14T09:57:27.872398",
+  "new_status": "Open"
+ },
+ {
+  "id": 87,
+  "case_id": 92,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Tanggal Bergabung Nasabah: - -> 2022-02-03\n- Marketing: - -> BENY YULIANTO (RESIGN)\n- Kepala Cabang: - -> PITRUS LEM\n- Status: Menunggu Pemeriksaan -> Open\n- Inti Pengaduan: SEDANG PENJADWALAN PEMERIKSAAN, BELUM ADA GUGATAN. TIDAK ADA PENAWARAN KEPADA NASABAH, NASABAH MENGINGINKAN 100%. Mar... -> NASABAH SULIT WD DAN TIDAK TERIMA ATAS KERUGIAN TRANSAKSI\n- Dokumen Pengaduan Nasabah: 0 file -> 7 file: 1. KRONOLOGI PENANGANAN PERKARA NASABAH AN.SRI REJEKI (RLAL1026).docx (stage: Kronologi Pengaduan Nasabah), BERITA ACARA MUSYAWARAH SRI REJEKI RLAL1026 tanggal 11 JULI 2024.pdf (stage: Pialang (Musyawarah); tanggal: ), 253-TANGGAPAN BBJ ATAS SRI REZEKI.pdf (stage: BBJ (Mediasi); tanggal: 2024-08-08; catatan: TIDAK TERJADI KESEPAKATAN, TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), Permintaan Tanggapan BBJ - Sri Rejeki.pdf (stage: BBJ (Mediasi); tanggal: 2024-08-08; catatan: TIDAK TERJADI KESEPAKATAN, TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), Undangan MediasiR Rifan - Sri.pdf (stage: BBJ (Mediasi); tanggal: 2024-08-08; catatan: TIDAK TERJADI KESEPAKATAN, TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), 0924-KLAIRIFIKASI BPPTI AN. SRI REZEKI.pdf (stage: Bappebti - Klarifikasi Pengaduan; proses: Klarifikasi Pengaduan; tanggal: 2024-09-13; catatan: SUDAH DITANGGAPI), LAPORAN PENGADUAN POLISI -  RLAL1026 An SRI REJEKI.pdf (stage: Kepolisian - Laporan Polisi; proses: Laporan Polisi; tanggal: 2022-07-20)\n- Risk Level: Medium -> Low\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 30% -> 82%\n- Temuan: - -> ARAHAN TRANSAKSI MARKETING\n- Root Cause: - -> PERAN WPB TIDAK AKTIF KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> TIDAK ADA PENAWARAN\n- Tindakan Terakhir: - -> MEDIASI BBJ\n- Tindak Lanjut: - -> MENUNGGU PEMERIKSAAN BAPPEBTI\n- WPB: - -> VICTOR SENO ISMAIL (RESIGN)\n- Manager: - -> VICTOR SENO ISMAIL (RESIGN)\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti\n- Dokumen Nasabah: 0 file -> 10 file: SIMULASI DEMO RLAL1026.png (stage: Simulasi Transaksi), RLAL1026 Aplikasi Perjanjian Online Nasabah.pdf (stage: Registrasi Online), OR & slip  NA RLAL1026 3 FEB 2022.png (stage: Penyetoran Margin Awal), RLAL1026 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RLAL1026 STATEMEN (030222-200722).pdf (stage: Riwayat Transaksi), 1. OR & SLIP TOP UP RLAL1026 2 MAR 2022.pdf (stage: Topup dan WD), 2. OR & SLIP TOP UP RLAL1026 TGL 28 MAR 2022.pdf (stage: Topup dan WD), 3. OR & SLIP TOP UP RLAL1026 TGL 17 MEI 2022.pdf (stage: Topup dan WD), 4. OR & SLIP TOP UP RLAL1026 TGL 25 MEI 2022.pdf (stage: Topup dan WD), 5. OR & SLIP TOP UP RLAL1026 TGL 18 JULI 2022.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2024-07-11; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN MARGIN 100%\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2024-08-08; Catatan: TIDAK TERJADI KESEPAKATAN, TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Klarifikasi Pengaduan; Tanggal: 2024-09-13; Catatan: SUDAH DITANGGAPI\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Laporan Polisi; Tanggal: 2022-07-20; Catatan: PANGGILAN POLISI TERHADAP 1 TIM MARKETING DAN TIDAK ADA LANJUTAN DARI PIHAK POLRESTA SU...\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2022-01-28\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2022-01-28 s.d 2022-01-28\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2022-01-28\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2022-02-03\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2022-02-03\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2022-02-03; Approval Kacab: 2022-02-03; Approval Kepatuhan: 2022-02-03\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2022-02-03\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2022-02-03 s.d 2022-07-20\n- Dokumen Nasabah / Topup dan WD: Catatan: 5x TU, TIDAK PERNAH WD",
+  "new_stage": "Proses Regulator",
+  "new_progress": 82,
+  "created_at": "2026-07-14T11:20:05.815739",
+  "new_status": "Open"
+ },
+ {
+  "id": 88,
+  "case_id": 99,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Tanggal Bergabung Nasabah: - -> 2026-01-26\n- Marketing: - -> SANDRA AURELLIA\n- Kepala Cabang: - -> NURMAN MAULANA\n- Bucket: Pemeriksaan Pengaduan Baru -> Proses Regulator\n- Inti Pengaduan: BELUM DIPERIKSA, BELUM ADA GUGATAN. BELUM ADA PENAWARAN KARENA MARGIN BESAR, BUKTI REKAMAN PRA REGOL, PENGISIAN REGOL... -> NASABAH MERASA DITIPU KARENA HASIL TRANSAKSI TIDAK SESUAI HARAPAN. Margin: Rp 3.190.000.000\n- Dokumen Pengaduan Nasabah: 0 file -> 4 file: KRONOLOGIS PENANGANAN PENGADUAN RAQL7937 IR. MOH. NUR ADIB.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah a.n Ir. Moh. Nur Adib (1).pdf (stage: Pialang (Musyawarah); tanggal: 2026-03-03; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), PANGGILAN POLISI IRSAN (1).pdf (stage: Kepolisian - BAP; proses: BAP; tanggal: 2026-05-15; catatan: PANGGILAN PERTAMA KEPADA IRSAN DAN SANDRA AURELLIA), PANGGILAN POLISI SANDRA AURELLIA (1).pdf (stage: Kepolisian - BAP; proses: BAP; tanggal: 2026-05-15; catatan: PANGGILAN PERTAMA KEPADA IRSAN DAN SANDRA AURELLIA)\n- Risk Level: High -> Medium\n- Workflow Stage: Open -> Proses Regulator\n- Progress: 10% -> 70%\n- Temuan: - -> ARAHAN TRANSAKSI MARKETING\n- Root Cause: - -> PERAN WPB TIDAK AKTIF KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> TIDAK ADA PENAWARAN\n- Tindakan Terakhir: - -> MENGHADIRI LAPORAN POLISI\n- Tindak Lanjut: - -> MENUNGGU PROSES REGULATOR\n- WPB: - -> IRFANSYAH BASUNI\n- Manager: - -> IRGI\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti\n- Dokumen Nasabah: 0 file -> 23 file: SS PRA REGOL.jpg (stage: Edukasi Pra Regol), DEMO BBH10501.pdf (stage: Simulasi Transaksi), SS REGOL.jpg (stage: Registrasi Online), SS VERIFIKASI WPB.jpg (stage: Verifikasi WPB), OR.jpg (stage: Penyetoran Margin Awal), SLIP PENYETORAN AWAL.jpg (stage: Penyetoran Margin Awal), SS AKTIVASI.jpg (stage: Aktivasi Akun), RAQL7937 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAQL7937 TRADE HISTORY.xlsx (stage: Riwayat Transaksi), RAQL7937 1.jpeg (stage: Topup dan WD), RAQL7937 2.jpeg (stage: Topup dan WD), RAQL7937 080126.jpeg (stage: Topup dan WD), RAQL7937 090126.jpeg (stage: Topup dan WD), RAQL7937 130126 2.jpeg (stage: Topup dan WD), RAQL7937 130126.jpeg (stage: Topup dan WD), RAQL7937 140126.jpeg (stage: Topup dan WD), RAQL7937 190126.jpeg (stage: Topup dan WD), Raql7937 200126.jpeg (stage: Topup dan WD), RAQL7937 210126.jpeg (stage: Topup dan WD), RAQL7937 220126.jpeg (stage: Topup dan WD), RAQL7937 260126.jpeg (stage: Topup dan WD), raql7937 300126.jpeg (stage: Topup dan WD), WD RAQL7937 19012026 BCA.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-03-03; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Catatan: BELUM MEDIASI BBJ, KARENA NASABAH TIDAK ADA RESPON KE BBJ UNTUK PELAKSANAAN MEDIASI\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: BELUM ADA PERMINTAAN KLARIFIKASI\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: BAP; Tanggal: 2026-05-15; Catatan: PANGGILAN PERTAMA KEPADA IRSAN DAN SANDRA AURELLIA\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2026-01-07\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2026-01-07 s.d 2026-01-07\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2026-01-07\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2026-01-07\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2026-01-07\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2026-01-08; Approval Kacab: 2026-01-08; Approval Kepatuhan: 2026-01-08\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2026-01-08\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2026-01-09 s.d 2026-02-04\n- Dokumen Nasabah / Topup dan WD: Catatan: 12x TU, 1x WD",
+  "new_stage": "Proses Regulator",
+  "new_progress": 70,
+  "created_at": "2026-07-14T11:50:14.320096",
+  "new_status": "Open"
+ },
+ {
+  "id": 89,
+  "case_id": 108,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH TIDAK TERIMA DENGAN KERUGIAN BESAR DAN CEPAT -> NASABAH TIDAK TERIMA DENGAN KERUGIAN BESAR DAN CEPAT. Margin Rp. 954.000.000,-",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-14T11:51:27.129787",
+  "new_status": "Open"
+ },
+ {
+  "id": 90,
+  "case_id": 108,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Risk Level: Low -> Medium",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-14T11:52:00.040127",
+  "new_status": "Open"
+ },
+ {
+  "id": 91,
+  "case_id": 92,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH SULIT WD DAN TIDAK TERIMA ATAS KERUGIAN TRANSAKSI -> NASABAH SULIT WD DAN TIDAK TERIMA ATAS KERUGIAN TRANSAKSI. Margin : Rp. 267.100.000,-",
+  "new_stage": "Proses Regulator",
+  "new_progress": 82,
+  "created_at": "2026-07-14T11:53:21.199765",
+  "new_status": "Open"
+ },
+ {
+  "id": 92,
+  "case_id": 78,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Tanggal Bergabung Nasabah: - -> 2022-01-06\n- No. Akun: RAPS6066 & RAPS6090 -> RAPS6066\n- Marketing: - -> MAULIN AGUSTINIA\n- Kepala Cabang: - -> MOZAEK ALTI RICO\n- Inti Pengaduan: marketing memberikan iming-iming kepada nasabah, WPB kurang aktif kepada nasabah -> MARKETING MEMBERIKAN IMING-IMING KEPADA NASABAH SERTA PERAN WPB KURANG AKTIF KEPADA NASABAH\n- Dokumen Pengaduan Nasabah: 0 file -> 17 file: KRONOLOGIS & PENANGANAN PENGADUAN ROEDYANTO RAPS6066 & RAPS6090 (1).docx (stage: Kronologi Pengaduan Nasabah), BERITA ACARA MUSYAWARAH ROEDYANTO (1).pdf (stage: Pialang (Musyawarah); tanggal: 2023-04-06; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), Permintaan Tanggapan - Roedyanto (PT RFB).pdf (stage: BBJ (Mediasi); tanggal: 2023-07-12; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), TANGGAPAN ATAS SURAT BBJ - ROEDYANTO - RFB.pdf (stage: BBJ (Mediasi); tanggal: 2023-07-12; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), Undangan Mediasi Roedyanto - PT RFB.pdf (stage: BBJ (Mediasi); tanggal: 2023-07-12; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), 0726-JAWAB SP BPPTI AN. ROEDYANTO.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGATAN YANG ISINYA : 1. MARKETING...), 1223-Tanggapan Surat Bappebti a.n Roedyanto (1).pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGATAN YANG ISINYA : 1. MARKETING...), 06225-TANGGAPAN KLARIFIKASI LANJUTAN ROEDYANTO.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGATAN YANG ISINYA : 1. MARKETING...), DS RORUNDAK UD.01.00 662 BAPPEBTI.2 SD 10 2024 - Permintaan Dokumen Roedyanto - RFB DBS (SD. 662).pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGATAN YANG ISINYA : 1. MARKETING...), SD 245 Permintaan Klarifikasi PT RFB.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGATAN YANG ISINYA : 1. MARKETING...), SP tertulis RFB -ROEDYANTO.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan; catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGATAN YANG ISINYA : 1. MARKETING...), LAPORAN POLISI AMEL.pdf (stage: Kepolisian - Perkembangan Laporan Polisi; proses: Perkembangan Laporan Polisi), LAPORAN POLISI CHRISTINE.pdf (stage: Kepolisian - Perkembangan Laporan Polisi; proses: Perkembangan Laporan Polisi), LAPORAN POLISI RIKI RIVALDI.pdf (stage: Kepolisian - Perkembangan Laporan Polisi; proses: Perkembangan Laporan Polisi), LP MABES ROEDYANTO RAPS6066-6090 (DIRKEP).pdf (stage: Kepolisian - Perkembangan Laporan Polisi; proses: Perkembangan Laporan Polisi), panggilan sidang perkara -roedyanto (1).pdf (stage: Pengadilan - Putusan Pengadilan; proses: Putusan Pengadilan; tanggal: 2025-02-04; catatan: PUTUSAN BANDING MENGUATKAN PUTUSAN PN JAKSEL (NO)), PUTUSAN BANDING NO 102 - ROEDYANTO VS RFB.pdf (stage: Pengadilan - Putusan Pengadilan; proses: Putusan Pengadilan; tanggal: 2025-02-04; catatan: PUTUSAN BANDING MENGUATKAN PUTUSAN PN JAKSEL (NO))\n- Progress: 85% -> 90%\n- Temuan: - -> TRANSAKSI PEMBEKUAN DAN ARAHAN TRANSAKSI MARKETING\n- Root Cause: - -> TIDAK ADA INFORMASI RESMI KEPADA NASABAH PADA SAAT PT DIBEKUKAN DAN PERAN WPB KURANG AKTIF KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA MARGIN 100%\n- Penawaran Perusahaan: - -> PENAWARAN KOMISI YANG DIDAPATKAN PADA SAAT TRANSAKSI PEMBEKUAN DITOLAK OLEH NASABAH SEBESAR 480JT\n- Tindakan Terakhir: - -> PENAWARAN KEPADA NASABAH 26 JUNI 2025\n- Tindak Lanjut: - -> MELAKUKAN PENAWARAN KEMBALI KEPADA NASABAH AKIBAT TRANSAKSI PEMBEKUAN\n- Jalur Penyelesaian: Belum Ditentukan -> Bappebti\n- Dokumen Nasabah: 0 file -> 55 file: FKN 1 (1 Maret 2022) Roedyanto RAPS6066.pdf (stage: Pertemuan Calon Nasabah), FKN 2 (10 Maret 2022) Roedyanto RAPS6066.pdf (stage: Pertemuan Calon Nasabah), FKN 3 (21 April 2022) Roedyanto RAPS6066.pdf (stage: Pertemuan Calon Nasabah), SS SIMULASI AKUN DEMO RAPS6066.jpg (stage: Simulasi Transaksi), OR NA RAPS6066.pdf (stage: Penyetoran Margin Awal), RAPS6066 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAPS6066 TRADE HISTORY.xlsx (stage: Riwayat Transaksi), OR TOP UP  RAPS6066 $ 190.000 120122.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $ 18,000 250122.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $2,000 040222.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $3,000 010322.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $9,900 280222.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $10,000 070322.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $10,000 160222.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $10,000 180222.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $17,500 180322.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $45,500 250222.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $60,000 210222.pdf (stage: Topup dan WD), OR TOP UP (KE2) RAPS6066 $417,500 140322.pdf (stage: Topup dan WD), OR TOP UP (KE3) RAPS6066 $3,000 040222.pdf (stage: Topup dan WD), OR TOP UP (KE3) RAPS6066 $30,000 070322.pdf (stage: Topup dan WD), OR TOP UP KE 2 RAPS6066 $10,000 310122.pdf (stage: Topup dan WD), OR TOP UP MLM (KE 2) RAPS6066 $10,000 310122.pdf (stage: Topup dan WD), OR TOP UP MLM (KE2) RAPS6066 $10,000 230222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $ 10,000 240122.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $ 40.000 040322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $2,500 140322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $2,500 180322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $3,000 040222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $3,000 260122.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $5,000 140222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $6,500 030322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $7,000 010322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $7,500 310122.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $7,700 180222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 010222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 070322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 150222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 210222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 230222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 250122.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 250222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 280122.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $10,000 280222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $15,000 090322.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $42,000 270122.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $55,000 240222.pdf (stage: Topup dan WD), OR TOP UP RAPS6066 $100,000 160222.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $ 10,000 210122.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $ 20,000 240122.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $ 20,000 250122.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $2,000 260122.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $10,000 270122.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $80,000 200122.pdf (stage: Topup dan WD), OR TOP UP RAPS6090 $140,000 170122.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2023-04-06; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2023-07-12; Catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: PENGADUAN SUDAH MELALUI PEMERIKSAAN BAPPEBTI DAN SUDAH MENGELUARKAN HASIL SURAT PERINGA...\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Perkembangan Laporan Polisi; Catatan: STATUS LP GANTUNG, PANGGILAN TERAKHIR 20 JUNI 2022\n- Dokumen Pengaduan Nasabah / Pengadilan: Proses: Putusan Pengadilan; Tanggal: 2025-02-04; Catatan: PUTUSAN BANDING MENGUATKAN PUTUSAN PN JAKSEL (NO)\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2022-03-01, 2022-03-10, 2022-04-21\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2022-01-04 s.d 2022-01-04\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2022-01-05\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2022-01-05\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2022-01-11; Approval Kacab: 2022-01-11; Approval Kepatuhan: 2022-01-11\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2022-01-11\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2022-01-06 s.d 2022-04-15\n- Dokumen Nasabah / Topup dan WD: Catatan: TU 41x RAPS6066, TU 7x RAPS6090, NASABAH TIDAK PERNAH WD",
+  "new_stage": "Proses Regulator",
+  "new_progress": 90,
+  "created_at": "2026-07-16T04:04:49.341756",
+  "new_status": "Open"
+ },
+ {
+  "id": 93,
+  "case_id": 152,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Progress: 0% -> 9%\n- Temuan: - -> ARAHAN TRANSAKSI MARKETING\n- Root Cause: - -> NASABAH MENGHUBUNGI MARKETING",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 9,
+  "created_at": "2026-07-17T04:15:06.424728",
+  "new_status": "Open"
+ },
+ {
+  "id": 94,
+  "case_id": 78,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: MARKETING MEMBERIKAN IMING-IMING KEPADA NASABAH SERTA PERAN WPB KURANG AKTIF KEPADA NASABAH -> MARKETING MEMBERIKAN IMING-IMING KEPADA NASABAH SERTA PERAN WPB KURANG AKTIF KEPADA NASABAH. Margin Rp.15.884.612.000,-",
+  "new_stage": "Proses Regulator",
+  "new_progress": 90,
+  "created_at": "2026-07-17T04:23:50.290616",
+  "new_status": "Open"
+ },
+ {
+  "id": 95,
+  "case_id": 107,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH MERASA DITIPU KARENA HASIL TRANSAKSI TIDAK SESUAI HARAPAN -> NASABAH MERASA DITIPU KARENA HASIL TRANSAKSI TIDAK SESUAI HARAPAN. Margin Rp.500.000.000,-\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-01-26",
+  "new_stage": "Negosiasi",
+  "new_progress": 76,
+  "created_at": "2026-07-17T04:27:56.186564",
+  "new_status": "Open"
+ },
+ {
+  "id": 96,
+  "case_id": 152,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH MERASA DITIPU KARENA HASIL TIDAK SESUAI DENGAN YANG DIJANJIKAN (KERUGIAN CEPAT) -> NASABAH MERASA DITIPU KARENA HASIL TIDAK SESUAI DENGAN YANG DIJANJIKAN (KERUGIAN CEPAT). Margin Rp.100.000.000,-\n- Progress: 9% -> 10%",
+  "new_stage": "Pemeriksaan Internal",
+  "new_progress": 10,
+  "created_at": "2026-07-17T04:31:36.39299",
+  "new_status": "Open"
+ },
+ {
+  "id": 98,
+  "case_id": 153,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH DIRUGIKAN AKIBAT ACTION YANG TIDAK SESUAI PLANNING -> NASABAH DIRUGIKAN AKIBAT ACTION YANG TIDAK SESUAI PLANNING. Margin 2 akun Rp.311.000.000,-\n- Workflow Stage: Pemeriksaan Internal -> Settlement / Deadlock\n- Progress: 0% -> 90%\n- Temuan: - -> MARKETING MELAKUKAN REGOL DAN TRANSAKSI\n- Root Cause: - -> PENGAWASAN KURANG TERHADAP MARKETING\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> PENAWARAN 30% KEPADA NASABAH DITOLAK\n- Tindakan Terakhir: - -> MUSYAWARAH KEMBALI DENGAN NASABAH TANGGAL 3 4 5 JULI 2025, NAMUN NASABAH TETAP DENGAN TUNTUTAN YAITU PENGEMBALIAN DAN...\n- Tindak Lanjut: - -> MEMINTA BAPPEBTI UNTUK MENYELESAIKAN SESUAI DENGAN JALUR PENYELESAIAN SERTA ATURAN",
+  "new_stage": "Settlement / Deadlock",
+  "new_progress": 90,
+  "created_at": "2026-07-17T07:18:39.423905",
+  "new_status": "Open"
+ },
+ {
+  "id": 99,
+  "case_id": 154,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Workflow Stage: Pemeriksaan Internal -> Settlement / Deadlock\n- Progress: 0% -> 90%\n- Temuan: - -> MARKETING MELAKUKAN TRANSAKSI\n- Root Cause: - -> PENGAWASAN KURANG KEPADA MARKETING\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> TIDAK ADA PENAWARAN LAGI\n- Tindakan Terakhir: - -> MUSYAWARAH PIALANG TANGGAL 14 SEPTEMBER 2022 DAN 22 SEPTEMBER 2022\n- Tindak Lanjut: - -> MEMINTA BAPPEBTI UNTUK DISELESAIKAN MELALUI JALUR PENYELESAIAN ATAU SESUAI ATURAN",
+  "new_stage": "Settlement / Deadlock",
+  "new_progress": 90,
+  "created_at": "2026-07-17T09:04:03.06596",
+  "new_status": "Open"
+ },
+ {
+  "id": 100,
+  "case_id": 155,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH TIDAK TERIMA KERUGIAN AKIBAT AKUN TERKENA CBS -> NASABAH TIDAK TERIMA KERUGIAN AKIBAT AKUN TERKENA CBS. Margin Rp.2.000.000.000,-\n- Workflow Stage: Pemeriksaan Internal -> Settlement / Deadlock\n- Progress: 0% -> 90%\n- Temuan: - -> MARKETING MELAKUKAN TRANSAKSI\n- Root Cause: - -> PENGAWASAN KURANG TERHADAP MARKETING\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> FEE TRANSAKSI 130JT\n- Tindakan Terakhir: - -> MUSYAWARAH 22 JULI 2025, PENAWARAN MASIH DITOLAK NASABAH. NASABAH MAU KE JALUR PN\n- Tindak Lanjut: - -> MEMINTA BAPPEBT PENYELESAIAN SESUAI BUKU PERJANJIAN ATAU ATURAN PENYELESAIAN PERSELISIHAN\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2022-10-22; Catatan: TIDAK TERJADI KESEPAKATAN, NASABAH MASIH TETAP PADA TUNTUTAN PENGEMBALIAN MARGIN 100%",
+  "new_stage": "Settlement / Deadlock",
+  "new_progress": 90,
+  "created_at": "2026-07-17T10:42:21.874827",
+  "new_status": "Open"
+ },
+ {
+  "id": 101,
+  "case_id": 156,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH TIDAK MEMAHAMI TRANSAKSI DAN RESIKO. SEMUA DIARAHKAN OLEH MARKETING -> NASABAH TIDAK MEMAHAMI TRANSAKSI DAN RESIKO. SEMUA DIARAHKAN OLEH MARKETING. Margin Rp.981.000.000,-\n- Workflow Stage: Pemeriksaan Internal -> Settlement / Deadlock\n- Progress: 0% -> 90%\n- Temuan: - -> MARKETING MELAKUKAN TRANSAKSI DAN REGOL\n- Root Cause: - -> PENGAWASAN KURANG KEPADA MARKETING DAN TIDAK ADA KONFIRMASI KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> 350 JUTA NAMUN NASABAH MENOLAK\n- Tindakan Terakhir: - -> MUSYAWARAH 27 OKTOBER 2025 TIDAK SEPAKAT, MUSYAWARAH 27 NOVEMBER 2025 TIDAK SEPAKAT, MUSYAWARAH 24 DESEMBER 2025 TIDA...\n- Tindak Lanjut: - -> MINTA KEPADA BAPPEBTI UNTUK MENYELESAIKAN MELALUI JALUR PENYELESAIAN BAKTI/PN\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2023-03-02; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUR PENGEMBALIAN DANA 100% MARGIN, MUSYAW...\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2023-06-14; Catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: MASUK KEDALAM LIST UNSUR PIDANA KARENA MARKETING MELAKUKAN TRANSAKSI",
+  "new_stage": "Settlement / Deadlock",
+  "new_progress": 90,
+  "created_at": "2026-07-19T08:18:32.856786",
+  "new_status": "Open"
+ },
+ {
+  "id": 102,
+  "case_id": 157,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Proses Negosiasi / Mediasi -> Menunggu Pemeriksaan\n- Dokumen Pengaduan Nasabah: 0 file -> 2 file: Berita Acara Musyawarah a.n Mohammad Rizki Yudomo.pdf (stage: Pialang (Musyawarah); tanggal: 2024-10-21; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), KRONOLOGIS & PENANGANAN RAOK7235 MOHAMMAD RIZKI YUDOMO.docx (stage: Kronologi Pengaduan Nasabah)\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 75%\n- Temuan: - -> PADA SAAT REGOL DIPANDU OLEH MARKETING\n- Root Cause: - -> WPB TIDAK ADA FU KEPADA NASABAH PADA SAAT MAU REGISTRASI\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> TIDAK ADA PENAWARAN\n- Tindakan Terakhir: - -> MUSYAWARAH PIALANG\n- Tindak Lanjut: - -> MENUNGGU PEMERIKSAAN\n- Dokumen Nasabah: 0 file -> 10 file: FKN a.n Mohammad Rizki Yudomo 13 September 2024.pdf (stage: Pertemuan Calon Nasabah), SS PRA REGOL a.n MOHAMMAD RIZKI YUDOMO.jpg (stage: Edukasi Pra Regol), DEMO BBH10511.pdf (stage: Simulasi Transaksi), SS REGOL a.n MOHAMMAD RIZKI YUDOMO.jpg (stage: Registrasi Online), SS VERIFIKASI a.n MOHAMMAD RIZKI YUDOMO.jpg (stage: Verifikasi WPB), OR PENYETORAN AWAL a.n MOHAMMAD RIZKI YUDOMO.jpg (stage: Penyetoran Margin Awal), SLIP PENYETORAN AWAL a.n MOHAMMAD RIZKI YUDOMO.jpg (stage: Penyetoran Margin Awal), SS AKTIVASI a.n MOHAMMAD RIZKI YUDOMO.jpg (stage: Aktivasi Akun), RAOK7235 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAOK7235 TRADE HISTORY.xlsx (stage: Riwayat Transaksi)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2024-10-21; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Catatan: MEDIASI BBJ TIDAK TERLAKSANA KARENA NASABAH TIDAK ADA RESPON KE PIHAK BURSA\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: TIDAK ADA PERMINTAAN KLARIFIKASI DARI BAPPEBTI KARENA NASABAH TIDAK ADA RESPON\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2024-09-13\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2024-09-11\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2024-09-11 s.d 2024-09-11\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2024-09-11\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2024-09-11\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2024-09-11\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2024-09-13; Approval Kacab: 2024-09-13; Approval Kepatuhan: 2024-09-13\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2024-09-13\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2024-09-12 s.d 2024-10-07\n- Dokumen Nasabah / Topup dan WD: Catatan: TIDAK ADA TU DAN WD",
+  "new_stage": "Proses Regulator",
+  "new_progress": 75,
+  "created_at": "2026-07-19T09:47:22.872295",
+  "new_status": "Open"
+ },
+ {
+  "id": 103,
+  "case_id": 158,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: NASABAH TIDAK DIJELASKAN RESIKO UANG BISA HABIS. Margin Rp.1.547.993.000,- -> NASABAH TIDAK DIJELASKAN RESIKO UANG BISA HABIS. Margin Rp.1.547.993.000,-. NASABAH CLOSE AKUN 28 SEP 2022\n- Dokumen Pengaduan Nasabah: 0 file -> 7 file: KRONOLOGIS PENANGANAN PENGADUAN RAPM6307.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah a.n Fatma Dwi Amartani.pdf (stage: Pialang (Musyawarah); tanggal: 2024-11-19; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 80% MARGIN), Undangan Mediasi Rifan-Fatma Dwi.pdf (stage: BBJ (Mediasi); tanggal: 2025-01-31; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH), 0125-TANGGAPAN BBJ FATMA DWI AMARTANI.pdf (stage: BBJ (Mediasi); tanggal: 2025-01-31; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH), Permintaan Tanggapan - Fatma.pdf (stage: BBJ (Mediasi); tanggal: 2025-01-31; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH), Panggilan Marketing Dipa.pdf (stage: Bappebti - Pemeriksaan Pengaduan; proses: Pemeriksaan Pengaduan; catatan: SEDANG DALAM PROSES PEMERIKSAAN), 0625-TANGGAPAN KLARIFIKASI BAPPEBTI AN. FATMA DWI AMARTANI.pdf (stage: Bappebti - Pemeriksaan Pengaduan; proses: Pemeriksaan Pengaduan; catatan: SEDANG DALAM PROSES PEMERIKSAAN)\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 80%\n- Temuan: - -> MARKETING MEMINTA DATA NASABAH UNTUK PENGISIAN REGOL\n- Root Cause: - -> MARKETING INGIN NASABAH CEPAT MELAKUKAN REGOL\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 80% MARGIN\n- Penawaran Perusahaan: - -> FEE TRANSAKSI DITOLAK OLEH NASABAH.\n- Tindakan Terakhir: - -> MEDIASI BBJ\n- Tindak Lanjut: - -> MENUNGGU HASIL PEMERIKSAAN BAPPEBTI\n- Dokumen Nasabah: 0 file -> 12 file: FKN a.n Fatma Dwi Amartani 8 Februari 2022.pdf (stage: Pertemuan Calon Nasabah), DEMO BBH10614.pdf (stage: Simulasi Transaksi), VERIFIKASI WPB a.n FATMA DWI AMARTANI.jpg (stage: Verifikasi WPB), OR PENYETORAN AWAL a.n FATMA DWI AMARTANI.jpg (stage: Penyetoran Margin Awal), SLIP PENYETORAN AWAL 1 a.n FATMA DWI AMARTANI.jpeg (stage: Penyetoran Margin Awal), SLIP PENYETORAN AWAL 2 a.n FATMA DWI AMARTANI.jpeg (stage: Penyetoran Margin Awal), SLIP PENYETORAN AWAL 3 a.n FATMA DWI AMARTANI.jpeg (stage: Penyetoran Margin Awal), AKTIVASI OPERASIONAL a.n FATMA DWI AMARTANI.jpg (stage: Aktivasi Akun), RAPM6307 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAPM6307 TRADE HISTORY.xlsx (stage: Riwayat Transaksi), WD RAPM6307 28092022 BCA.pdf (stage: Topup dan WD), TOP UP RAPM6307.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2024-11-19; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 80% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2025-01-31; Catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Pemeriksaan Pengaduan; Catatan: SEDANG DALAM PROSES PEMERIKSAAN BAPPEBTI\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2022-02-08\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2022-02-04\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2022-02-03 s.d 2022-02-09\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2022-02-07\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2022-02-07\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2022-02-04\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2022-02-09; Approval Kacab: 2022-02-09; Approval Kepatuhan: 2022-02-09\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2022-02-09\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2022-02-07 s.d 2022-09-28\n- Dokumen Nasabah / Topup dan WD: Catatan: TU 12x, WD 1x",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-19T10:14:47.385256",
+  "new_status": "Open"
+ },
+ {
+  "id": 104,
+  "case_id": 159,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 3 file: KRONOLOGIS PENANGANAN PENGADUAN RAQF7710 HT SIMATUPANG.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah a.n HT Simatupang-1.pdf (stage: Pialang (Musyawarah); tanggal: 2025-09-24; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 50% MARGIN), Undangan Mediasi RFB-Simatupang-1.pdf (stage: BBJ (Mediasi); tanggal: 2025-10-13; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH) -> 7 file: KRONOLOGIS PENANGANAN PENGADUAN RAQF7710 HT SIMATUPANG.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah a.n HT Simatupang-1.pdf (stage: Pialang (Musyawarah); tanggal: 2025-09-24; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 50% MARGIN), Undangan Mediasi RFB-Simatupang-1.pdf (stage: BBJ (Mediasi); tanggal: 2025-10-13; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), TANGGAPAN Klarifikasi BAPPEBTI HT SIMATUPANG-1.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan), DS RORUN UD.01.02 391 BAPPEBTI.2 SD 11 2025 Klarifikasi atas Pengaduan Tidak Sepakat Nasabaha.n HT Simatupang PT Rifan Financindo Berjangka-1.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan), 1025-Tanggapan pengaduan nasabah H.Simatupang.pdf (stage: BBJ (Mediasi)), Permintaan Tanggapan - HT Simatupang-1.pdf (stage: BBJ (Mediasi))\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 75%\n- Temuan: - -> ARAHAN TRANSAKSI OLEH MARKETING\n- Root Cause: - -> WPB KURANG AKTIF KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 50% MARGIN\n- Penawaran Perusahaan: - -> FEE TRANSAKSI DITOLAK OLEH NASABAH\n- Tindakan Terakhir: - -> MUSYAWARAH 3 JULI 2026 TIDAK TERJADI KESEPAKATAN, FEE TRANSAKSI DITOLAK OLEH NASABAH\n- Tindak Lanjut: - -> PERSUASIF SECARA LANGSUNG KE NASABAH TANPA LAWYER\n- Dokumen Nasabah: 0 file -> 9 file: FKN a.n HT Simatupang 27 Agustus 2025.pdf (stage: Pertemuan Calon Nasabah), SS PRAREGOL a.n HT SIMATUPANG.jpg (stage: Edukasi Pra Regol), DEMO BBH10556.pdf (stage: Simulasi Transaksi), SS REGOL a.n HT SIMATUPANG.jpg (stage: Registrasi Online), SS VERIFIKASI a.n HT SIMATUPANG.jpg (stage: Verifikasi WPB), RAQF7710 OR & SLIP NA.jpg (stage: Penyetoran Margin Awal), SS AKTIVASI a.n HT SIMATUPANG.jpg (stage: Aktivasi Akun), RAQF7710 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAQF7710 TRADE HISTORY.xlsx (stage: Riwayat Transaksi)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: MENUNGGU PEMERIKSAAN BAPPEBTI\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2025-08-27\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2025-08-21\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2025-08-21 s.d 2025-08-21\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2025-08-21\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2025-08-21\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2025-08-25\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2025-08-27; Approval Kacab: 2025-08-27; Approval Kepatuhan: 2025-08-27\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2025-08-27\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2025-08-25 s.d 2025-09-10\n- Dokumen Nasabah / Topup dan WD: Catatan: TIDAK ADA TU DAN WD",
+  "new_stage": "Proses Regulator",
+  "new_progress": 75,
+  "created_at": "2026-07-19T10:41:02.980486",
+  "new_status": "Open"
+ },
+ {
+  "id": 105,
+  "case_id": 159,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Proses Regulator -> Proses Negosiasi / Mediasi\n- Workflow Stage: Proses Regulator -> Negosiasi",
+  "new_stage": "Negosiasi",
+  "new_progress": 75,
+  "created_at": "2026-07-19T10:45:04.958063",
+  "new_status": "Open"
+ },
+ {
+  "id": 106,
+  "case_id": 157,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Menunggu Pemeriksaan -> Proses Negosiasi / Mediasi\n- Workflow Stage: Proses Regulator -> Negosiasi\n- Tindak Lanjut: MENUNGGU PEMERIKSAAN -> MENGHUBUNGI NASABAH UNTUK PENYELESAIAN, NAMUN NASABAH MASIH BELUM MENANGGAPI",
+  "new_stage": "Negosiasi",
+  "new_progress": 75,
+  "created_at": "2026-07-19T10:46:21.219201",
+  "new_status": "Open"
+ },
+ {
+  "id": 107,
+  "case_id": 160,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Inti Pengaduan: ARAHAN TRANSAKSI MENYEBABKAN KERUGIAN DAN NASABAH MEMAKAI UANG PINJAMAN -> ARAHAN TRANSAKSI MENYEBABKAN KERUGIAN DAN NASABAH MEMAKAI UANG PINJAMAN. Margin Rp.100.000.000,-\n- Dokumen Pengaduan Nasabah: 2 file: KRONOLOGIS PENANGANAN PENGADUAN RAQC7784 EUIS KULSUM.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah a.n Euis Kulsum.pdf (stage: Pialang (Musyawarah); tanggal: 2025-12-01; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN) -> 5 file: KRONOLOGIS PENANGANAN PENGADUAN RAQC7784 EUIS KULSUM.docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Musyawarah a.n Euis Kulsum.pdf (stage: Pialang (Musyawarah); tanggal: 2025-12-01; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), Undangan Mediasi RFB-Euis.pdf (stage: BBJ (Mediasi); tanggal: 2025-12-30; catatan: MEDIASI TIDAK TERLAKSANA DENGAN BAIK KARENA NASABAH TIDAK KOOPERATIF DAN BBJ MENYIMPULKAN TIDAK TERJADI KESEPAKATAN), 1225-SURAT TANGGAPAN BBJ A.N EUIS KULSUM.pdf (stage: BBJ (Mediasi); tanggal: 2025-12-30; catatan: MEDIASI TIDAK TERLAKSANA DENGAN BAIK KARENA NASABAH TIDAK KOOPERATIF DAN BBJ MENYIMPULKAN TIDAK TERJADI KESEPAKATAN), Permintaan Tanggapan - Euis2025-1.pdf (stage: BBJ (Mediasi); tanggal: 2025-12-30; catatan: MEDIASI TIDAK TERLAKSANA DENGAN BAIK KARENA NASABAH TIDAK KOOPERATIF DAN BBJ MENYIMPULKAN TIDAK TERJADI KESEPAKATAN)\n- Workflow Stage: Pemeriksaan Internal -> Negosiasi\n- Progress: 0% -> 75%\n- Temuan: - -> ARAHAN TRANSAKSI MARKETING DAN WPB MENGETAHUI NASABAH MENGGUNAKAN DANA PINJAMAN\n- Root Cause: - -> WPB KURANG AKTIF KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> FEE TRANSAKSI DITOLAK OLEH NASABAH\n- Tindakan Terakhir: - -> MUSYAWARAH TANGGAL 13 MARET 2025, NASABAH MASIH MENOLAK PENAWARAN\n- Tindak Lanjut: - -> PERSUASIF KEPADA NASABAH SECARA LANGSUNG\n- Dokumen Nasabah: 0 file -> 10 file: FKN a.n Euis Kulsum 3 Oktober 2025.pdf (stage: Pertemuan Calon Nasabah), SS PRAREGOL a.n EUIS KULSUM.jpg (stage: Edukasi Pra Regol), DEMO BBH10641.pdf (stage: Simulasi Transaksi), SS REGOL a.n EUIS KULSUM.jpg (stage: Registrasi Online), SS VERIFIKASI a.n EUIS KULSUM.jpg (stage: Verifikasi WPB), OR PENYETORAN AWAL a.n EUIS KULSUM.jpg (stage: Penyetoran Margin Awal), SLIP PENYETORAN AWAL a.n EUIS KULSUM.jpg (stage: Penyetoran Margin Awal), SS AKTIVASI a.n EUIS KULSUM.jpg (stage: Aktivasi Akun), RAQC7784 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAQC7784 TradeHistory.xlsx (stage: Riwayat Transaksi)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2025-12-30; Catatan: MEDIASI TIDAK TERLAKSANA DENGAN BAIK KARENA NASABAH TIDAK KOOPERATIF DAN BBJ MENYIMPULK...\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: BAPPEBTI BELUM MEMINTA KLARIFIKASI\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2025-10-03\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2025-10-02\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2025-10-02 s.d 2025-10-02\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2025-10-02\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2025-10-02\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2025-10-02\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2025-10-03; Approval Kacab: 2025-10-03; Approval Kepatuhan: 2025-10-03\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2025-10-03\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2025-10-02 s.d 2025-10-17\n- Dokumen Nasabah / Topup dan WD: Catatan: TIDAK PERNAH TU DAN WD",
+  "new_stage": "Negosiasi",
+  "new_progress": 75,
+  "created_at": "2026-07-19T11:33:57.478293",
+  "new_status": "Open"
+ },
+ {
+  "id": 108,
+  "case_id": 161,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Dokumen Pengaduan Nasabah: 0 file -> 9 file: KRONOLOGIS & PENANGANAN PENGADUAN ANG CHIA HOON(1).docx (stage: Kronologi Pengaduan Nasabah), BERITA ACARA MUSYAWARAH 2.pdf (stage: Pialang (Musyawarah); tanggal: 2024-10-16, 2024-10-31; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), BERITA ACARA MUSYAWARAH 1 ANG CHIU HOON RAPQ6267.pdf (stage: Pialang (Musyawarah); tanggal: 2024-10-16, 2024-10-31; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), Undangan Mediasi RFB-Ang Chiu Hoon.pdf (stage: BBJ (Mediasi); tanggal: 2024-12-11; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), 424-Tanggapan BBJ Ang Chiu Hoon.pdf (stage: BBJ (Mediasi); tanggal: 2024-12-11; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), Permintaan Tanggapan - Ang Chiu Hoon.pdf (stage: BBJ (Mediasi); tanggal: 2024-12-11; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH), TANGGAPAN Klarifikasi BAPPEBTI Ang Chiu Hoon RAPQ6267 - RFB AXA1(1).docx (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan), DS RORUN UD.01.02 89 BAPPEBTI.2 SD 03 2025 Klarifikasi atas Pengaduan Nasabah PT Rifan Financindo Berjangka.pdf (stage: Bappebti - Perkembangan Pengaduan; proses: Perkembangan Pengaduan), polda metro- hilda putri-aulia.pdf (stage: Kepolisian - Laporan Polisi; proses: Laporan Polisi; tanggal: 2025-10-01; catatan: LP YANG DIKUASAKAN KEPADA LAWYER NASABAH YAITU EKA PRASETYO BINTORO)\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 80%\n- Temuan: - -> TIDAK ADA\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> TIDAK ADA PENAWARAN\n- Tindakan Terakhir: - -> MEMENUHI PANGGILAN BAP POLISI PMJ KEPADA DIREKTUR, MARKETING DAN WPB 1 OKTOBER 2025 DAN TIDAK ADA LANJUTAN\n- Tindak Lanjut: - -> MENUNGGU PEMERIKSAAN BAPPEBTI\n- Dokumen Nasabah: 0 file -> 28 file: FKN 1 (09 MEI 2024) ANG CHIU HOON RAPQ6267.pdf (stage: Pertemuan Calon Nasabah), FKN 2 (16 JULI 2024) ANG CHIU HOON RAPQ6267.pdf (stage: Pertemuan Calon Nasabah), FKN PRA REGOL (19 APRIL 2024) ANG CHIU HOON RAPQ6267.pdf (stage: Pertemuan Calon Nasabah), SS PRA REGOL ANG CHIU HOON RAPQ6267.jpeg (stage: Edukasi Pra Regol), SS SIMULASI DEMO AKUN.jpeg (stage: Simulasi Transaksi), SS REGOL ANG CHIU HOON RAPQ6267.jpeg (stage: Registrasi Online), SS VERIFIKASI WPB ANG CHIU HOON RAPQ6267.jpeg (stage: Verifikasi WPB), OR NA RAPQ6267.pdf (stage: Penyetoran Margin Awal), SS AKTIVASI KACAB.jpeg (stage: Aktivasi Akun), RAPQ6267 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAPQ6267 TRADE HISTORY.xlsx (stage: Riwayat Transaksi), OR TOP UP KE 2 RAPQ6267 $10,000 200824.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $10,000 080524.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $10,000 160724.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $10,000 190824.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $10,000 200824.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $10,000 200924.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $24.37 111024 (BTE).pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $43.87 110724 (BTE).pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $50,000 260824.pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $53.62 110624 (BTE).pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $58.50 121124 (BTE).pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $73.12 120824 (BTE).pdf (stage: Topup dan WD), OR TOP UP RAPQ6267 $117.00 110924 (BTE).pdf (stage: Topup dan WD), WD RAPQ6267 03052024 BCA.pdf (stage: Topup dan WD), WD RAPQ6267 06082024 BCA.pdf (stage: Topup dan WD), WD RAPQ6267 11072024 BCA.pdf (stage: Topup dan WD), WD RAPQ6267 26072024 BCA.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2024-10-16, 2024-10-31; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2024-12-11; Catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: MENUNGGU PEMERIKSAAN BAPPEBTI\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Laporan Polisi; Tanggal: 2025-10-01; Catatan: LP YANG DIKUASAKAN KEPADA LAWYER NASABAH YAITU EKA PRASETYO BINTORO\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2024-04-19, 2024-07-16, 2024-05-09\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2024-04-19\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2024-04-19 s.d 2024-04-19\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2024-04-19\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2024-04-19\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2024-04-19\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2024-04-22; Approval Kacab: 2024-04-22; Approval Kepatuhan: 2024-04-22\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2024-04-22\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2024-04-19 s.d 2024-10-07\n- Dokumen Nasabah / Topup dan WD: Catatan: TU 11x, WD 4x",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-19T15:01:13.769651",
+  "new_status": "Open"
+ },
+ {
+  "id": 109,
+  "case_id": 162,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Status: Open -> Closed\n- Workflow Stage: Pemeriksaan Internal -> Settlement / Deadlock\n- Progress: 0% -> 100%\n- Temuan: - -> TIDAK ADA EDUKASI WPB KEPADA NASABAH\n- Root Cause: - -> PERAN WPB TIDAK AKTIF KEPADA NASABAH\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 75% MARGIN\n- Penawaran Perusahaan: - -> Rp.127.500.000 DITOLAK OLEH NASABAH\n- Tindakan Terakhir: - -> 9 SEPTEMBER 2025 MEMBERIKA PENAWARAN DAN NASABAH MENOLAK\n- Tindak Lanjut: - -> MEMINTA BAPPEBTI UNTUK MENYELESAIKAN MELALUI JALUR PENYELESAIAN PN/BAKTI\n- Dokumen Nasabah: 0 file -> 34 file: FKN 2 (7 Oktober 2021) Rija Amperianto RAPT5876.pdf (stage: Pertemuan Calon Nasabah), FKN 1 (6 Maret 2022) Rija Amperianto RAPT5876.pdf (stage: Pertemuan Calon Nasabah), SS VERIFIKASI WPB.jpeg (stage: Verifikasi WPB), SS SIMULASI DEMO.jpeg (stage: Simulasi Transaksi), OR NA RAPT5876.pdf (stage: Penyetoran Margin Awal), SS AKTIVASI KACAB.jpeg (stage: Aktivasi Akun), RAPT5876 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAPT5876 TradeHistory.xlsx (stage: Riwayat Transaksi), OR TOP UP AXA 1 RAPT5876 $2.000 111121.pdf (stage: Topup dan WD), OR TOP UP AXA 1 RAPT5876 $4.000 261021.pdf (stage: Topup dan WD), OR TOP UP AXA1 RAPT5876 $2.500 221021.pdf (stage: Topup dan WD), OR TOP UP MLM AXA1 RAPT5876 $20 260522.pdf (stage: Topup dan WD), OR TOP UP MLM AXA1 RAPT5876 $100 110522.pdf (stage: Topup dan WD), OR TOP UP MLM RAPT5876 $30 250522.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $1,000 020322.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $1,000 140322.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $1,000 140422.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $1,000 240222.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $2,000 040322.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $2,000 120422.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $2,000 170222.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $2,500 141021.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $2,500 221021.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $4,000 261021.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $5,000 070422.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $5,000 101121.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $10,000 210122.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $50 240522.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $60 270522.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $100 200522.pdf (stage: Topup dan WD), OR TOP UP RAPT5876 $200 130522.pdf (stage: Topup dan WD), WD RAPT5876 01112021 MDR.pdf (stage: Topup dan WD), WD RAPT5876 06122021 MDR.pdf (stage: Topup dan WD), WD RAPT5876 15102021 MDR.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2021-10-07, 2022-03-06\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2021-10-05 s.d 2021-10-05\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2021-10-05\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2021-10-06\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2021-10-06\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2021-10-07; Approval Kacab: 2021-10-07; Approval Kepatuhan: 2021-10-07\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2021-10-07\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2021-10-06 s.d 2022-05-27\n- Dokumen Nasabah / Topup dan WD: Catatan: TU 22x, WD 3x",
+  "new_stage": "Settlement / Deadlock",
+  "new_progress": 100,
+  "created_at": "2026-07-19T15:37:27.111383",
+  "new_status": "Closed"
+ },
+ {
+  "id": 110,
+  "case_id": 108,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Proses Regulator -> Menunggu Pemeriksaan",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-19T15:39:48.171341",
+  "new_status": "Open"
+ },
+ {
+  "id": 111,
+  "case_id": 161,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Proses Regulator -> Menunggu Pemeriksaan",
+  "new_stage": "Proses Regulator",
+  "new_progress": 80,
+  "created_at": "2026-07-19T15:40:39.426856",
+  "new_status": "Open"
+ },
+ {
+  "id": 112,
+  "case_id": 163,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Proses Regulator -> Menunggu Pemeriksaan\n- Inti Pengaduan: NASABAH MERASA DITIPU KARENA HASIL TRANSAKSI TIDAK SESUAI HARAPAN -> NASABAH MERASA DITIPU KARENA HASIL TRANSAKSI TIDAK SESUAI HARAPAN. Margin Rp.270.000.000,-\n- Dokumen Pengaduan Nasabah: 1 file: KRONOLOGIS & PENANGANAN PENGADUAN SYAHRUL (RAX93617).docx (stage: Kronologi Pengaduan Nasabah) -> 6 file: KRONOLOGIS & PENANGANAN PENGADUAN SYAHRUL (RAX93617).docx (stage: Kronologi Pengaduan Nasabah), Berita Acara Hasil Musyawarah An Syahrul (RAX93617).pdf (stage: Pialang (Musyawarah); tanggal: 2024-11-15; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), Undangan Mediasi RFB- Syahrul.pdf (stage: BBJ (Mediasi); tanggal: 2024-12-10), SD 321 Permintaan Dokumen.pdf (stage: Bappebti - Permintaan Dokumen; proses: Permintaan Dokumen), Surat Ketetapan Penghentian Penyelidikan LP An Syahrul. No Acc RAX93617.pdf (stage: Kepolisian - Hasil LP; proses: Hasil LP), SP2HP LID Henti LP An Syahrul Akun RAX93617.pdf (stage: Kepolisian - Hasil LP; proses: Hasil LP)\n- Risk Level: Low -> High\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 75%\n- Temuan: - -> TRANSFER SEBELUM REGOL DAN MARKETING MELAKUKAKN TRANSAKSI\n- Root Cause: - -> PENGAWASAN DAN SOP TIDAK SEKETAT SAAT INI\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> FEE TRANSAKSI\n- Tindakan Terakhir: - -> MEDIASI BBJ\n- Tindak Lanjut: - -> MENUNGGU PEMERIKSAAN BAPPEBTI\n- Dokumen Nasabah: 0 file -> 9 file: DEMO RAX93617.jpg (stage: Simulasi Transaksi), RAX93617 OR & SLIP NA.jpg (stage: Penyetoran Margin Awal), RAX93617 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RAX93617 TRADE HISTORY.xlsx (stage: Riwayat Transaksi), OR -TU-2-TOP UP RAX93617 210921 top up kedua.pdf (stage: Topup dan WD), TU-2-SLIP RAX93617 210921 top up kedua.jpg (stage: Topup dan WD), OR-TU-1-TOP UP RAX93617 140921 top up pertama.pdf (stage: Topup dan WD), SLIP RAX93617 140921 (2).jpg (stage: Topup dan WD), 1-TU-SLIP RAX93617 140921.jpg (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2024-11-15; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2024-12-10; Catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH MASIH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Permintaan Dokumen; Catatan: HENDAK PEMERIKSAAN BAPPEBTI\n- Dokumen Pengaduan Nasabah / Kepolisian: Proses: Hasil LP\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2021-09-06\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2021-09-03 s.d 2021-09-06\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2021-09-06\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2021-09-06\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2021-09-06\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2021-09-07; Approval Kacab: 2021-09-07; Approval Kepatuhan: 2021-09-07\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2021-09-07\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2021-09-06 s.d 2021-10-08\n- Dokumen Nasabah / Topup dan WD: Catatan: TU 2x",
+  "new_stage": "Proses Regulator",
+  "new_progress": 75,
+  "created_at": "2026-07-20T03:28:43.927479",
+  "new_status": "Open"
+ },
+ {
+  "id": 113,
+  "case_id": 164,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Bucket: Proses Regulator -> Menunggu Pemeriksaan\n- Inti Pengaduan: SARAN ANALISA YANG DIBERIKAN OLEH WPB KEPADA NASABAH MENGHASILKAN KERUGIAN. Margin Rp.253.808.000,- -> SARAN ANALISA YANG DIBERIKAN OLEH WPB KEPADA NASABAH MENGHASILKAN KERUGIAN. Margin Rp.253.808.000,-. NASABAH CLOSE AK...\n- Dokumen Pengaduan Nasabah: 0 file -> 4 file: MUSYAWARAH - SRI WAHYUNI RLAQ1013.pdf (stage: Pialang (Musyawarah); tanggal: 2026-02-14; catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN), Undangan Mediasi RFB- Sri.pdf (stage: BBJ (Mediasi); tanggal: 2025-02-14; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH), Permintaan Tanggapan - Sri Wahyuni (1).pdf (stage: BBJ (Mediasi); tanggal: 2025-02-14; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH), 0525-TANGGAPAN BBJ SRI WAHYUNI (1).pdf (stage: BBJ (Mediasi); tanggal: 2025-02-14; catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH)\n- Workflow Stage: Pemeriksaan Internal -> Proses Regulator\n- Progress: 0% -> 66%\n- Temuan: - -> BELUM ADA\n- Permintaan Nasabah: - -> PENGEMBALIAN DANA 100% MARGIN\n- Penawaran Perusahaan: - -> TIDAK ADA PENAWARAN\n- Tindakan Terakhir: - -> MEDIASI BBJ\n- Tindak Lanjut: - -> MENUNGGU PERMINTAAN KLARIFIKASI BAPPEBTI\n- Dokumen Nasabah: 0 file -> 32 file: FKN NASABAH - RLAQ1013 - SRI WAHYUNI.pdf (stage: Pertemuan Calon Nasabah), TRADE HISTORY DEMO AN SRI WAHYUNI.jpg (stage: Simulasi Transaksi), OR & SLIP NA RLAQ1013 22 AGT 2022.jpg (stage: Penyetoran Margin Awal), RLAQ1013 PIN ONLINE TRADING by EMAIL.jpg (stage: Pengiriman Kode Akses Transaksi), RLAQ1013 STATEMENT (110822-100823).pdf (stage: Riwayat Transaksi), 1. WD & SLIP RLAQ1013 25 AGT 2022.pdf (stage: Topup dan WD), 2. WD & SLIP RLAQ1013 13 SEPT 2022.pdf (stage: Topup dan WD), 3. WD & SLIP RLAQ1013 14 OKT 2022.pdf (stage: Topup dan WD), 4. WD & SLIP RLAQ1013 26 DES 2022.pdf (stage: Topup dan WD), 5. WD DAN SLIP RLAQ1013 2 JAN 2023.pdf (stage: Topup dan WD), 6. WD DAN SLIP RLAQ1013 11 JAN 2023.pdf (stage: Topup dan WD), 7. WD DAN SLIP RLAQ1013 25 JAN 2023.pdf (stage: Topup dan WD), 8. WD DAN SLIP RLAQ1013 3 FEB 2023.pdf (stage: Topup dan WD), 9. WD & SLIP RLAQ1013 27 FEB 2023.pdf (stage: Topup dan WD), 10. WD DAN SLIP RLAQ1013 4 APR 2023.pdf (stage: Topup dan WD), 11. WD DAN SLIP RLAQ1013 26 APR 2023.pdf (stage: Topup dan WD), 12. WD DAN SLIP RLAQ1013 8 MEI 2023.pdf (stage: Topup dan WD), 13. WD DAN SLIP RLAQ1013 19 MEI 2023.pdf (stage: Topup dan WD), 14. WD DAN SLIP RLAQ1013 2 JUNI 2023.pdf (stage: Topup dan WD), 15. WD DAN SLIP RLAQ1013 16 JUNI 2023.pdf (stage: Topup dan WD), 16. WD DAN SLIP RLAQ1013 25 JULI 2023.pdf (stage: Topup dan WD), 17. WD DAN SLIP RLAQ1013 9 AGT 2023.pdf (stage: Topup dan WD), 1. OR & SLIP  TOP UP RLAQ1013 26 AGT 22.pdf (stage: Topup dan WD), 2. OR & SLIP TOP UP RLAQ1013  10 OKT 2022.pdf (stage: Topup dan WD), 3. OR & SLIP TOP UP RLAQ1013 14 DES 22.pdf (stage: Topup dan WD), 4. OR & SLIP TOP UP RLAQ1013 28 DES 22.pdf (stage: Topup dan WD), 5. OR & SLIP TOP UP RLAQ1013  4 JAN 2023.pdf (stage: Topup dan WD), 6. OR & SLIP TOP UP RLAQ1013 20 MAR 2023 (TU MALAM).pdf (stage: Topup dan WD), 7. OR & SLIP TOP UP RLAQ1013 23 MAR 2023.pdf (stage: Topup dan WD), 8. OR  & SLIP TOP UP RLAQ1013 24 MAR 2023.pdf (stage: Topup dan WD), 9. OR & SLIP TOP UP RLAQ1013  22 JUN 2023 (TU MALAM).pdf (stage: Topup dan WD), 10. OR & SLIP TOP UP RLAQ1013 5 JUL 2023.pdf (stage: Topup dan WD)\n\nUpdate metadata dokumen:\n- Dokumen Pengaduan Nasabah / Pialang (Musyawarah): Tanggal: 2026-02-14; Catatan: TIDAK TERJADI KESEPAKATAN KARENA NASABAH MENUNTUT PENGEMBALIAN DANA 100% MARGIN\n- Dokumen Pengaduan Nasabah / BBJ (Mediasi): Tanggal: 2025-02-14; Catatan: TIDAK TERJADI KESEPAKATAN KARENA TUNTUTAN NASABAH SAMA SEPERTI MUSYAWARAH\n- Dokumen Pengaduan Nasabah / Bappebti: Proses: Perkembangan Pengaduan; Catatan: BELUM ADA PERMINTAAN KLARIFIKASI BAPPEBTI\n- Dokumen Nasabah / Pertemuan Calon Nasabah: Tanggal: 2022-08-20\n- Dokumen Nasabah / Edukasi Pra Regol: Tanggal: 2022-08-22\n- Dokumen Nasabah / Simulasi Transaksi: Rentang: 2026-08-16 s.d 2022-08-22\n- Dokumen Nasabah / Registrasi Online: Tanggal: 2022-08-20\n- Dokumen Nasabah / Verifikasi WPB: Tanggal: 2022-08-22\n- Dokumen Nasabah / Penyetoran Margin Awal: Tanggal: 2022-08-22\n- Dokumen Nasabah / Aktivasi Akun: Tanggal: 2022-08-23; Approval Kacab: 2022-08-23; Approval Kepatuhan: 2022-08-23\n- Dokumen Nasabah / Pengiriman Kode Akses Transaksi: Tanggal: 2022-08-23\n- Dokumen Nasabah / Riwayat Transaksi: Rentang: 2022-08-22 s.d 2023-08-10\n- Dokumen Nasabah / Topup dan WD: Catatan: TU 10x, WD 17x",
+  "new_stage": "Proses Regulator",
+  "new_progress": 66,
+  "created_at": "2026-07-20T04:34:02.344903",
+  "new_status": "Open"
+ },
+ {
+  "id": 114,
+  "case_id": 164,
+  "created_by": 9,
+  "content": "Update data kasus:\n- Progress: 66% -> 70%",
+  "new_stage": "Proses Regulator",
+  "new_progress": 70,
+  "created_at": "2026-07-20T04:36:23.211219",
+  "new_status": "Open"
+ }
+]

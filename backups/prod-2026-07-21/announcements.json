@@ -1,0 +1,72 @@
+[
+ {
+  "id": 3,
+  "created_by": 1,
+  "title": "PEnggunaan aplikasi",
+  "content": "tolong aplikasinya di perbaikidan di isi setiap hari",
+  "priority": "Tinggi",
+  "target_type": "users",
+  "target_value": "8,12,6,10,5,15,13,9,14,16,3,7,11",
+  "start_date": "2026-03-10",
+  "end_date": "2026-03-11",
+  "is_pinned": false,
+  "is_archived": false,
+  "created_at": "2026-03-10T04:22:09.639499"
+ },
+ {
+  "id": 4,
+  "created_by": 5,
+  "title": "Planing yg akan diterapkan di Q2",
+  "content": "1. Traning kepatuhan cabang utk mandiri penanganan new akun\n2. Traning operasional utk hal yg sama\n3. Zoom meeting bulanan",
+  "priority": "Tinggi",
+  "target_type": "all",
+  "target_value": null,
+  "start_date": "2026-03-10",
+  "end_date": "2026-03-31",
+  "is_pinned": false,
+  "is_archived": false,
+  "created_at": "2026-03-10T14:56:46.047737"
+ },
+ {
+  "id": 1,
+  "created_by": 2,
+  "title": "Rapat Koordinasi Grup Q1 2024",
+  "content": "Seluruh Direktur Utama dan Direktur Kepatuhan diharapkan hadir pada rapat koordinasi grup Q1 yang akan dilaksanakan pada tanggal 15 Maret 2024 pukul 09:00 WIB di kantor pusat.",
+  "priority": "Tinggi",
+  "target_type": "all",
+  "target_value": null,
+  "start_date": "2026-03-07",
+  "end_date": null,
+  "is_pinned": true,
+  "is_archived": true,
+  "created_at": "2026-03-07T14:15:34.844708"
+ },
+ {
+  "id": 2,
+  "created_by": 1,
+  "title": "Update Sistem SGCC",
+  "content": "Sistem SG Control Center telah diperbarui dengan fitur baru untuk monitoring kasus dan aktivitas. Silakan pelajari panduan penggunaan yang telah dibagikan.",
+  "priority": "Normal",
+  "target_type": "all",
+  "target_value": null,
+  "start_date": "2026-03-07",
+  "end_date": null,
+  "is_pinned": false,
+  "is_archived": true,
+  "created_at": "2026-03-07T14:15:34.879047"
+ },
+ {
+  "id": 5,
+  "created_by": 2,
+  "title": "meeting hari senin",
+  "content": "pembahasan perpindahan PT",
+  "priority": "Normal",
+  "target_type": "all",
+  "target_value": null,
+  "start_date": "2026-04-02",
+  "end_date": null,
+  "is_pinned": false,
+  "is_archived": true,
+  "created_at": "2026-04-02T11:50:33.520868"
+ }
+]

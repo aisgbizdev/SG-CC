@@ -1,0 +1,263 @@
+[
+ {
+  "id": 1,
+  "entity_type": "case",
+  "entity_id": 110,
+  "created_by": 13,
+  "content": "Akan dilakukan brifing dahulu pada tgl 11 Mar 2026 sebelum mediasi BBJ",
+  "parent_id": null,
+  "created_at": "2026-03-10T14:21:42.187655"
+ },
+ {
+  "id": 2,
+  "entity_type": "case",
+  "entity_id": 110,
+  "created_by": 13,
+  "content": "Brifing reshedule menjadi di tgl 12 Mar 2026, dikrenakan WPB posisi diluar kantor",
+  "parent_id": null,
+  "created_at": "2026-03-12T15:50:01.55796"
+ },
+ {
+  "id": 3,
+  "entity_type": "activity",
+  "entity_id": 62,
+  "created_by": 11,
+  "content": "planningnya jam brp dan nasabah bawa kuasa hukum ga ?\n",
+  "parent_id": null,
+  "created_at": "2026-03-16T05:52:43.51892"
+ },
+ {
+  "id": 4,
+  "entity_type": "activity",
+  "entity_id": 62,
+  "created_by": 12,
+  "content": "reschedule setelah lebaran",
+  "parent_id": null,
+  "created_at": "2026-03-17T09:34:54.121143"
+ },
+ {
+  "id": 5,
+  "entity_type": "case",
+  "entity_id": 108,
+  "created_by": 1,
+  "content": "langkah selanjutnyqa apa dan kapan??",
+  "parent_id": null,
+  "created_at": "2026-04-02T09:39:57.096006"
+ },
+ {
+  "id": 6,
+  "entity_type": "case",
+  "entity_id": 114,
+  "created_by": 1,
+  "content": "ada rencana ketemu lagi kapan\n",
+  "parent_id": null,
+  "created_at": "2026-04-02T09:41:13.786476"
+ },
+ {
+  "id": 7,
+  "entity_type": "case",
+  "entity_id": 113,
+  "created_by": 1,
+  "content": "coab pindahkan ke menuggu keputusan, karen akita tinggal menunggu dia aja\n",
+  "parent_id": null,
+  "created_at": "2026-04-02T09:42:23.197673"
+ },
+ {
+  "id": 8,
+  "entity_type": "case",
+  "entity_id": 106,
+  "created_by": 2,
+  "content": "terus mau sampai kapan diselesaikannya",
+  "parent_id": null,
+  "created_at": "2026-04-02T11:46:30.412914"
+ },
+ {
+  "id": 9,
+  "entity_type": "case",
+  "entity_id": 115,
+  "created_by": 1,
+  "content": "ini giman akelanjutannya, mau diapakan?\n",
+  "parent_id": null,
+  "created_at": "2026-04-14T03:59:36.605219"
+ },
+ {
+  "id": 10,
+  "entity_type": "case",
+  "entity_id": 134,
+  "created_by": 1,
+  "content": "jadi selanjutnya udah disiapkan data2 yg diminta pak bowo kemarin apa belum? segera lah\n",
+  "parent_id": null,
+  "created_at": "2026-04-22T16:16:30.606366"
+ },
+ {
+  "id": 11,
+  "entity_type": "case",
+  "entity_id": 115,
+  "created_by": 1,
+  "content": "dibaca dan dibalas dong .",
+  "parent_id": null,
+  "created_at": "2026-04-22T16:17:47.891673"
+ },
+ {
+  "id": 12,
+  "entity_type": "activity",
+  "entity_id": 474,
+  "created_by": 1,
+  "content": "ini statusnya gmana? masih 0%\n",
+  "parent_id": null,
+  "created_at": "2026-05-20T05:47:15.92084"
+ },
+ {
+  "id": 13,
+  "entity_type": "activity",
+  "entity_id": 478,
+  "created_by": 1,
+  "content": "apakah sudah beres? koq maish 50%",
+  "parent_id": null,
+  "created_at": "2026-05-20T05:47:43.029279"
+ },
+ {
+  "id": 14,
+  "entity_type": "activity",
+  "entity_id": 449,
+  "created_by": 1,
+  "content": "ini masih diekrjakan?\n\n",
+  "parent_id": null,
+  "created_at": "2026-05-20T06:07:30.899224"
+ },
+ {
+  "id": 15,
+  "entity_type": "case",
+  "entity_id": 113,
+  "created_by": 1,
+  "content": "Beresinnya mau gimana",
+  "parent_id": null,
+  "created_at": "2026-05-21T14:18:18.767966"
+ },
+ {
+  "id": 16,
+  "entity_type": "activity",
+  "entity_id": 449,
+  "created_by": 16,
+  "content": "saat ini masih proses pengecekan data dari pihak auditor BBJ-KBI",
+  "parent_id": null,
+  "created_at": "2026-06-11T06:45:14.805266"
+ },
+ {
+  "id": 17,
+  "entity_type": "case",
+  "entity_id": 110,
+  "created_by": 18,
+  "content": "Jika belum dilaporkan hasil perdamaiannya, maka Agar segera di laporkan ke Bappebti. Terima kasih",
+  "parent_id": null,
+  "created_at": "2026-06-17T02:42:48.891841"
+ },
+ {
+  "id": 18,
+  "entity_type": "case",
+  "entity_id": 132,
+  "created_by": 18,
+  "content": "Jika belum dilaporkan hasil perdamaiannya, maka Agar segera di laporkan ke Bappebti. Terima kasih",
+  "parent_id": null,
+  "created_at": "2026-06-17T02:47:33.420382"
+ },
+ {
+  "id": 19,
+  "entity_type": "case",
+  "entity_id": 133,
+  "created_by": 18,
+  "content": "Jika belum dilaporkan hasil perdamaiannya, maka Agar segera di laporkan ke Bappebti. Terima kasih",
+  "parent_id": null,
+  "created_at": "2026-06-17T02:56:12.897845"
+ },
+ {
+  "id": 20,
+  "entity_type": "case",
+  "entity_id": 137,
+  "created_by": 18,
+  "content": "Jika belum dilaporkan hasil perdamaiannya, maka agar segera di laporkan ke Bappebti. Terima kasih",
+  "parent_id": null,
+  "created_at": "2026-06-17T02:58:56.883796"
+ },
+ {
+  "id": 21,
+  "entity_type": "activity",
+  "entity_id": 589,
+  "created_by": 18,
+  "content": "Lumayan juga minor 3 temuannya dan 9 OFI, apakah ada rekomendasi? ",
+  "parent_id": null,
+  "created_at": "2026-06-19T10:33:36.74028"
+ },
+ {
+  "id": 22,
+  "entity_type": "activity",
+  "entity_id": 611,
+  "created_by": 18,
+  "content": "Oke, termonitor. Terima kasih.",
+  "parent_id": null,
+  "created_at": "2026-06-22T09:45:34.758653"
+ },
+ {
+  "id": 23,
+  "entity_type": "activity",
+  "entity_id": 793,
+  "created_by": 18,
+  "content": "Sosialisasi mendapat feedback yang baik dari jajaran kepatuhan cabang",
+  "parent_id": null,
+  "created_at": "2026-07-14T08:03:49.309548"
+ },
+ {
+  "id": 24,
+  "entity_type": "case",
+  "entity_id": 139,
+  "created_by": 18,
+  "content": "Sudah adakah hasil pemeriksaan internal?",
+  "parent_id": null,
+  "created_at": "2026-07-15T09:57:02.372955"
+ },
+ {
+  "id": 25,
+  "entity_type": "activity",
+  "entity_id": 793,
+  "created_by": 13,
+  "content": "siap komandan... dan menjadi evaluasi berkelanjutan.. ",
+  "parent_id": null,
+  "created_at": "2026-07-15T09:59:15.688243"
+ },
+ {
+  "id": 26,
+  "entity_type": "case",
+  "entity_id": 139,
+  "created_by": 13,
+  "content": "belum ada informasi kelanjutan dari pihak Bappebti... ",
+  "parent_id": null,
+  "created_at": "2026-07-15T10:00:18.434263"
+ },
+ {
+  "id": 27,
+  "entity_type": "case",
+  "entity_id": 147,
+  "created_by": 18,
+  "content": "Case closed termonitor",
+  "parent_id": null,
+  "created_at": "2026-07-17T05:16:56.254198"
+ },
+ {
+  "id": 28,
+  "entity_type": "activity",
+  "entity_id": 848,
+  "created_by": 18,
+  "content": "Perlu melibatkan bagian pajak yang kompeten dalam ",
+  "parent_id": null,
+  "created_at": "2026-07-17T05:22:54.617042"
+ },
+ {
+  "id": 29,
+  "entity_type": "activity",
+  "entity_id": 848,
+  "created_by": 18,
+  "content": "Jika ada sosialisasi lanjutan perlu meliibatkan Tim pajak yang kompeten.",
+  "parent_id": null,
+  "created_at": "2026-07-17T05:25:43.949652"
+ }
+]

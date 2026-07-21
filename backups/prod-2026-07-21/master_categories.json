@@ -1,0 +1,152 @@
+[
+ {
+  "id": 2,
+  "name": "Review Pengaduan",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 3,
+  "name": "Mediasi",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 4,
+  "name": "Meeting Regulator",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 5,
+  "name": "Koordinasi Internal",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 7,
+  "name": "Evaluasi Kepatuhan",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 8,
+  "name": "Tindakan Korektif",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 10,
+  "name": "Pengawasan Cabang",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 11,
+  "name": "Aktivasi Account",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 12,
+  "name": "Cek Dana Masuk (Deposit)",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 13,
+  "name": "Cek Dana New Account / Top Up",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 14,
+  "name": "Cek Withdrawal",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 15,
+  "name": "Rekap Kebutuhan Printing",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 16,
+  "name": "Rekap Kebutuhan OR",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 17,
+  "name": "Pengumpulan Data Audit",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 18,
+  "name": "Pencarian Data Account",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 19,
+  "name": "Bantuan Operasional Lain",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 20,
+  "name": "Handover Shift",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 21,
+  "name": "Laporan Harian",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 22,
+  "name": "Monitoring Operasional",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 1,
+  "name": "Audit",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 9,
+  "name": "Monitoring Pengaduan",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 6,
+  "name": "Penyusunan Laporan & Kuisioner",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 23,
+  "name": "Koordinasi Eksternal",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 24,
+  "name": "Tanggapan Surat Regulator",
+  "type": "activity",
+  "is_active": true
+ },
+ {
+  "id": 25,
+  "name": "Penanganan Pengaduan",
+  "type": "activity",
+  "is_active": true
+ }
+]
