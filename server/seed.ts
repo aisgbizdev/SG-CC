@@ -6,8 +6,27 @@ import { count, eq, sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 
+async function migrationsAlreadyApplied(): Promise<boolean> {
+  try {
+    const result = await db.execute(sql`
+      SELECT
+        (SELECT count(*) FROM information_schema.columns WHERE table_name = 'kpi_assessments' AND column_name = 'active_contribution_score') AS col_ok,
+        (SELECT count(*) FROM information_schema.tables WHERE table_name = 'read_receipts') AS tbl_ok,
+        (SELECT count(*) FROM master_categories WHERE name = 'Penanganan Pengaduan' AND type = 'activity') AS cat_ok
+    `);
+    const row: any = (result as any).rows?.[0];
+    return !!row && Number(row.col_ok) > 0 && Number(row.tbl_ok) > 0 && Number(row.cat_ok) > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function runMigrations() {
   try {
+    if (await migrationsAlreadyApplied()) {
+      console.log("Migrasi schema sudah diterapkan, dilewati.");
+      return;
+    }
     await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS phone text`);
     await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS email text`);
     await db.execute(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS director_name text`);

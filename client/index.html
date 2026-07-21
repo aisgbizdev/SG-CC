@@ -79,14 +79,15 @@
           navigator.serviceWorker.register('/sw.js').catch(() => {});
         });
       }
+      window.__hideSplash = () => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.classList.add('fade-out');
+          setTimeout(() => splash.remove(), 400);
+        }
+      };
       window.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-          const splash = document.getElementById('splash-screen');
-          if (splash) {
-            splash.classList.add('fade-out');
-            setTimeout(() => splash.remove(), 400);
-          }
-        }, 1500);
+        setTimeout(() => window.__hideSplash(), 5000);
       });
     </script>
   </body>

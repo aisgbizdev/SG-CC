@@ -1,1 +1,2 @@
 - [Replit edge WAF blocks base64 in request bodies](replit-waf-base64-uploads.md) — prod 403 (HTML) on uploads sending `data:...;base64` JSON; send raw binary instead.
+- [Prod slowness & cold start](prod-slowness-cold-start.md) — autoscale cold starts must not block listen on startup DB work; gzip, avatar-less user lists, splash-on-mount; .env tracked in git needs rotation.

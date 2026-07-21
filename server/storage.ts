@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, desc, or, sql, count, isNull, gte, lte } from "drizzle-orm";
+import { eq, and, desc, or, sql, count, isNull, gte, lte, getTableColumns } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   companies, users, masterCategories, activities, cases, caseUpdates, caseMeetings,
@@ -201,11 +201,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsers(): Promise<User[]> {
-    return db.select().from(users).orderBy(users.fullName);
+    const { avatarUrl, ...cols } = getTableColumns(users);
+    const rows = await db.select(cols).from(users).orderBy(users.fullName);
+    return rows.map((r) => ({ ...r, avatarUrl: null })) as User[];
   }
 
   async getUsersByCompany(companyId: number): Promise<User[]> {
-    return db.select().from(users).where(eq(users.companyId, companyId));
+    const { avatarUrl, ...cols } = getTableColumns(users);
+    const rows = await db.select(cols).from(users).where(eq(users.companyId, companyId));
+    return rows.map((r) => ({ ...r, avatarUrl: null })) as User[];
   }
 
   async createUser(data: InsertUser): Promise<User> {

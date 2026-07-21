@@ -409,7 +409,17 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   setupAuth(app);
-  await seedData();
+  if (process.env.NODE_ENV === "production") {
+    const seedPromise = seedData().catch((err) => console.error("Seed/migrasi startup gagal:", err));
+    let seedDone = false;
+    seedPromise.finally(() => { seedDone = true; });
+    app.use("/api", (_req, _res, next) => {
+      if (seedDone) return next();
+      seedPromise.then(() => next(), () => next());
+    });
+  } else {
+    await seedData();
+  }
 
   app.get("/api/companies", requireAuth, async (_req, res) => {
     try {
