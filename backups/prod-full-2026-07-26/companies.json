@@ -1,0 +1,62 @@
+[
+ {
+  "id": 1,
+  "name": "PT Solid Gold Berjangka",
+  "code": "SGB",
+  "address": null,
+  "is_active": true,
+  "phone": null,
+  "email": null,
+  "director_name": null,
+  "founded_date": null,
+  "license_number": null
+ },
+ {
+  "id": 2,
+  "name": "PT Rifan Financindo Berjangka",
+  "code": "RFB",
+  "address": "Axa Tower Jl. Prof DR Satrio Kav 18, Lantai 30,35,23 dan 25, Kuningan, Setia budi, Jakarta Selatan, DKI Jakarta 12940",
+  "is_active": true,
+  "phone": "021-30056300",
+  "email": "corporate@rifan-financindo-berjangka",
+  "director_name": "RIYAN KURNIAWAN",
+  "founded_date": "2000-12-08",
+  "license_number": "08/BAPPEBTI/SI/XII/2000"
+ },
+ {
+  "id": 3,
+  "name": "PT Best Profit Futures",
+  "code": "BPF",
+  "address": null,
+  "is_active": true,
+  "phone": null,
+  "email": null,
+  "director_name": null,
+  "founded_date": null,
+  "license_number": null
+ },
+ {
+  "id": 4,
+  "name": "PT Kontak Perkasa Futures",
+  "code": "KPF",
+  "address": null,
+  "is_active": true,
+  "phone": null,
+  "email": null,
+  "director_name": null,
+  "founded_date": null,
+  "license_number": null
+ },
+ {
+  "id": 5,
+  "name": "PT Equityworld Futures",
+  "code": "EWF",
+  "address": null,
+  "is_active": true,
+  "phone": null,
+  "email": null,
+  "director_name": null,
+  "founded_date": null,
+  "license_number": null
+ }
+]

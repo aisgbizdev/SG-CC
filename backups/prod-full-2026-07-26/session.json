@@ -1,0 +1,74 @@
+[
+ {
+  "sid": "SBMulxKhSEPx3WEqiLTULAN-DQT0Axxj",
+  "sess": {
+   "cookie": {
+    "originalMaxAge": 2592000000,
+    "partitioned": true,
+    "expires": "2026-07-01T11:27:46.145Z",
+    "secure": true,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "none"
+   },
+   "passport": {
+    "user": 11
+   }
+  },
+  "expire": "2026-07-28T12:46:12"
+ },
+ {
+  "sid": "W1WfuBBU_hAwOD-LRGAP5y0GnJgg7hdq",
+  "sess": {
+   "cookie": {
+    "originalMaxAge": 2592000000,
+    "partitioned": true,
+    "expires": "2026-08-22T02:08:31.037Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+   },
+   "passport": {
+    "user": 11
+   }
+  },
+  "expire": "2026-08-22T02:08:32"
+ },
+ {
+  "sid": "n9VTDilRbzLRNeJ-bZ91paViYTwWiz6M",
+  "sess": {
+   "cookie": {
+    "originalMaxAge": 28800000,
+    "partitioned": true,
+    "expires": "2026-07-26T22:46:07.125Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+   },
+   "passport": {
+    "user": 11
+   }
+  },
+  "expire": "2026-07-26T22:46:08"
+ },
+ {
+  "sid": "uiFwCKin1xWWQMX8S2yo4I9MApUcrQve",
+  "sess": {
+   "cookie": {
+    "originalMaxAge": 2592000000,
+    "partitioned": true,
+    "expires": "2026-07-30T15:01:11.009Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+   },
+   "passport": {
+    "user": 12
+   }
+  },
+  "expire": "2026-07-30T15:01:12"
+ }
+]

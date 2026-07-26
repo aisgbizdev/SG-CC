@@ -1,0 +1,22 @@
+[
+ {
+  "id": 1,
+  "sender_id": 9,
+  "receiver_id": 10,
+  "subject": "TES",
+  "content": "MANTAP",
+  "is_read": true,
+  "created_at": "2026-03-09T10:56:10.290365",
+  "tag": null
+ },
+ {
+  "id": 2,
+  "sender_id": 1,
+  "receiver_id": 12,
+  "subject": "data kasus",
+  "content": "mana datanya , jam 2 gw mau jalan\n",
+  "is_read": true,
+  "created_at": "2026-03-10T04:40:21.594047",
+  "tag": null
+ }
+]

@@ -1,0 +1,164 @@
+[
+ {
+  "id": 1,
+  "announcement_id": 3,
+  "user_id": 14,
+  "read_at": "2026-03-10T04:27:43.197532"
+ },
+ {
+  "id": 2,
+  "announcement_id": 3,
+  "user_id": 8,
+  "read_at": "2026-03-10T04:49:05.756075"
+ },
+ {
+  "id": 3,
+  "announcement_id": 2,
+  "user_id": 8,
+  "read_at": "2026-03-10T09:29:39.000766"
+ },
+ {
+  "id": 4,
+  "announcement_id": 1,
+  "user_id": 5,
+  "read_at": "2026-03-10T14:59:56.669998"
+ },
+ {
+  "id": 5,
+  "announcement_id": 3,
+  "user_id": 5,
+  "read_at": "2026-03-10T15:00:03.707111"
+ },
+ {
+  "id": 6,
+  "announcement_id": 2,
+  "user_id": 5,
+  "read_at": "2026-03-10T15:00:04.69894"
+ },
+ {
+  "id": 7,
+  "announcement_id": 4,
+  "user_id": 5,
+  "read_at": "2026-03-10T15:00:06.44815"
+ },
+ {
+  "id": 8,
+  "announcement_id": 4,
+  "user_id": 13,
+  "read_at": "2026-03-10T16:28:02.345247"
+ },
+ {
+  "id": 9,
+  "announcement_id": 3,
+  "user_id": 13,
+  "read_at": "2026-03-10T16:29:20.094766"
+ },
+ {
+  "id": 10,
+  "announcement_id": 1,
+  "user_id": 1,
+  "read_at": "2026-03-10T16:59:27.960843"
+ },
+ {
+  "id": 11,
+  "announcement_id": 2,
+  "user_id": 1,
+  "read_at": "2026-03-10T16:59:32.517862"
+ },
+ {
+  "id": 12,
+  "announcement_id": 2,
+  "user_id": 9,
+  "read_at": "2026-03-11T01:59:08.275565"
+ },
+ {
+  "id": 13,
+  "announcement_id": 1,
+  "user_id": 9,
+  "read_at": "2026-03-11T01:59:54.408085"
+ },
+ {
+  "id": 14,
+  "announcement_id": 4,
+  "user_id": 16,
+  "read_at": "2026-03-11T03:09:35.27595"
+ },
+ {
+  "id": 15,
+  "announcement_id": 3,
+  "user_id": 12,
+  "read_at": "2026-03-11T17:09:10.750773"
+ },
+ {
+  "id": 16,
+  "announcement_id": 4,
+  "user_id": 12,
+  "read_at": "2026-03-11T17:09:12.984864"
+ },
+ {
+  "id": 17,
+  "announcement_id": 1,
+  "user_id": 10,
+  "read_at": "2026-03-13T08:29:45.601967"
+ },
+ {
+  "id": 18,
+  "announcement_id": 1,
+  "user_id": 11,
+  "read_at": "2026-03-27T02:19:30.922607"
+ },
+ {
+  "id": 19,
+  "announcement_id": 4,
+  "user_id": 1,
+  "read_at": "2026-03-29T03:52:13.834338"
+ },
+ {
+  "id": 20,
+  "announcement_id": 5,
+  "user_id": 1,
+  "read_at": "2026-04-03T17:17:36.16331"
+ },
+ {
+  "id": 21,
+  "announcement_id": 4,
+  "user_id": 8,
+  "read_at": "2026-04-07T09:23:56.395147"
+ },
+ {
+  "id": 22,
+  "announcement_id": 4,
+  "user_id": 11,
+  "read_at": "2026-05-26T01:00:25.332714"
+ },
+ {
+  "id": 23,
+  "announcement_id": 3,
+  "user_id": 11,
+  "read_at": "2026-05-26T01:00:25.773574"
+ },
+ {
+  "id": 24,
+  "announcement_id": 4,
+  "user_id": 18,
+  "read_at": "2026-06-05T03:33:57.765069"
+ },
+ {
+  "id": 25,
+  "announcement_id": 4,
+  "user_id": 9,
+  "read_at": "2026-06-11T09:58:52.372456"
+ },
+ {
+  "id": 26,
+  "announcement_id": 3,
+  "user_id": 18,
+  "read_at": "2026-06-17T01:56:23.159004"
+ },
+ {
+  "id": 27,
+  "announcement_id": 4,
+  "user_id": 19,
+  "read_at": "2026-07-14T07:30:30.059762"
+ }
+]

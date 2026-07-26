@@ -1,0 +1,425 @@
+[
+ {
+  "id": 22,
+  "company_id": 2,
+  "name": "MEDAN",
+  "address": "Best & Grow Tower ( J.W MARRIOT) Lt.12, Unit 1205-1209, Jl. Putri Hijau No.10, Medan 20111",
+  "head_name": "SONYA KADARMANIK",
+  "wpb_count": 22,
+  "is_active": true
+ },
+ {
+  "id": 28,
+  "company_id": 2,
+  "name": "SOLO",
+  "address": "Jl. Adisucipto No. 86 RT 01/RW 07, Kel. Jajar, Kec. Laweyan, Surakarta 57144",
+  "head_name": "PITRUS LEM",
+  "wpb_count": 11,
+  "is_active": true
+ },
+ {
+  "id": 30,
+  "company_id": 2,
+  "name": "DBS",
+  "address": "DBS Bank Tower LT.14 & 20, Ciputra World 1, Jl. Prof DR Satrio Kav 3-5, Jakarta Selatan 12940",
+  "head_name": "LISA USFIE HARAHAP",
+  "wpb_count": 18,
+  "is_active": true
+ },
+ {
+  "id": 31,
+  "company_id": 1,
+  "name": "BALI",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 32,
+  "company_id": 1,
+  "name": "MAKASSAR",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 33,
+  "company_id": 1,
+  "name": "PALEMBANG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 34,
+  "company_id": 1,
+  "name": "SEMARANG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 35,
+  "company_id": 1,
+  "name": "TCC",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 37,
+  "company_id": 2,
+  "name": "AXA 2",
+  "address": "Axa Tower Jl. Prof DR Satrio Kav 18 LT.25 & 35, Kuningan, Setiabudi, Jakarta Selatan, DKI Jakarta 12940",
+  "head_name": "NURMAN MAULANA",
+  "wpb_count": 21,
+  "is_active": true
+ },
+ {
+  "id": 38,
+  "company_id": 2,
+  "name": "AXA 3",
+  "address": "Axa Tower Jl. Prof DR Satrio Kav 18 LT.30, Kuningan, Setiabudi, Jakarta Selatan, DKI Jakarta 12940",
+  "head_name": "RICKY MARIO MANOREK",
+  "wpb_count": 10,
+  "is_active": true
+ },
+ {
+  "id": 39,
+  "company_id": 2,
+  "name": "BALIKPAPAN",
+  "address": "Jl. Jend Sudirman No. 47 Komp. Balikpapan Super Block/BSB B35-37, Gunung Bahagia, Balikpapan 76114",
+  "head_name": "LYDIA CHANDRA",
+  "wpb_count": 5,
+  "is_active": true
+ },
+ {
+  "id": 40,
+  "company_id": 2,
+  "name": "BANDUNG",
+  "address": "Jl. Pajajaran No.94 RT 02/RW 02, Kel. Pamoyanan, Kec. Cicendo, Bandung 40173",
+  "head_name": "",
+  "wpb_count": 7,
+  "is_active": true
+ },
+ {
+  "id": 41,
+  "company_id": 2,
+  "name": "JOGYA",
+  "address": "Ruko B1,B2,B3 dan B5 Malioboro City, Jl. Laksda Adisucipto KM.8, Tambakbayan, Caturtunggal, Depok, Sleman Yogyakarta 55281",
+  "head_name": "DEWI DIANANINGRUM",
+  "wpb_count": 7,
+  "is_active": true
+ },
+ {
+  "id": 42,
+  "company_id": 2,
+  "name": "PALEMBANG",
+  "address": "Kompleks Pertokoan Palembang Square Unit 112, 113 & 115, Jl. Kampus POM IX Palembang 30137",
+  "head_name": "EKO BUDHI PRASETYO",
+  "wpb_count": 12,
+  "is_active": true
+ },
+ {
+  "id": 43,
+  "company_id": 2,
+  "name": "PEKANBARU",
+  "address": "Jl. Jend Sudirman No. 453, Kel. Simpang Empat, Kec. Pekanbaru, Kota Pekanbaru 28116",
+  "head_name": "WIESYE GREVIANA ROOSEN",
+  "wpb_count": 7,
+  "is_active": true
+ },
+ {
+  "id": 44,
+  "company_id": 2,
+  "name": "SEMARANG",
+  "address": "Ruko S.Parman Corner Unit 5 & 6, Jl. S.Parman No. 47A Semarang 50231",
+  "head_name": "MIA AMALIA MALEPPE",
+  "wpb_count": 12,
+  "is_active": true
+ },
+ {
+  "id": 45,
+  "company_id": 2,
+  "name": "SURABAYA",
+  "address": "Ciputra World Office Tower LT.32, Kawasan Ciputra World, Jl. Mayjen Sungkono 89, RT008/RW 006, Gunungsari Dukuh Pakis Surabaya 60224",
+  "head_name": "LEONARDO",
+  "wpb_count": 9,
+  "is_active": true
+ },
+ {
+  "id": 46,
+  "company_id": 2,
+  "name": "SURABAYA 7",
+  "address": "Pakuwon Tower Jl. Embong Malang No 21-31 LT.26, Kel. Kedungdoro, Kec. Tegalsari, Surabaya 60621",
+  "head_name": "SUWANDI EFENDI",
+  "wpb_count": 9,
+  "is_active": true
+ },
+ {
+  "id": 47,
+  "company_id": 3,
+  "name": "BANDUNG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 48,
+  "company_id": 3,
+  "name": "BANJARMASIN",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 49,
+  "company_id": 3,
+  "name": "ET",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 50,
+  "company_id": 3,
+  "name": "JAMBI",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 51,
+  "company_id": 3,
+  "name": "LAMPUNG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 52,
+  "company_id": 3,
+  "name": "MEDAN",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 53,
+  "company_id": 3,
+  "name": "MLNG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 54,
+  "company_id": 3,
+  "name": "PEKANBARU",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 55,
+  "company_id": 3,
+  "name": "PONTK",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 56,
+  "company_id": 3,
+  "name": "SEMARANG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 57,
+  "company_id": 3,
+  "name": "SURABAYA",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 58,
+  "company_id": 4,
+  "name": "BALI",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 59,
+  "company_id": 4,
+  "name": "BANDUNG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 60,
+  "company_id": 4,
+  "name": "JOGYA",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 61,
+  "company_id": 4,
+  "name": "MAKASSAR",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 62,
+  "company_id": 4,
+  "name": "MAREIN",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 63,
+  "company_id": 4,
+  "name": "SEMARANG",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 64,
+  "company_id": 4,
+  "name": "SURABAYA",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 65,
+  "company_id": 5,
+  "name": "CIREBON",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 66,
+  "company_id": 5,
+  "name": "CYBER",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 67,
+  "company_id": 5,
+  "name": "MEDAN",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 68,
+  "company_id": 5,
+  "name": "MNDO",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 69,
+  "company_id": 5,
+  "name": "SBY2",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 70,
+  "company_id": 5,
+  "name": "SMG3",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 71,
+  "company_id": 5,
+  "name": "SSC",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 72,
+  "company_id": 5,
+  "name": "SURABAYA 6 (ALBET)",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 73,
+  "company_id": 5,
+  "name": "SURABAYA 6 (M NAIM)",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 75,
+  "company_id": 2,
+  "name": "AXA",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ },
+ {
+  "id": 79,
+  "company_id": 3,
+  "name": "PP Jakarta",
+  "address": null,
+  "head_name": null,
+  "wpb_count": 0,
+  "is_active": true
+ }
+]
