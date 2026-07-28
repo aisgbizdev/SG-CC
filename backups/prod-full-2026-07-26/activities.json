@@ -21694,5 +21694,29 @@
   "handover_from": null,
   "pending_tasks": null,
   "operational_condition": null
+ },
+ {
+  "id": 905,
+  "company_id": 4,
+  "created_by": 13,
+  "date": "2026-07-27",
+  "category_id": 17,
+  "title": "Pengumpulan data KYE OJK",
+  "description": "pengumpulan data audit kye kpf 10 - 13 Agustus 2026",
+  "result": "",
+  "status": "Sedang Dikerjakan",
+  "priority": "Medium",
+  "progress": 10,
+  "target_date": "2026-08-03",
+  "next_action": "",
+  "notes": "",
+  "is_archived": false,
+  "created_at": "2026-07-27T12:04:00.800299",
+  "updated_at": "2026-07-27T12:04:00.800299",
+  "quantity": 1,
+  "shift": null,
+  "handover_from": null,
+  "pending_tasks": null,
+  "operational_condition": null
  }
 ]
