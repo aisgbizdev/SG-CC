@@ -76,7 +76,13 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+          // updateViaCache:'none' -> browser selalu ambil sw.js dari jaringan,
+          // jangan dari HTTP cache, supaya service worker lama yang rusak
+          // langsung tergantikan versi baru.
+          navigator.serviceWorker
+            .register('/sw.js', { updateViaCache: 'none' })
+            .then((reg) => reg.update().catch(() => {}))
+            .catch(() => {});
         });
       }
       window.__hideSplash = () => {
