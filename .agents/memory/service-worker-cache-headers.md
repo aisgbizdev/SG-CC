@@ -28,3 +28,8 @@ combined with `skipWaiting()` + `clients.claim()` in the new SW, the fixed versi
   to `dist/public/sw.js`, and prod serves the built `dist`. Verify `head dist/public/sw.js` after build —
   a stale `dist` can ship the OLD SW even though the source is fixed.
 - The new SW's `activate` deletes all old caches (e.g. `sgcc-v1`) so stale cached assets stop serving.
+- To auto-recover browsers stuck on the old SW WITHOUT a manual refresh, the page listens for
+  `navigator.serviceWorker.addEventListener('controllerchange', ...)` and reloads once (guarded by a
+  flag to avoid loops). When the new SW claims control, the page reloads under it automatically.
+- Each SW code change must bump something the browser byte-compares (the comment/version at top is
+  enough) so the update check detects a difference; otherwise the new SW never installs.

@@ -75,6 +75,16 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
+        // Bila service worker BARU mengambil alih kontrol (menggantikan SW lama
+        // yang rusak), reload halaman sekali supaya langsung berjalan di bawah
+        // SW baru yang tidak mengintersepsi navigasi. Ini memutus deadlock
+        // "refresh muter terus" pada browser yang masih memegang SW lama.
+        let __swReloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (__swReloaded) return;
+          __swReloaded = true;
+          window.location.reload();
+        });
         window.addEventListener('load', () => {
           // updateViaCache:'none' -> browser selalu ambil sw.js dari jaringan,
           // jangan dari HTTP cache, supaya service worker lama yang rusak
