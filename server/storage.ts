@@ -491,6 +491,37 @@ export class DatabaseStorage implements IStorage {
 
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
 
+    // Proyeksi ringkasan kasus TANPA kolom lampiran base64 raksasa
+    // (complaintAttachments, caseDocuments). Menarik dua kolom itu untuk
+    // daftar dashboard menyeret puluhan MB dan membuat /api/dashboard lambat
+    // (>10 detik). Dashboard hanya butuh field ringkasan, bukan file lampiran.
+    const caseSummaryColumns = {
+      id: cases.id,
+      companyId: cases.companyId,
+      createdBy: cases.createdBy,
+      caseCode: cases.caseCode,
+      branch: cases.branch,
+      dateReceived: cases.dateReceived,
+      customerName: cases.customerName,
+      accountNumber: cases.accountNumber,
+      picMain: cases.picMain,
+      branchHead: cases.branchHead,
+      bucket: cases.bucket,
+      status: cases.status,
+      summary: cases.summary,
+      riskLevel: cases.riskLevel,
+      priority: cases.priority,
+      workflowStage: cases.workflowStage,
+      progress: cases.progress,
+      targetDate: cases.targetDate,
+      latestAction: cases.latestAction,
+      nextAction: cases.nextAction,
+      resolutionPath: cases.resolutionPath,
+      isArchived: cases.isArchived,
+      createdAt: cases.createdAt,
+      updatedAt: cases.updatedAt,
+    };
+
     const [
       [activityStats],
       [caseStats],
@@ -521,8 +552,8 @@ export class DatabaseStorage implements IStorage {
       }).from(tasks).where(taskConditions),
       db.select({ total: count() }).from(announcements).where(announcementConditions),
       db.select().from(activities).where(actConditions).orderBy(desc(activities.createdAt)).limit(5),
-      db.select().from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5),
-      db.select().from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), nonClosedCaseCondition)).orderBy(desc(cases.createdAt)).limit(5),
+      db.select(caseSummaryColumns).from(cases).where(caseConditions).orderBy(desc(cases.createdAt)).limit(5),
+      db.select(caseSummaryColumns).from(cases).where(and(caseConditions, eq(cases.riskLevel, "High"), nonClosedCaseCondition)).orderBy(desc(cases.createdAt)).limit(5),
       db.select({
         companyId: cases.companyId,
         total: count(),

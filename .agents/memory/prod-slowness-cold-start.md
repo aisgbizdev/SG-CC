@@ -16,4 +16,6 @@ Other perf decisions to keep:
 
 Known issue: `.env` with real secrets (DATABASE_URL, SESSION_SECRET, JWT_SECRET, VAPID private key) is tracked in git despite .gitignore. Needs `git rm --cached` (destructive — user/task approval) + secret rotation.
 
+Follow-up (round 3): `/api/dashboard` regressed to ~11s. Cause: `getDashboardStats` recentCases/highRiskCases used `db.select().from(cases).limit(5)` = SELECT * including the base64 blob columns `complaintAttachments` + `caseDocuments` (cases holds ~233MB of attachments). Any list/preview query on `cases` MUST use an explicit column projection that omits those two blobs — never `db.select()` without projection on `cases`. Same rule as the avatarUrl exclusion for users.
+
 Follow-up (round 2): prod dashboard still took 13s after cold start. Cause: 17 parallel queries vs pg Pool max 10 + default idleTimeoutMillis 10s dropping Neon connections constantly + Neon compute resume. Fix: dashboard counts consolidated to single-per-table `count(*) FILTER` queries (17→8 round trips), pool tuned (idleTimeoutMillis 4min, keepAlive). Remaining floor: autoscale wake + Neon resume on first hit after idle — only Reserved VM removes it.
