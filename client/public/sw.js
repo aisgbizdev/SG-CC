@@ -1,78 +1,29 @@
-const CACHE_NAME = 'sgcc-v2';
-const STATIC_ASSETS = [
-  '/SGCC_logo.png',
-  '/favicon.png'
-];
+// Service worker SG Control Center — KHUSUS push notification.
+//
+// CATATAN PENTING: versi sebelumnya memasang handler `fetch` yang mengintersepsi
+// navigasi (event.respondWith(fetch(...)) tanpa fallback) dan menyimpan cache.
+// Itu membuat aplikasi "muter-muter"/blank saat refresh (navigasi menggantung
+// bila ada hiccup jaringan, dan cache basi setelah republish). Sekarang service
+// worker TIDAK lagi mengintersepsi request apa pun — browser menangani semua
+// fetch secara normal — sehingga tidak bisa lagi menyebabkan halaman menggantung.
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
+self.addEventListener('install', () => {
+  // Aktifkan versi baru langsung, jangan menunggu tab lama tertutup.
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  const url = new URL(event.request.url);
-
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return new Response(JSON.stringify({ error: 'Offline' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      })
-    );
-    return;
-  }
-
-  if (
-    event.request.mode === 'navigate' ||
-    ['script', 'style', 'document'].includes(event.request.destination) ||
-    url.pathname.startsWith('/src/') ||
-    url.pathname.startsWith('/assets/')
-  ) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
-          return cachedResponse || Response.error();
-        });
-      })
+    // Hapus SEMUA cache lama (mis. 'sgcc-v2') supaya aset basi tidak tersaji lagi.
+    caches.keys()
+      .then((names) => Promise.all(names.map((name) => caches.delete(name))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('push', function(event) {
+// Sengaja TIDAK ada handler 'fetch': biar browser yang menangani semua request.
+
+self.addEventListener('push', function (event) {
   if (!event.data) return;
   try {
     var data = event.data.json();
@@ -91,11 +42,11 @@ self.addEventListener('push', function(event) {
   }
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
   event.notification.close();
   var url = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
         if ('focus' in client) {
