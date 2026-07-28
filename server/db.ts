@@ -14,4 +14,11 @@ export const pool = new pg.Pool({
   connectionTimeoutMillis: 15000,
 });
 
+// Cegah crash proses saat koneksi idle diputus oleh database (mis. Neon menutup
+// koneksi idle). Tanpa listener ini, error socket pada client idle menjadi
+// uncaught exception yang mematikan seluruh server lalu memicu restart.
+pool.on("error", (err) => {
+  console.error("[db] Kesalahan pada koneksi idle pool (ditangani, server tetap jalan):", err.message);
+});
+
 export const db = drizzle(pool, { schema });
